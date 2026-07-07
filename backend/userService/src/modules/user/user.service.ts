@@ -45,8 +45,12 @@ export class UserService {
       };
       const token = JwtToken.generate(tokenPayload);
 
+      const restored = await User.findByPk(existingUser.id, {
+        attributes: { exclude: ["password", "createdAt", "updatedAt", "deletedAt"] },
+      });
+
       return {
-        user: this.sanitizeUser(existingUser),
+        user: restored!.toJSON(),
         token,
       };
     }
@@ -76,8 +80,12 @@ export class UserService {
     };
     const token = JwtToken.generate(tokenPayload);
 
+    const created = await User.findByPk(user.id, {
+      attributes: { exclude: ["password", "createdAt", "updatedAt", "deletedAt"] },
+    });
+
     return {
-      user: this.sanitizeUser(user),
+      user: created!.toJSON(),
       token,
     };
   }
@@ -109,8 +117,12 @@ export class UserService {
     };
     const token = JwtToken.generate(tokenPayload);
 
+    const logged = await User.findByPk(user.id, {
+      attributes: { exclude: ["password", "createdAt", "updatedAt", "deletedAt"] },
+    });
+
     return {
-      user: this.sanitizeUser(user),
+      user: logged!.toJSON(),
       token,
     };
   }
@@ -170,10 +182,5 @@ export class UserService {
     }
 
     return user;
-  }
-
-  private static sanitizeUser(user: User) {
-    const { password, createdAt, updatedAt, deletedAt, ...rest } = user.toJSON();
-    return rest;
   }
 }
