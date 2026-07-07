@@ -28,5 +28,23 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
+export const getAllUsersSchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(10),
+});
+
+export const getUserByRoleSchema = z.object({
+  role: userRoleSchema,
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(10),
+});
+
+export const getUserByIdSchema = z.object({
+  id: z.string().uuid("Invalid user ID format"),
+});
+
 export type SignupInput = z.infer<typeof signupSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+export type GetAllUsersInput = z.infer<typeof getAllUsersSchema>;
+export type GetUserByRoleInput = z.infer<typeof getUserByRoleSchema>;
+export type GetUserByIdInput = z.infer<typeof getUserByIdSchema>;

@@ -50,9 +50,7 @@ Content-Type: application/json
       "lname": "doe",
       "role": "student",
       "email": "john@example.com",
-      "mobilenumber": "9876543210",
-      "createdAt": "2026-07-06T12:00:00.000Z",
-      "updatedAt": "2026-07-06T12:00:00.000Z"
+      "mobilenumber": "9876543210"
     },
     "token": "eyJhbGciOiJIUzI1NiIs..."
   }
@@ -117,9 +115,7 @@ Content-Type: application/json
       "lname": "doe",
       "role": "student",
       "email": "john@example.com",
-      "mobilenumber": "9876543210",
-      "createdAt": "2026-07-06T12:00:00.000Z",
-      "updatedAt": "2026-07-06T12:00:00.000Z"
+      "mobilenumber": "9876543210"
     },
     "token": "eyJhbGciOiJIUzI1NiIs..."
   }
@@ -140,6 +136,187 @@ Content-Type: application/json
 {
   "success": false,
   "message": "Invalid email or password",
+  "data": null
+}
+```
+
+---
+
+## GET /
+
+Get all users with pagination.
+
+### Request
+
+**Headers:**
+```
+Content-Type: application/json
+```
+
+**Query Parameters:**
+
+| Param | Type   | Required | Default | Description         |
+|-------|--------|----------|---------|---------------------|
+| page  | number | No       | 1       | Page number         |
+| limit | number | No       | 10      | Items per page (max 100) |
+
+**Example:** `GET /api/user?page=1&limit=20`
+
+### Response
+
+**200 OK**
+```json
+{
+  "success": true,
+  "message": "Users retrieved successfully",
+  "data": {
+    "users": [
+      {
+        "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "fname": "john",
+        "lname": "doe",
+        "role": "student",
+        "email": "john@example.com",
+        "mobilenumber": "9876543210"
+      }
+    ],
+    "pagination": {
+      "total": 50,
+      "page": 1,
+      "limit": 10,
+      "totalPages": 5
+    }
+  }
+}
+```
+
+**400 Bad Request** — Invalid query parameters
+```json
+{
+  "success": false,
+  "message": "Validation failed",
+  "data": null
+}
+```
+
+---
+
+## GET /role/:role
+
+Get all users filtered by role with pagination.
+
+### Request
+
+**Headers:**
+```
+Content-Type: application/json
+```
+
+**Path Parameters:**
+
+| Param | Type   | Required | Values               |
+|-------|--------|----------|----------------------|
+| role  | string | Yes      | `"student"` or `"teacher"` |
+
+**Query Parameters:**
+
+| Param | Type   | Required | Default | Description         |
+|-------|--------|----------|---------|---------------------|
+| page  | number | No       | 1       | Page number         |
+| limit | number | No       | 10      | Items per page (max 100) |
+
+**Example:** `GET /api/user/role/student?page=1&limit=20`
+
+### Response
+
+**200 OK**
+```json
+{
+  "success": true,
+  "message": "Users retrieved successfully",
+  "data": {
+    "users": [
+      {
+        "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "fname": "john",
+        "lname": "doe",
+        "role": "student",
+        "email": "john@example.com",
+        "mobilenumber": "9876543210"
+      }
+    ],
+    "pagination": {
+      "total": 30,
+      "page": 1,
+      "limit": 10,
+      "totalPages": 3
+    }
+  }
+}
+```
+
+**400 Bad Request** — Invalid role or query parameters
+```json
+{
+  "success": false,
+  "message": "Validation failed",
+  "data": null
+}
+```
+
+---
+
+## GET /:id
+
+Get a single user by ID.
+
+### Request
+
+**Headers:**
+```
+Content-Type: application/json
+```
+
+**Path Parameters:**
+
+| Param | Type   | Required | Description              |
+|-------|--------|----------|--------------------------|
+| id    | string | Yes      | UUID of the user         |
+
+**Example:** `GET /api/user/a1b2c3d4-e5f6-7890-abcd-ef1234567890`
+
+### Response
+
+**200 OK**
+```json
+{
+  "success": true,
+  "message": "User retrieved successfully",
+  "data": {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "fname": "john",
+    "lname": "doe",
+    "role": "student",
+    "email": "john@example.com",
+    "mobilenumber": "9876543210"
+  }
+}
+```
+
+**400 Bad Request** — Invalid UUID format
+```json
+{
+  "success": false,
+  "message": "Validation failed",
+  "data": null
+}
+```
+
+**404 Not Found** — User does not exist
+```json
+{
+  "success": false,
+  "message": "User not found",
   "data": null
 }
 ```

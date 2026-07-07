@@ -4,7 +4,13 @@ import { ApiError } from "../../utils/ApiError";
 import { JwtToken, JwtPayload } from "../../utils/jwtToken";
 import { RESPONSE_MESSAGES } from "../../utils/responseMessages";
 import User from "./user.model";
-import { SignupInput, LoginInput } from "./user.validation";
+import {
+  SignupInput,
+  LoginInput,
+  GetAllUsersInput,
+  GetUserByRoleInput,
+  GetUserByIdInput,
+} from "./user.validation";
 
 export class UserService {
   static async signup(data: SignupInput) {
@@ -109,8 +115,65 @@ export class UserService {
     };
   }
 
+  static async getAllUsers(data: GetAllUsersInput) {
+    const { page, limit } = data;
+    const offset = (page - 1) * limit;
+
+    const { rows: users, count: total } = await User.findAndCountAll({
+      attributes: { exclude: ["password", "createdAt", "updatedAt", "deletedAt"] },
+      limit,
+      offset,
+      order: [["createdAt", "DESC"]],
+    });
+
+    return {
+      users,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  static async getUserByRole(data: GetUserByRoleInput) {
+    const { role, page, limit } = data;
+    const offset = (page - 1) * limit;
+
+    const { rows: users, count: total } = await User.findAndCountAll({
+      where: { role },
+      attributes: { exclude: ["password", "createdAt", "updatedAt", "deletedAt"] },
+      limit,
+      offset,
+      order: [["createdAt", "DESC"]],
+    });
+
+    return {
+      users,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  static async getUserById(data: GetUserByIdInput) {
+    const user = await User.findByPk(data.id, {
+      attributes: { exclude: ["password", "createdAt", "updatedAt", "deletedAt"] },
+    });
+
+    if (!user) {
+      throw ApiError.notFound(RESPONSE_MESSAGES.ERROR.USER_NOT_FOUND);
+    }
+
+    return user;
+  }
+
   private static sanitizeUser(user: User) {
-    const { password, ...userWithoutPassword } = user.toJSON();
-    return userWithoutPassword;
+    const { password, createdAt, updatedAt, deletedAt, ...rest } = user.toJSON();
+    return rest;
   }
 }

@@ -3,6 +3,7 @@ export const RESPONSE_MESSAGES = {
     USER_CREATED: "User registered successfully",
     LOGIN_SUCCESS: "Login successful",
     USER_FOUND: "User retrieved successfully",
+    USERS_FOUND: "Users retrieved successfully",
     USER_UPDATED: "User updated successfully",
     USER_DELETED: "User deleted successfully",
     TOKEN_VALID: "Token is valid",
