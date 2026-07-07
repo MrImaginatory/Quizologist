@@ -79,6 +79,32 @@ export const routes: RouteConfig[] = [
     roles: ["admin", "teacher", "student"],
     methods: ["GET"],
   },
+
+  // ==================== Student Service ====================
+  // Enroll — student only
+  {
+    path: "/enrollment",
+    target: `${env.STUDENT_SERVICE_URL}/api/enrollment`,
+    auth: true,
+    roles: ["student"],
+    methods: ["POST"],
+  },
+  // View enrollments — student only
+  {
+    path: "/enrollment",
+    target: `${env.STUDENT_SERVICE_URL}/api/enrollment`,
+    auth: true,
+    roles: ["student"],
+    methods: ["GET"],
+  },
+  // Unenroll — student only
+  {
+    path: "/enrollment",
+    target: `${env.STUDENT_SERVICE_URL}/api/enrollment`,
+    auth: true,
+    roles: ["student"],
+    methods: ["DELETE"],
+  },
 ];
 
 export function findMatchingRoute(
