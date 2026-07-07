@@ -22,7 +22,7 @@ Content-Type: application/json
   "lname": "Doe",
   "role": "student",
   "email": "john@example.com",
-  "mobilenumber": "9876543210",
+  "mobileNumber": "9876543210",
   "password": "secret123"
 }
 ```
@@ -33,7 +33,7 @@ Content-Type: application/json
 | lname        | string   | Yes      | 1-50 characters                              |
 | role         | string   | Yes      | `"student"` or `"teacher"`                   |
 | email        | string   | Yes      | Valid email format                           |
-| mobilenumber | string   | Yes      | 10-15 characters                             |
+| mobileNumber | string   | Yes      | 10-15 characters                             |
 | password     | string   | Yes      | 6-100 characters                             |
 
 ### Response
@@ -50,7 +50,7 @@ Content-Type: application/json
       "lname": "doe",
       "role": "student",
       "email": "john@example.com",
-      "mobilenumber": "9876543210"
+      "mobileNumber": "9876543210"
     },
     "token": "eyJhbGciOiJIUzI1NiIs..."
   }
@@ -115,7 +115,7 @@ Content-Type: application/json
       "lname": "doe",
       "role": "student",
       "email": "john@example.com",
-      "mobilenumber": "9876543210"
+      "mobileNumber": "9876543210"
     },
     "token": "eyJhbGciOiJIUzI1NiIs..."
   }
@@ -177,7 +177,7 @@ Content-Type: application/json
         "lname": "doe",
         "role": "student",
         "email": "john@example.com",
-        "mobilenumber": "9876543210"
+        "mobileNumber": "9876543210"
       }
     ],
     "pagination": {
@@ -242,7 +242,7 @@ Content-Type: application/json
         "lname": "doe",
         "role": "student",
         "email": "john@example.com",
-        "mobilenumber": "9876543210"
+        "mobileNumber": "9876543210"
       }
     ],
     "pagination": {
@@ -298,7 +298,7 @@ Content-Type: application/json
     "lname": "doe",
     "role": "student",
     "email": "john@example.com",
-    "mobilenumber": "9876543210"
+    "mobileNumber": "9876543210"
   }
 }
 ```

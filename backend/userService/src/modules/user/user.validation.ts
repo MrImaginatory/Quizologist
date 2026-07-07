@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const userRoleSchema = z.enum(["student", "teacher"]);
+const userRoleSchema = z.enum(["admin", "student", "teacher"]);
 
 export const signupSchema = z.object({
   fname: z
@@ -13,7 +13,7 @@ export const signupSchema = z.object({
     .max(50, "Last name must be at most 50 characters"),
   role: userRoleSchema,
   email: z.string().email("Invalid email format"),
-  mobilenumber: z
+  mobileNumber: z
     .string()
     .min(10, "Mobile number must be at least 10 digits")
     .max(15, "Mobile number must be at most 15 digits"),

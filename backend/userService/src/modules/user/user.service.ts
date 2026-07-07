@@ -34,7 +34,7 @@ export class UserService {
         fname: data.fname.toLowerCase(),
         lname: data.lname.toLowerCase(),
         role: data.role,
-        mobilenumber: data.mobilenumber.toLowerCase(),
+        mobileNumber: data.mobileNumber.toLowerCase(),
         password: hashedPassword,
       });
 
@@ -69,7 +69,7 @@ export class UserService {
       lname: data.lname.toLowerCase(),
       role: data.role,
       email: lowercasedEmail,
-      mobilenumber: data.mobilenumber.toLowerCase(),
+      mobileNumber: data.mobileNumber.toLowerCase(),
       password: hashedPassword,
     });
 

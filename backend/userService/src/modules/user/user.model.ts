@@ -9,14 +9,13 @@ type UserCreationAttributes = Optional<
 
 class User
   extends Model<UserAttributes, UserCreationAttributes>
-  implements UserAttributes
-{
+  implements UserAttributes {
   declare id: string;
   declare fname: string;
   declare lname: string;
   declare role: UserRole;
   declare email: string;
-  declare mobilenumber: string;
+  declare mobileNumber: string;
   declare password: string;
   declare createdAt: Date;
   declare updatedAt: Date;
@@ -45,7 +44,7 @@ User.init(
       },
     },
     role: {
-      type: DataTypes.ENUM("student", "teacher"),
+      type: DataTypes.ENUM("admin", "student", "teacher"),
       allowNull: false,
     },
     email: {
@@ -56,11 +55,11 @@ User.init(
         this.setDataValue("email", value.toLowerCase());
       },
     },
-    mobilenumber: {
+    mobileNumber: {
       type: DataTypes.STRING(15),
       allowNull: false,
       set(value: string) {
-        this.setDataValue("mobilenumber", value.toLowerCase());
+        this.setDataValue("mobileNumber", value.toLowerCase());
       },
     },
     password: {

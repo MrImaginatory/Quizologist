@@ -2,35 +2,30 @@ import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { env } from "./config/env";
 import { connectDatabase } from "./config/database";
-import { seedAdmin } from "./config/seed";
-import userRoutes from "./modules/user/user.routes";
+import Question from "./modules/question/question.model";
+import questionRoutes from "./modules/question/question.routes";
 import { ApiError } from "./utils/ApiError";
 import { ApiResponse } from "./utils/ApiResponse";
 
 const app = express();
 
-// Global middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Routes
-app.use("/api/user", userRoutes);
+app.use("/api/question", questionRoutes);
 
-// Health check
 app.get("/health", (_req: Request, res: Response) => {
   ApiResponse.success(res, "Service is healthy", {
-    service: "user-service",
+    service: "question-service",
     timestamp: new Date().toISOString(),
   });
 });
 
-// 404 handler
 app.use((_req: Request, res: Response) => {
   ApiResponse.error(res, "Route not found", 404);
 });
 
-// Global error handler
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof ApiError) {
     return ApiResponse.error(res, err.message, err.statusCode);
@@ -50,13 +45,11 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   return ApiResponse.error(res, "Internal server error", 500);
 });
 
-// Start server
 const startServer = async () => {
   await connectDatabase();
-  await seedAdmin();
 
   app.listen(env.PORT, () => {
-    console.log(`User Service running on port ${env.PORT}`);
+    console.log(`Question Service running on port ${env.PORT}`);
     console.log(`Environment: ${env.NODE_ENV}`);
   });
 };

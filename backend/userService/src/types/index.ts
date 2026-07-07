@@ -5,7 +5,7 @@ export interface AuthRequest extends Request {
   user?: JwtPayload;
 }
 
-export type UserRole = "student" | "teacher";
+export type UserRole = "admin" | "student" | "teacher";
 
 export interface UserAttributes {
   id: string;
@@ -13,7 +13,7 @@ export interface UserAttributes {
   lname: string;
   role: UserRole;
   email: string;
-  mobilenumber: string;
+  mobileNumber: string;
   password: string;
   createdAt?: Date;
   updatedAt?: Date;
@@ -25,7 +25,7 @@ export interface CreateUserInput {
   lname: string;
   role: UserRole;
   email: string;
-  mobilenumber: string;
+  mobileNumber: string;
   password: string;
 }
 
