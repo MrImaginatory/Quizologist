@@ -16,6 +16,11 @@ import {
 
 const TIMESTAMP_EXCLUDE = { exclude: ["createdAt", "updatedAt", "deletedAt"] };
 
+const TOPIC_INCLUDE = { model: Topic, as: "topic", attributes: ["id", "name"] };
+const SUBJECT_INCLUDE = { model: Subject, as: "subject", attributes: ["id", "name"] };
+const FACULTY_INCLUDE = { model: Faculty, as: "faculty", attributes: ["id", "name"] };
+const ALL_INCLUDES = [TOPIC_INCLUDE, SUBJECT_INCLUDE, FACULTY_INCLUDE];
+
 async function validateForeignKeys(data: { topic_id: string; subject_id: string; faculty_id: string }) {
   const topic = await Topic.findByPk(data.topic_id);
   if (!topic) throw ApiError.badRequest(RESPONSE_MESSAGES.ERROR.TOPIC_NOT_FOUND);
@@ -59,7 +64,12 @@ export class QuestionService {
       questionAddedBy: userId,
     });
 
-    return question.toJSON();
+    const created = await Question.findByPk(question.id, {
+      attributes: TIMESTAMP_EXCLUDE,
+      include: ALL_INCLUDES,
+    });
+
+    return created!.toJSON();
   }
 
   static async getAll(data: GetAllQuestionsInput) {
@@ -68,6 +78,7 @@ export class QuestionService {
 
     const { rows, count } = await Question.findAndCountAll({
       attributes: TIMESTAMP_EXCLUDE,
+      include: ALL_INCLUDES,
       limit,
       offset,
       order: [["createdAt", "DESC"]],
@@ -87,6 +98,7 @@ export class QuestionService {
   static async getById(data: QuestionIdParam) {
     const question = await Question.findByPk(data.id, {
       attributes: TIMESTAMP_EXCLUDE,
+      include: ALL_INCLUDES,
     });
 
     if (!question) {
@@ -105,6 +117,7 @@ export class QuestionService {
         question: { [Op.iLike]: `%${q}%` },
       },
       attributes: TIMESTAMP_EXCLUDE,
+      include: ALL_INCLUDES,
       limit,
       offset,
       order: [["createdAt", "DESC"]],
@@ -128,6 +141,7 @@ export class QuestionService {
     const { rows, count } = await Question.findAndCountAll({
       where: { topic_id: topicId },
       attributes: TIMESTAMP_EXCLUDE,
+      include: ALL_INCLUDES,
       limit,
       offset,
       order: [["createdAt", "DESC"]],
@@ -178,6 +192,7 @@ export class QuestionService {
 
     const updated = await Question.findByPk(data.id, {
       attributes: TIMESTAMP_EXCLUDE,
+      include: ALL_INCLUDES,
     });
 
     return updated!.toJSON();

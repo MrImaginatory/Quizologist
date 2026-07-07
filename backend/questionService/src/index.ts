@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { env } from "./config/env";
 import { connectDatabase } from "./config/database";
+import "./config/associations";
 import { extractGatewayUser } from "./middlewares/gatewayUser.middleware";
 import Question from "./modules/question/question.model";
 import questionRoutes from "./modules/question/question.routes";

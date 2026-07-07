@@ -21,12 +21,15 @@ export const RESPONSE_MESSAGES = {
   ERROR: {
     FACULTY_EXISTS: "Faculty with this name already exists",
     FACULTY_NOT_FOUND: "Faculty not found or has been deleted",
+    FACULTY_HAS_SUBJECTS: "Cannot delete faculty — subjects are still linked to it",
 
     SUBJECT_EXISTS: "Subject with this name already exists in this faculty",
     SUBJECT_NOT_FOUND: "Subject not found or has been deleted",
+    SUBJECT_HAS_TOPICS: "Cannot delete subject — topics are still linked to it",
 
     TOPIC_EXISTS: "Topic with this name already exists in this subject",
     TOPIC_NOT_FOUND: "Topic not found or has been deleted",
+    TOPIC_HAS_QUESTIONS: "Cannot delete topic — questions are still linked to it",
 
     VALIDATION_ERROR: "Validation failed",
     INTERNAL_ERROR: "Internal server error",

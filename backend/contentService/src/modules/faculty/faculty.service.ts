@@ -1,6 +1,7 @@
 import { ApiError } from "../../utils/ApiError";
 import { RESPONSE_MESSAGES } from "../../utils/responseMessages";
 import Faculty from "./faculty.model";
+import Subject from "../subject/subject.model";
 import {
   CreateFacultyInput,
   UpdateFacultyInput,
@@ -99,6 +100,14 @@ export class FacultyService {
 
     if (!faculty) {
       throw ApiError.notFound(RESPONSE_MESSAGES.ERROR.FACULTY_NOT_FOUND);
+    }
+
+    const linkedSubjects = await Subject.count({
+      where: { faculty_id: data.id },
+    });
+
+    if (linkedSubjects > 0) {
+      throw ApiError.badRequest(RESPONSE_MESSAGES.ERROR.FACULTY_HAS_SUBJECTS);
     }
 
     await faculty.destroy();

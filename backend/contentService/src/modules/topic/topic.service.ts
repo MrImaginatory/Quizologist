@@ -3,6 +3,7 @@ import { RESPONSE_MESSAGES } from "../../utils/responseMessages";
 import Subject from "../subject/subject.model";
 import Faculty from "../faculty/faculty.model";
 import Topic from "./topic.model";
+import Question from "../question/question.model";
 import {
   CreateTopicInput,
   UpdateTopicInput,
@@ -40,7 +41,12 @@ export class TopicService {
       subject_id: data.subject_id,
     });
 
-    return topic.toJSON();
+    const created = await Topic.findByPk(topic.id, {
+      attributes: TIMESTAMP_EXCLUDE,
+      include: [SUBJECT_INCLUDE],
+    });
+
+    return created!.toJSON();
   }
 
   static async getAll(data: GetAllTopicsInput) {
@@ -155,6 +161,14 @@ export class TopicService {
 
     if (!topic) {
       throw ApiError.notFound(RESPONSE_MESSAGES.ERROR.TOPIC_NOT_FOUND);
+    }
+
+    const linkedQuestions = await Question.count({
+      where: { topic_id: data.id },
+    });
+
+    if (linkedQuestions > 0) {
+      throw ApiError.badRequest(RESPONSE_MESSAGES.ERROR.TOPIC_HAS_QUESTIONS);
     }
 
     await topic.destroy();

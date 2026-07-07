@@ -2,6 +2,7 @@ import { ApiError } from "../../utils/ApiError";
 import { RESPONSE_MESSAGES } from "../../utils/responseMessages";
 import Faculty from "../faculty/faculty.model";
 import Subject from "./subject.model";
+import Topic from "../topic/topic.model";
 import {
   CreateSubjectInput,
   UpdateSubjectInput,
@@ -34,7 +35,12 @@ export class SubjectService {
       faculty_id: data.faculty_id,
     });
 
-    return subject.toJSON();
+    const created = await Subject.findByPk(subject.id, {
+      attributes: TIMESTAMP_EXCLUDE,
+      include: [FACULTY_INCLUDE],
+    });
+
+    return created!.toJSON();
   }
 
   static async getAll(data: GetAllSubjectsInput) {
@@ -149,6 +155,14 @@ export class SubjectService {
 
     if (!subject) {
       throw ApiError.notFound(RESPONSE_MESSAGES.ERROR.SUBJECT_NOT_FOUND);
+    }
+
+    const linkedTopics = await Topic.count({
+      where: { subject_id: data.id },
+    });
+
+    if (linkedTopics > 0) {
+      throw ApiError.badRequest(RESPONSE_MESSAGES.ERROR.SUBJECT_HAS_TOPICS);
     }
 
     await subject.destroy();
