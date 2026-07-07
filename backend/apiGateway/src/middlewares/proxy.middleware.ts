@@ -9,7 +9,7 @@ export const proxyRequest = async (
   _next: NextFunction
 ) => {
   try {
-    const match = findMatchingRoute(req.path);
+    const match = findMatchingRoute(req.path, req.method);
 
     if (!match) {
       return ApiResponse.error(res, "Route not found", 404);

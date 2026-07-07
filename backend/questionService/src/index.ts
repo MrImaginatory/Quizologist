@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { env } from "./config/env";
 import { connectDatabase } from "./config/database";
+import { extractGatewayUser } from "./middlewares/gatewayUser.middleware";
 import Question from "./modules/question/question.model";
 import questionRoutes from "./modules/question/question.routes";
 import { ApiError } from "./utils/ApiError";
@@ -13,7 +14,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use("/api/question", questionRoutes);
+app.use("/api/question", extractGatewayUser, questionRoutes);
 
 app.get("/health", (_req: Request, res: Response) => {
   ApiResponse.success(res, "Service is healthy", {

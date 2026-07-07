@@ -5,6 +5,7 @@ export interface RouteConfig {
   target: string;
   auth: boolean;
   roles?: string[];
+  methods?: string[]; // HTTP methods this rule applies to. If omitted, applies to all.
 }
 
 export const routes: RouteConfig[] = [
@@ -47,27 +48,60 @@ export const routes: RouteConfig[] = [
   },
 
   // ==================== Question Service ====================
+  // Write operations — admin and teacher only
+  {
+    path: "/question",
+    target: `${env.QUESTION_SERVICE_URL}/api/question`,
+    auth: true,
+    roles: ["admin", "teacher"],
+    methods: ["POST"],
+  },
+  {
+    path: "/question",
+    target: `${env.QUESTION_SERVICE_URL}/api/question`,
+    auth: true,
+    roles: ["admin", "teacher"],
+    methods: ["PUT"],
+  },
+  {
+    path: "/question",
+    target: `${env.QUESTION_SERVICE_URL}/api/question`,
+    auth: true,
+    roles: ["admin", "teacher"],
+    methods: ["DELETE"],
+  },
+
+  // Read operations — all authenticated users
   {
     path: "/question",
     target: `${env.QUESTION_SERVICE_URL}/api/question`,
     auth: true,
     roles: ["admin", "teacher", "student"],
+    methods: ["GET"],
   },
 ];
 
 export function findMatchingRoute(
-  reqPath: string
+  reqPath: string,
+  reqMethod: string
 ): { route: RouteConfig; remainingPath: string } | null {
   const normalised = reqPath.endsWith("/") ? reqPath.slice(0, -1) : reqPath;
+  const upperMethod = reqMethod.toUpperCase();
 
   for (const route of routes) {
     const routePath = route.path.endsWith("/")
       ? route.path.slice(0, -1)
       : route.path;
 
-    if (normalised === routePath || normalised.startsWith(routePath + "/")) {
-      return { route, remainingPath: normalised.slice(routePath.length) };
-    }
+    const pathMatch =
+      normalised === routePath || normalised.startsWith(routePath + "/");
+
+    if (!pathMatch) continue;
+
+    // If the route specifies methods, the request method must match
+    if (route.methods && !route.methods.includes(upperMethod)) continue;
+
+    return { route, remainingPath: normalised.slice(routePath.length) };
   }
   return null;
 }

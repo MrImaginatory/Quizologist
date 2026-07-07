@@ -23,7 +23,7 @@ app.get("/health", (_req: Request, res: Response) => {
 
 // Single catch-all for all /api routes — route config drives auth + RBAC
 app.use("/api", (req: Request, res: Response, next: NextFunction) => {
-  const match = findMatchingRoute(req.path);
+  const match = findMatchingRoute(req.path, req.method);
 
   if (!match) {
     return ApiResponse.error(res, "Route not found", 404);

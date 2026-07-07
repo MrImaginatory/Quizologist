@@ -6,6 +6,7 @@ export interface AuthRequest extends Request {
 }
 
 export type QuestionType = "mcq" | "descriptive";
+export type DifficultyLevel = "beginner" | "normal" | "mid" | "hard" | "expert";
 
 export interface QuestionAttributes {
   id: string;
@@ -15,6 +16,7 @@ export interface QuestionAttributes {
   correctAnswer: string;
   explanation: string | null;
   videoUrl: string | null;
+  difficulty: DifficultyLevel;
   topic_id: string;
   subject_id: string;
   faculty_id: string;

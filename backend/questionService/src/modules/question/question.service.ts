@@ -2,6 +2,9 @@ import { Op } from "sequelize";
 import { ApiError } from "../../utils/ApiError";
 import { RESPONSE_MESSAGES } from "../../utils/responseMessages";
 import Question from "./question.model";
+import Topic from "../topic/topic.model";
+import Subject from "../subject/subject.model";
+import Faculty from "../faculty/faculty.model";
 import {
   CreateQuestionInput,
   UpdateQuestionInput,
@@ -13,8 +16,35 @@ import {
 
 const TIMESTAMP_EXCLUDE = { exclude: ["createdAt", "updatedAt", "deletedAt"] };
 
+async function validateForeignKeys(data: { topic_id: string; subject_id: string; faculty_id: string }) {
+  const topic = await Topic.findByPk(data.topic_id);
+  if (!topic) throw ApiError.badRequest(RESPONSE_MESSAGES.ERROR.TOPIC_NOT_FOUND);
+
+  const subject = await Subject.findByPk(data.subject_id);
+  if (!subject) throw ApiError.badRequest(RESPONSE_MESSAGES.ERROR.SUBJECT_NOT_FOUND);
+
+  const faculty = await Faculty.findByPk(data.faculty_id);
+  if (!faculty) throw ApiError.badRequest(RESPONSE_MESSAGES.ERROR.FACULTY_NOT_FOUND);
+}
+
+async function checkDuplicateQuestion(questionText: string, topicId: string) {
+  const existing = await Question.findOne({
+    where: {
+      question: questionText,
+      topic_id: topicId,
+    },
+  });
+
+  if (existing) {
+    throw ApiError.conflict(RESPONSE_MESSAGES.ERROR.QUESTION_EXISTS);
+  }
+}
+
 export class QuestionService {
   static async create(data: CreateQuestionInput, userId: string) {
+    await validateForeignKeys(data);
+    await checkDuplicateQuestion(data.question, data.topic_id);
+
     const question = await Question.create({
       type: data.type,
       question: data.question,
@@ -22,6 +52,7 @@ export class QuestionService {
       correctAnswer: data.correctAnswer,
       explanation: data.explanation || null,
       videoUrl: data.videoUrl || null,
+      difficulty: data.difficulty,
       topic_id: data.topic_id,
       subject_id: data.subject_id,
       faculty_id: data.faculty_id,
@@ -120,12 +151,25 @@ export class QuestionService {
       throw ApiError.notFound(RESPONSE_MESSAGES.ERROR.QUESTION_NOT_FOUND);
     }
 
+    if (data.topic_id || data.subject_id || data.faculty_id) {
+      await validateForeignKeys({
+        topic_id: data.topic_id || question.topic_id,
+        subject_id: data.subject_id || question.subject_id,
+        faculty_id: data.faculty_id || question.faculty_id,
+      });
+    }
+
+    if (data.question && data.question !== question.question) {
+      await checkDuplicateQuestion(data.question, data.topic_id || question.topic_id);
+    }
+
     if (data.type) question.set("type", data.type);
     if (data.question) question.set("question", data.question);
     if (data.choices !== undefined) question.set("choices", data.choices);
     if (data.correctAnswer) question.set("correctAnswer", data.correctAnswer);
     if (data.explanation !== undefined) question.set("explanation", data.explanation);
     if (data.videoUrl !== undefined) question.set("videoUrl", data.videoUrl);
+    if (data.difficulty) question.set("difficulty", data.difficulty);
     if (data.topic_id) question.set("topic_id", data.topic_id);
     if (data.subject_id) question.set("subject_id", data.subject_id);
     if (data.faculty_id) question.set("faculty_id", data.faculty_id);

@@ -1,6 +1,6 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../../config/database";
-import { QuestionAttributes, QuestionType } from "../../types";
+import { QuestionAttributes, QuestionType, DifficultyLevel } from "../../types";
 
 type QuestionCreationAttributes = Optional<
   QuestionAttributes,
@@ -8,6 +8,7 @@ type QuestionCreationAttributes = Optional<
   | "choices"
   | "explanation"
   | "videoUrl"
+  | "difficulty"
   | "createdAt"
   | "updatedAt"
   | "deletedAt"
@@ -24,6 +25,7 @@ class Question
   declare correctAnswer: string;
   declare explanation: string | null;
   declare videoUrl: string | null;
+  declare difficulty: DifficultyLevel;
   declare topic_id: string;
   declare subject_id: string;
   declare faculty_id: string;
@@ -65,6 +67,11 @@ Question.init(
       type: DataTypes.STRING(500),
       allowNull: true,
     },
+    difficulty: {
+      type: DataTypes.ENUM("beginner", "normal", "mid", "hard", "expert"),
+      allowNull: false,
+      defaultValue: "normal",
+    },
     topic_id: {
       type: DataTypes.UUID,
       allowNull: false,
@@ -101,6 +108,15 @@ Question.init(
     paranoid: true,
     underscored: true,
     modelName: "Question",
+    indexes: [
+      {
+        unique: true,
+        fields: ["question", "topic_id"],
+        where: {
+          deleted_at: null,
+        },
+      },
+    ],
   }
 );
 

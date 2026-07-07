@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 const questionTypeEnum = z.enum(["mcq", "descriptive"]);
+const difficultyEnum = z.enum(["beginner", "normal", "mid", "hard", "expert"]);
 
 export const createQuestionSchema = z
   .object({
@@ -14,6 +15,7 @@ export const createQuestionSchema = z
     correctAnswer: z.string().min(1, "Correct answer is required"),
     explanation: z.string().optional(),
     videoUrl: z.string().url("Invalid URL format").optional(),
+    difficulty: difficultyEnum.default("normal"),
     topic_id: z.string().uuid("Invalid topic ID format"),
     subject_id: z.string().uuid("Invalid subject ID format"),
     faculty_id: z.string().uuid("Invalid faculty ID format"),
@@ -58,6 +60,7 @@ export const updateQuestionSchema = z
     correctAnswer: z.string().min(1).optional(),
     explanation: z.string().optional(),
     videoUrl: z.string().url().optional().nullable(),
+    difficulty: difficultyEnum.optional(),
     topic_id: z.string().uuid().optional(),
     subject_id: z.string().uuid().optional(),
     faculty_id: z.string().uuid().optional(),
