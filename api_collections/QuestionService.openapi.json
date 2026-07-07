@@ -1,0 +1,561 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "QuestionService",
+    "description": "",
+    "version": "1.0.0"
+  },
+  "tags": [],
+  "paths": {
+    "/{id}": {
+      "get": {
+        "summary": "Get Question By Id",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "0f06abdc-16aa-45f2-98fb-0a70b303719e",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "examples": {
+                  "1": {
+                    "summary": "OK",
+                    "value": {
+                      "statusCode": 200,
+                      "success": true,
+                      "message": "Question retrieved successfully",
+                      "data": {
+                        "id": "0f06abdc-16aa-45f2-98fb-0a70b303719e",
+                        "type": "mcq",
+                        "question": "What is the time complexity of binary search?",
+                        "choices": [
+                          "O(n)",
+                          "O(log n)",
+                          "O(n^2)",
+                          "O(1)"
+                        ],
+                        "correctAnswer": "O(log n)",
+                        "explanation": "Binary search halves the search space each step.",
+                        "videoUrl": "https://youtube.com/watch?v=example",
+                        "difficulty": "mid",
+                        "topic_id": "e74872fd-544a-4b2d-8d3b-4eec6eac8765",
+                        "subject_id": "496fad96-d68e-4691-af2f-3f2c2b8e8fcd",
+                        "faculty_id": "dfcc263a-6ff5-4b87-bca0-09e894fe9370",
+                        "questionAddedBy": "7a38f123-d17f-461b-aae4-0f651555761b",
+                        "topic": {
+                          "id": "e74872fd-544a-4b2d-8d3b-4eec6eac8765",
+                          "name": "binary trees"
+                        },
+                        "subject": {
+                          "id": "496fad96-d68e-4691-af2f-3f2c2b8e8fcd",
+                          "name": "data structures"
+                        },
+                        "faculty": {
+                          "id": "dfcc263a-6ff5-4b87-bca0-09e894fe9370",
+                          "name": "computer science"
+                        }
+                      }
+                    }
+                  },
+                  "2": {
+                    "summary": "OK",
+                    "value": {
+                      "statusCode": 200,
+                      "success": true,
+                      "message": "Question retrieved successfully",
+                      "data": {
+                        "id": "0f06abdc-16aa-45f2-98fb-0a70b303719e",
+                        "type": "mcq",
+                        "question": "What is the time complexity of binary search?",
+                        "choices": [
+                          "O(n)",
+                          "O(log n)",
+                          "O(n^2)",
+                          "O(1)"
+                        ],
+                        "correctAnswer": "O(log n)",
+                        "explanation": "Binary search halves the search space each step.",
+                        "videoUrl": "https://youtube.com/watch?v=example",
+                        "difficulty": "mid",
+                        "topic_id": "e74872fd-544a-4b2d-8d3b-4eec6eac8765",
+                        "subject_id": "496fad96-d68e-4691-af2f-3f2c2b8e8fcd",
+                        "faculty_id": "dfcc263a-6ff5-4b87-bca0-09e894fe9370",
+                        "questionAddedBy": "7a38f123-d17f-461b-aae4-0f651555761b",
+                        "topic": {
+                          "id": "e74872fd-544a-4b2d-8d3b-4eec6eac8765",
+                          "name": "binary trees"
+                        },
+                        "subject": {
+                          "id": "496fad96-d68e-4691-af2f-3f2c2b8e8fcd",
+                          "name": "data structures"
+                        },
+                        "faculty": {
+                          "id": "dfcc263a-6ff5-4b87-bca0-09e894fe9370",
+                          "name": "computer science"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "summary": "Update Question",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "0f06abdc-16aa-45f2-98fb-0a70b303719e",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              },
+              "example": {
+                "type": "mcq",
+                "question": "What is the time complexity of binary search?",
+                "choices": [
+                  "O(n)",
+                  "O(log n)",
+                  "O(n^2)",
+                  "O(1)"
+                ],
+                "correctAnswer": "O(log n)",
+                "explanation": "Binary search halves the search space each step.",
+                "videoUrl": "https://youtube.com/watch?v=example",
+                "difficulty": "mid",
+                "topic_id": "e74872fd-544a-4b2d-8d3b-4eec6eac8765",
+                "subject_id": "496fad96-d68e-4691-af2f-3f2c2b8e8fcd",
+                "faculty_id": "dfcc263a-6ff5-4b87-bca0-09e894fe9370"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "statusCode": 401,
+                  "success": false,
+                  "message": "Token is required",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "summary": "Delete Question",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "0f06abdc-16aa-45f2-98fb-0a70b303719e",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "statusCode": 404,
+                  "success": false,
+                  "message": "Question not found",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/": {
+      "get": {
+        "summary": "Get Questions",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "statusCode": 200,
+                  "success": true,
+                  "message": "Questions retrieved successfully",
+                  "data": {
+                    "questions": [
+                      {
+                        "id": "6de683e6-79e6-4a29-b932-edf4ea245358",
+                        "type": "mcq",
+                        "question": "What is the time complexity of binary search?",
+                        "choices": [
+                          "O(n)",
+                          "O(log n)",
+                          "O(n^2)",
+                          "O(1)"
+                        ],
+                        "correctAnswer": "O(log n)",
+                        "explanation": "Binary search halves the search space each step.",
+                        "videoUrl": "https://youtube.com/watch?v=example",
+                        "difficulty": "normal",
+                        "topic_id": "2ea811e3-d04d-4d33-9cd2-5afd7d93b9bb",
+                        "subject_id": "be277672-e809-437b-b45c-b0d0230a9e86",
+                        "faculty_id": "3c4c9362-8600-4b15-8e18-c06a01f47b34",
+                        "questionAddedBy": "7a38f123-d17f-461b-aae4-0f651555761b"
+                      }
+                    ],
+                    "pagination": {
+                      "total": 1,
+                      "page": 1,
+                      "limit": 10,
+                      "totalPages": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "summary": "Add Question",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              },
+              "example": {
+                "type": "mcq",
+                "question": "What is the time complexity of binary search?",
+                "choices": [
+                  "O(n)",
+                  "O(log n)",
+                  "O(n^2)",
+                  "O(1)"
+                ],
+                "correctAnswer": "O(log n)",
+                "explanation": "Binary search halves the search space each step.",
+                "videoUrl": "https://youtube.com/watch?v=example",
+                "topic_id": "e74872fd-544a-4b2d-8d3b-4eec6eac8765",
+                "subject_id": "496fad96-d68e-4691-af2f-3f2c2b8e8fcd",
+                "faculty_id": "dfcc263a-6ff5-4b87-bca0-09e894fe9370"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "statusCode": 401,
+                  "success": false,
+                  "message": "Token is required",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/search": {
+      "get": {
+        "summary": "Search Question",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "example": "h",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "statusCode": 200,
+                  "success": true,
+                  "message": "Questions retrieved successfully",
+                  "data": {
+                    "questions": [
+                      {
+                        "id": "0f06abdc-16aa-45f2-98fb-0a70b303719e",
+                        "type": "mcq",
+                        "question": "What is the time complexity of binary search?",
+                        "choices": [
+                          "O(n)",
+                          "O(log n)",
+                          "O(n^2)",
+                          "O(1)"
+                        ],
+                        "correctAnswer": "O(log n)",
+                        "explanation": "Binary search halves the search space each step.",
+                        "videoUrl": "https://youtube.com/watch?v=example",
+                        "difficulty": "mid",
+                        "topic_id": "e74872fd-544a-4b2d-8d3b-4eec6eac8765",
+                        "subject_id": "496fad96-d68e-4691-af2f-3f2c2b8e8fcd",
+                        "faculty_id": "dfcc263a-6ff5-4b87-bca0-09e894fe9370",
+                        "questionAddedBy": "7a38f123-d17f-461b-aae4-0f651555761b",
+                        "topic": {
+                          "id": "e74872fd-544a-4b2d-8d3b-4eec6eac8765",
+                          "name": "binary trees"
+                        },
+                        "subject": {
+                          "id": "496fad96-d68e-4691-af2f-3f2c2b8e8fcd",
+                          "name": "data structures"
+                        },
+                        "faculty": {
+                          "id": "dfcc263a-6ff5-4b87-bca0-09e894fe9370",
+                          "name": "computer science"
+                        }
+                      }
+                    ],
+                    "pagination": {
+                      "total": 1,
+                      "page": 1,
+                      "limit": 10,
+                      "totalPages": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/topic/{topicId}": {
+      "get": {
+        "summary": "Question by Topics",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "topicId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "e74872fd-544a-4b2d-8d3b-4eec6eac8765",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "statusCode": 200,
+                  "success": true,
+                  "message": "Questions retrieved successfully",
+                  "data": {
+                    "questions": [
+                      {
+                        "id": "0f06abdc-16aa-45f2-98fb-0a70b303719e",
+                        "type": "mcq",
+                        "question": "What is the time complexity of binary search?",
+                        "choices": [
+                          "O(n)",
+                          "O(log n)",
+                          "O(n^2)",
+                          "O(1)"
+                        ],
+                        "correctAnswer": "O(log n)",
+                        "explanation": "Binary search halves the search space each step.",
+                        "videoUrl": "https://youtube.com/watch?v=example",
+                        "difficulty": "mid",
+                        "topic_id": "e74872fd-544a-4b2d-8d3b-4eec6eac8765",
+                        "subject_id": "496fad96-d68e-4691-af2f-3f2c2b8e8fcd",
+                        "faculty_id": "dfcc263a-6ff5-4b87-bca0-09e894fe9370",
+                        "questionAddedBy": "7a38f123-d17f-461b-aae4-0f651555761b",
+                        "topic": {
+                          "id": "e74872fd-544a-4b2d-8d3b-4eec6eac8765",
+                          "name": "binary trees"
+                        },
+                        "subject": {
+                          "id": "496fad96-d68e-4691-af2f-3f2c2b8e8fcd",
+                          "name": "data structures"
+                        },
+                        "faculty": {
+                          "id": "dfcc263a-6ff5-4b87-bca0-09e894fe9370",
+                          "name": "computer science"
+                        }
+                      }
+                    ],
+                    "pagination": {
+                      "total": 1,
+                      "page": 1,
+                      "limit": 10,
+                      "totalPages": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    }
+  },
+  "webhooks": {},
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/api/question",
+      "description": "Develop Env"
+    },
+    {
+      "url": "",
+      "description": "Testing Env"
+    },
+    {
+      "url": "",
+      "description": "Prod Env"
+    }
+  ],
+  "security": [
+    {
+      "bearer": []
+    }
+  ]
+}

@@ -1,0 +1,367 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "UserService",
+    "description": "",
+    "version": "1.0.0"
+  },
+  "tags": [],
+  "paths": {
+    "/signup": {
+      "post": {
+        "summary": "SignUp",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              },
+              "example": {
+                "fname": "{{$person.firstName}}",
+                "lname": "{{$person.lastName}}",
+                "role": "student",
+                "email": "{{$internet.email}}",
+                "mobileNumber": "{{$number.int(min=8888888888,max=9999999999)}}",
+                "password": "secret123"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "statusCode": 201,
+                  "success": true,
+                  "message": "User registered successfully",
+                  "data": {
+                    "user": {
+                      "id": "e241e30b-c651-4cf3-9579-3aba373bb4d3",
+                      "fname": "thea",
+                      "lname": "buckridge",
+                      "role": "student",
+                      "email": "giovani.romaguera@hotmail.com",
+                      "mobilenumber": "9605797754",
+                      "updatedAt": "2026-07-06T13:33:56.566Z",
+                      "createdAt": "2026-07-06T13:33:56.566Z",
+                      "deletedAt": null
+                    },
+                    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJlMjQxZTMwYi1jNjUxLTRjZjMtOTU3OS0zYWJhMzczYmI0ZDMiLCJlbWFpbCI6Imdpb3Zhbmkucm9tYWd1ZXJhQGhvdG1haWwuY29tIiwicm9sZSI6InN0dWRlbnQiLCJpYXQiOjE3ODMzNDQ4MzYsImV4cCI6MTc4Mzk0OTYzNn0.l1rQMSGlV1YoE67HmujGWeswsOHJSg4ITgXegFEsozg"
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/login": {
+      "post": {
+        "summary": "Admin Login",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              },
+              "example": {
+                "email": "admin@quizologist.com",
+                "password": "Admin@123"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/role/{role}": {
+      "get": {
+        "summary": "Get User by Role",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "role",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "teacher",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "statusCode": 200,
+                  "success": true,
+                  "message": "Users retrieved successfully",
+                  "data": {
+                    "users": [
+                      {
+                        "id": "afa50e77-3fc1-46b8-9264-ec82ce2ea5f1",
+                        "fname": "amelia",
+                        "lname": "roob",
+                        "role": "teacher",
+                        "email": "destany_williamson28@yahoo.com",
+                        "mobilenumber": "9884395462",
+                        "createdAt": "2026-07-06T13:34:50.631Z",
+                        "updatedAt": "2026-07-06T13:34:50.631Z",
+                        "deletedAt": null
+                      },
+                      {
+                        "id": "3e137564-adc7-4cbc-ad63-ed261db3178b",
+                        "fname": "louvenia",
+                        "lname": "mueller",
+                        "role": "teacher",
+                        "email": "erin_kub@yahoo.com",
+                        "mobilenumber": "9605171749",
+                        "createdAt": "2026-07-06T13:34:21.608Z",
+                        "updatedAt": "2026-07-06T13:34:21.608Z",
+                        "deletedAt": null
+                      }
+                    ],
+                    "pagination": {
+                      "total": 2,
+                      "page": 1,
+                      "limit": 10,
+                      "totalPages": 1
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/{id}": {
+      "get": {
+        "summary": "Get User By Id",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "7a38f123-d17f-461b-aae4-0f651555761b",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "statusCode": 200,
+                  "success": true,
+                  "message": "User retrieved successfully",
+                  "data": {
+                    "id": "afa50e77-3fc1-46b8-9264-ec82ce2ea5f1",
+                    "fname": "amelia",
+                    "lname": "roob",
+                    "role": "teacher",
+                    "email": "destany_williamson28@yahoo.com",
+                    "mobilenumber": "9884395462",
+                    "createdAt": "2026-07-06T13:34:50.631Z",
+                    "updatedAt": "2026-07-06T13:34:50.631Z",
+                    "deletedAt": null
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/": {
+      "get": {
+        "summary": "Get All Users",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "statusCode": 200,
+                  "success": true,
+                  "message": "Users retrieved successfully",
+                  "data": {
+                    "users": [
+                      {
+                        "id": "afa50e77-3fc1-46b8-9264-ec82ce2ea5f1",
+                        "fname": "amelia",
+                        "lname": "roob",
+                        "role": "teacher",
+                        "email": "destany_williamson28@yahoo.com",
+                        "mobilenumber": "9884395462",
+                        "createdAt": "2026-07-06T13:34:50.631Z",
+                        "updatedAt": "2026-07-06T13:34:50.631Z",
+                        "deletedAt": null
+                      },
+                      {
+                        "id": "3e137564-adc7-4cbc-ad63-ed261db3178b",
+                        "fname": "louvenia",
+                        "lname": "mueller",
+                        "role": "teacher",
+                        "email": "erin_kub@yahoo.com",
+                        "mobilenumber": "9605171749",
+                        "createdAt": "2026-07-06T13:34:21.608Z",
+                        "updatedAt": "2026-07-06T13:34:21.608Z",
+                        "deletedAt": null
+                      },
+                      {
+                        "id": "182aae19-e82c-46f7-aa1c-fe331e33f7eb",
+                        "fname": "laurine",
+                        "lname": "koch",
+                        "role": "student",
+                        "email": "fabiola.haley@yahoo.com",
+                        "mobilenumber": "9066574641",
+                        "createdAt": "2026-07-06T13:34:06.795Z",
+                        "updatedAt": "2026-07-06T13:34:06.795Z",
+                        "deletedAt": null
+                      },
+                      {
+                        "id": "e241e30b-c651-4cf3-9579-3aba373bb4d3",
+                        "fname": "thea",
+                        "lname": "buckridge",
+                        "role": "student",
+                        "email": "giovani.romaguera@hotmail.com",
+                        "mobilenumber": "9605797754",
+                        "createdAt": "2026-07-06T13:33:56.566Z",
+                        "updatedAt": "2026-07-06T13:33:56.566Z",
+                        "deletedAt": null
+                      }
+                    ],
+                    "pagination": {
+                      "total": 4,
+                      "page": 1,
+                      "limit": 10,
+                      "totalPages": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    }
+  },
+  "webhooks": {},
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/api/user",
+      "description": "Develop Env"
+    },
+    {
+      "url": "https://test.your-api-server.com",
+      "description": "Testing Env"
+    },
+    {
+      "url": "https://prod.your-api-server.com",
+      "description": "Prod Env"
+    }
+  ],
+  "security": [
+    {
+      "bearer": []
+    }
+  ]
+}
