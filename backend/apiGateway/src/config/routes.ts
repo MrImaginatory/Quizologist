@@ -89,12 +89,20 @@ export const routes: RouteConfig[] = [
     roles: ["student"],
     methods: ["POST"],
   },
-  // View enrollments — student only
+  // View own enrollments — student only
   {
     path: "/enrollment",
     target: `${env.STUDENT_SERVICE_URL}/api/enrollment`,
     auth: true,
     roles: ["student"],
+    methods: ["GET"],
+  },
+  // View enrollments by student ID — admin and teacher
+  {
+    path: "/enrollment/student",
+    target: `${env.STUDENT_SERVICE_URL}/api/enrollment/student`,
+    auth: true,
+    roles: ["admin", "teacher"],
     methods: ["GET"],
   },
   // Unenroll — student only

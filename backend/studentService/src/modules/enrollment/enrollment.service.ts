@@ -5,19 +5,22 @@ import Faculty from "../faculty/faculty.model";
 import Subject from "../subject/subject.model";
 import Topic from "../topic/topic.model";
 import {
+  EnrollmentItemInput,
   CreateEnrollmentInput,
   EnrollmentIdParam,
   GetAllEnrollmentsInput,
 } from "./enrollment.validation";
 
-const TIMESTAMP_EXCLUDE = { exclude: ["createdAt", "updatedAt", "deletedAt"] };
+const TIMESTAMP_EXCLUDE = {
+  exclude: ["faculty_id", "subject_id", "topic_id", "createdAt", "updatedAt", "deletedAt"],
+};
 
 const FACULTY_INCLUDE = { model: Faculty, as: "faculty", attributes: ["id", "name"] };
 const SUBJECT_INCLUDE = { model: Subject, as: "subject", attributes: ["id", "name"] };
 const TOPIC_INCLUDE = { model: Topic, as: "topic", attributes: ["id", "name"] };
 const ALL_INCLUDES = [FACULTY_INCLUDE, SUBJECT_INCLUDE, TOPIC_INCLUDE];
 
-async function validateEnrollment(data: CreateEnrollmentInput) {
+async function validateEnrollmentItem(data: EnrollmentItemInput) {
   const faculty = await Faculty.findByPk(data.faculty_id);
   if (!faculty) throw ApiError.badRequest(RESPONSE_MESSAGES.ERROR.FACULTY_NOT_FOUND);
 
@@ -44,7 +47,7 @@ async function validateEnrollment(data: CreateEnrollmentInput) {
   }
 }
 
-async function checkDuplicate(studentId: string, data: CreateEnrollmentInput) {
+async function checkDuplicate(studentId: string, data: EnrollmentItemInput) {
   const existing = await Enrollment.findOne({
     where: {
       student_id: studentId,
@@ -54,29 +57,40 @@ async function checkDuplicate(studentId: string, data: CreateEnrollmentInput) {
     },
   });
 
-  if (existing) {
-    throw ApiError.conflict(RESPONSE_MESSAGES.ERROR.ENROLLMENT_EXISTS);
-  }
+  return existing !== null;
 }
 
 export class EnrollmentService {
-  static async create(data: CreateEnrollmentInput, studentId: string) {
-    await validateEnrollment(data);
-    await checkDuplicate(studentId, data);
+  static async createBatch(data: CreateEnrollmentInput, studentId: string) {
+    const created: any[] = [];
+    const skipped: { enrollment: EnrollmentItemInput; reason: string }[] = [];
 
-    const enrollment = await Enrollment.create({
-      student_id: studentId,
-      faculty_id: data.faculty_id,
-      subject_id: data.subject_id || null,
-      topic_id: data.topic_id || null,
-    });
+    for (const item of data.enrollments) {
+      const isDuplicate = await checkDuplicate(studentId, item);
 
-    const result = await Enrollment.findByPk(enrollment.id, {
-      attributes: TIMESTAMP_EXCLUDE,
-      include: ALL_INCLUDES,
-    });
+      if (isDuplicate) {
+        skipped.push({ enrollment: item, reason: "Already enrolled" });
+        continue;
+      }
 
-    return result!.toJSON();
+      await validateEnrollmentItem(item);
+
+      const enrollment = await Enrollment.create({
+        student_id: studentId,
+        faculty_id: item.faculty_id,
+        subject_id: item.subject_id || null,
+        topic_id: item.topic_id || null,
+      });
+
+      const result = await Enrollment.findByPk(enrollment.id, {
+        attributes: TIMESTAMP_EXCLUDE,
+        include: ALL_INCLUDES,
+      });
+
+      created.push(result!.toJSON());
+    }
+
+    return { created, skipped, totalCreated: created.length, totalSkipped: skipped.length };
   }
 
   static async getAll(studentId: string, data: GetAllEnrollmentsInput) {
@@ -129,5 +143,29 @@ export class EnrollmentService {
     await enrollment.destroy();
 
     return { message: RESPONSE_MESSAGES.SUCCESS.UNENROLLED };
+  }
+
+  static async getByStudentId(studentId: string, data: GetAllEnrollmentsInput) {
+    const { page, limit } = data;
+    const offset = (page - 1) * limit;
+
+    const { rows, count } = await Enrollment.findAndCountAll({
+      where: { student_id: studentId },
+      attributes: TIMESTAMP_EXCLUDE,
+      include: ALL_INCLUDES,
+      limit,
+      offset,
+      order: [["createdAt", "DESC"]],
+    });
+
+    return {
+      enrollments: rows.map((e) => e.toJSON()),
+      pagination: {
+        total: count,
+        page,
+        limit,
+        totalPages: Math.ceil(count / limit),
+      },
+    };
   }
 }

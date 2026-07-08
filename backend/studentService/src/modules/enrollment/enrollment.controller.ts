@@ -6,6 +6,7 @@ import { RESPONSE_MESSAGES } from "../../utils/responseMessages";
 import {
   createEnrollmentSchema,
   enrollmentIdParamSchema,
+  studentIdParamSchema,
   getAllEnrollmentsSchema,
 } from "./enrollment.validation";
 
@@ -13,7 +14,7 @@ export class EnrollmentController {
   static async create(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const data = createEnrollmentSchema.parse(req.body);
-      const result = await EnrollmentService.create(data, req.user!.userId);
+      const result = await EnrollmentService.createBatch(data, req.user!.userId);
 
       return ApiResponse.success(
         res,
@@ -64,6 +65,22 @@ export class EnrollmentController {
       return ApiResponse.success(
         res,
         RESPONSE_MESSAGES.SUCCESS.UNENROLLED,
+        result
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getByStudentId(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const params = studentIdParamSchema.parse(req.params);
+      const query = getAllEnrollmentsSchema.parse(req.query);
+      const result = await EnrollmentService.getByStudentId(params.studentId, query);
+
+      return ApiResponse.success(
+        res,
+        RESPONSE_MESSAGES.SUCCESS.ENROLLMENTS_FOUND,
         result
       );
     } catch (error) {

@@ -8,7 +8,7 @@ Base URL: `http://localhost:3004/api/enrollment`
 
 ## POST /
 
-Enroll in a faculty, subject, or topic.
+Batch enroll in multiple faculties, subjects, and topics in a single request.
 
 **Headers:**
 ```
@@ -16,35 +16,24 @@ Content-Type: application/json
 x-user-id: <uuid>
 ```
 
-**Body — Faculty level:**
+**Body:**
 ```json
 {
-  "faculty_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-}
-```
-
-**Body — Subject level:**
-```json
-{
-  "faculty_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-  "subject_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901"
-}
-```
-
-**Body — Topic level:**
-```json
-{
-  "faculty_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-  "subject_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
-  "topic_id": "c3d4e5f6-a7b8-9012-cdef-123456789012"
+  "enrollments": [
+    { "faculty_id": "a1b2c3d4-..." },
+    { "faculty_id": "a1b2c3d4-...", "subject_id": "b2c3d4e5-..." },
+    { "faculty_id": "a1b2c3d4-...", "subject_id": "b2c3d4e5-...", "topic_id": "c3d4e5f6-..." },
+    { "faculty_id": "d4e5f6a7-...", "subject_id": "e5f6a7b8-...", "topic_id": "f6a7b8c9-..." }
+  ]
 }
 ```
 
 | Field | Type | Required | Rules |
 |-------|------|----------|-------|
-| faculty_id | string | Yes | UUID, must exist |
-| subject_id | string | No | UUID, must belong to the given faculty |
-| topic_id | string | No | UUID, must belong to the given subject. Requires subject_id. |
+| enrollments | array | Yes | 1-50 items per request |
+| enrollments[].faculty_id | string | Yes | UUID, must exist |
+| enrollments[].subject_id | string | No | UUID, must belong to the faculty |
+| enrollments[].topic_id | string | No | UUID, must belong to the subject. Requires subject_id. |
 
 **201 Created:**
 ```json
@@ -52,14 +41,23 @@ x-user-id: <uuid>
   "success": true,
   "message": "Enrolled successfully",
   "data": {
-    "id": "d4e5f6a7-b8c9-0123-def4-567890abcdef",
-    "student_id": "14312853-91cc-473b-9516-5265e7d6f4c7",
-    "faculty_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-    "subject_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
-    "topic_id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
-    "faculty": { "id": "a1b2c3d4-...", "name": "computer science" },
-    "subject": { "id": "b2c3d4e5-...", "name": "data structures" },
-    "topic": { "id": "c3d4e5f6-...", "name": "binary trees" }
+    "created": [
+      {
+        "id": "d4e5f6a7-...",
+        "student_id": "14312853-...",
+        "faculty": { "id": "a1b2c3d4-...", "name": "computer science" },
+        "subject": { "id": "b2c3d4e5-...", "name": "data structures" },
+        "topic": { "id": "c3d4e5f6-...", "name": "binary trees" }
+      }
+    ],
+    "skipped": [
+      {
+        "enrollment": { "faculty_id": "a1b2c3d4-...", "subject_id": "b2c3d4e5-..." },
+        "reason": "Already enrolled"
+      }
+    ],
+    "totalCreated": 1,
+    "totalSkipped": 1
   }
 }
 ```
@@ -73,20 +71,11 @@ x-user-id: <uuid>
 }
 ```
 
-**409 Conflict — Already enrolled:**
-```json
-{
-  "success": false,
-  "message": "Already enrolled in this combination",
-  "data": null
-}
-```
-
 ---
 
 ## GET /
 
-List all enrollments for the authenticated student.
+List own enrollments (student only).
 
 **Query Params:** `page` (default 1), `limit` (default 10, max 100)
 
@@ -100,19 +89,6 @@ List all enrollments for the authenticated student.
       {
         "id": "d4e5f6a7-...",
         "student_id": "14312853-...",
-        "faculty_id": "a1b2c3d4-...",
-        "subject_id": null,
-        "topic_id": null,
-        "faculty": { "id": "a1b2c3d4-...", "name": "computer science" },
-        "subject": null,
-        "topic": null
-      },
-      {
-        "id": "e5f6a7b8-...",
-        "student_id": "14312853-...",
-        "faculty_id": "a1b2c3d4-...",
-        "subject_id": "b2c3d4e5-...",
-        "topic_id": "c3d4e5f6-...",
         "faculty": { "id": "a1b2c3d4-...", "name": "computer science" },
         "subject": { "id": "b2c3d4e5-...", "name": "data structures" },
         "topic": { "id": "c3d4e5f6-...", "name": "binary trees" }
@@ -127,6 +103,18 @@ List all enrollments for the authenticated student.
   }
 }
 ```
+
+---
+
+## GET /student/:studentId
+
+Get enrollments for a specific student (admin/teacher only).
+
+**Path Params:** `studentId` — UUID of the student
+
+**Query Params:** `page`, `limit`
+
+**200 OK:** Same structure as GET /
 
 ---
 
@@ -173,15 +161,16 @@ Unenroll (soft delete).
 
 ---
 
-## Validation Rules Summary
+## Batch Enrollment Rules
 
 | Rule | Description |
 |------|-------------|
-| Faculty required | `faculty_id` must reference an existing, non-deleted faculty |
+| Faculty required | Every enrollment item must have a `faculty_id` |
 | Subject ownership | `subject_id` must belong to the given `faculty_id` |
 | Topic ownership | `topic_id` must belong to the given `subject_id` |
 | Topic needs subject | `subject_id` is required when `topic_id` is provided |
-| No duplicates | Same student + faculty + subject + topic combination is blocked |
+| No duplicates | Same student + faculty + subject + topic combo is skipped |
+| Batch size | 1-50 enrollments per request |
 
 ---
 
@@ -195,6 +184,6 @@ Unenroll (soft delete).
 | 400 | Subject does not belong to the specified faculty |
 | 400 | Topic does not belong to the specified subject |
 | 400 | subject_id is required when topic_id is provided |
+| 400 | At least one enrollment is required |
 | 404 | Enrollment not found |
-| 409 | Already enrolled in this combination |
 | 500 | Internal server error |
