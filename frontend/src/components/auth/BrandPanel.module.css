@@ -1,0 +1,153 @@
+.brandPanel {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  width: 50%;
+  min-height: 100vh;
+  padding: 64px;
+  background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  max-width: 480px;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.logo {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 48px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: white;
+  animation: fadeIn 0.6s ease-out 0.1s both;
+}
+
+.logoIcon {
+  width: 44px;
+  height: 44px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.heading {
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 24px;
+  color: white;
+  animation: fadeIn 0.6s ease-out 0.2s both;
+}
+
+.subheading {
+  font-size: 18px;
+  opacity: 0.9;
+  line-height: 1.7;
+  margin-bottom: 48px;
+  color: white;
+  animation: fadeIn 0.6s ease-out 0.3s both;
+}
+
+.features {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.feature {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 16px;
+  opacity: 0.9;
+  color: white;
+  animation: fadeIn 0.6s ease-out 0.4s both;
+}
+
+.feature:nth-child(2) {
+  animation-delay: 0.5s;
+}
+
+.feature:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.featureIcon {
+  width: 24px;
+  height: 24px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.decorCircle {
+  position: absolute;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.08);
+  animation: pulse 4s ease-in-out infinite;
+}
+
+.circle1 {
+  width: 400px;
+  height: 400px;
+  top: -150px;
+  right: -150px;
+  animation-delay: 0s;
+}
+
+.circle2 {
+  width: 250px;
+  height: 250px;
+  bottom: -80px;
+  left: -80px;
+  animation-delay: 2s;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.08;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.12;
+  }
+}
+
+@media (min-width: 1024px) {
+  .brandPanel {
+    display: flex;
+  }
+}

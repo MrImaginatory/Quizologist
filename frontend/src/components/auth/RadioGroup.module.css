@@ -1,0 +1,54 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary, #374151);
+}
+
+.options {
+  display: flex;
+  gap: 12px;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 12px 20px;
+  border: 1px solid var(--border-primary, #e5e7eb);
+  border-radius: 8px;
+  transition: all 150ms ease-in-out;
+  background-color: var(--card-bg, white);
+  flex: 1;
+}
+
+.option:hover {
+  border-color: var(--color-primary-300, #a5b4fc);
+  /* background-color: var(--color-primary-50, #eef2ff); */
+}
+
+.option.selected {
+  border-color: var(--color-primary-500, #6366f1);
+  /* background-color: var(--color-primary-50, #eef2ff); */
+}
+
+.option input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-primary-500, #6366f1);
+  cursor: pointer;
+}
+
+.optionLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary, #374151);
+  cursor: pointer;
+}
