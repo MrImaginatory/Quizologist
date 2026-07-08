@@ -1,0 +1,394 @@
+# Test Service API Documentation
+
+Base URL: `http://localhost:3005/api/test`
+
+> In production, all REST requests go through the API Gateway at `http://localhost:3000/api/test`. Socket.IO connects directly to `http://localhost:3005`.
+
+---
+
+## Authentication
+
+All endpoints require a Bearer token or gateway headers (`x-user-id`, `x-user-email`, `x-user-role`).
+
+---
+
+## REST Endpoints
+
+### POST /start
+
+Start a new test session.
+
+**Body:**
+```json
+{
+  "subject_id": "uuid",   // optional — null for all enrolled
+  "topic_id": "uuid"      // optional — null for all enrolled
+}
+```
+
+| Field | Type | Required | Rules |
+|-------|------|----------|-------|
+| subject_id | string | No | UUID, must have enrollment |
+| topic_id | string | No | UUID, must have enrollment. Requires subject_id if provided. |
+
+**201 Created:**
+```json
+{
+  "success": true,
+  "message": "Test started successfully",
+  "data": {
+    "id": "uuid",
+    "test_id": "john_doe_mon_20260708_143000",
+    "status": "pending",
+    "totalQuestions": 25,
+    "questions": [
+      {
+        "index": 0,
+        "questionId": "uuid",
+        "question": "What is binary search?",
+        "choices": ["O(n)", "O(log n)", "O(n^2)", "O(1)"],
+        "difficulty": "normal",
+        "topicName": "binary trees",
+        "subjectName": "data structures",
+        "facultyName": "computer science"
+      }
+    ]
+  }
+}
+```
+
+**400 Bad Request:**
+```json
+{
+  "success": false,
+  "message": "You are not enrolled in this subject/topic"
+}
+```
+
+**409 Conflict:**
+```json
+{
+  "success": false,
+  "message": "You already have an active test. Complete or abandon it before starting a new one."
+}
+```
+
+---
+
+### POST /submit/:testId
+
+Submit and grade the test.
+
+**Path Params:** `testId` — UUID of the test session
+
+**200 OK:**
+```json
+{
+  "success": true,
+  "message": "Test submitted successfully",
+  "data": {
+    "id": "uuid",
+    "test_id": "john_doe_mon_20260708_143000",
+    "status": "completed",
+    "totalQuestions": 25,
+    "attempted": 22,
+    "skipped": 3,
+    "correct": 18,
+    "incorrect": 4,
+    "score": 72.00
+  }
+}
+```
+
+**400 Bad Request:**
+```json
+{
+  "success": false,
+  "message": "This test has already been submitted"
+}
+```
+
+---
+
+### GET /result/:testId
+
+Get full result with correct answers and explanations. Only works after test is completed.
+
+**Path Params:** `testId` — UUID
+
+**200 OK:**
+```json
+{
+  "success": true,
+  "message": "Result retrieved successfully",
+  "data": {
+    "id": "uuid",
+    "test_id": "john_doe_mon_20260708_143000",
+    "status": "completed",
+    "totalQuestions": 25,
+    "attempted": 22,
+    "skipped": 3,
+    "correct": 18,
+    "incorrect": 4,
+    "score": 72.00,
+    "disconnectCount": 1,
+    "startedAt": "2026-07-08T14:30:00.000Z",
+    "completedAt": "2026-07-08T15:00:00.000Z",
+    "questions": [
+      {
+        "index": 0,
+        "question": "What is binary search?",
+        "choices": ["O(n)", "O(log n)", "O(n^2)", "O(1)"],
+        "selectedAnswer": "O(log n)",
+        "correctAnswer": "O(log n)",
+        "isCorrect": true,
+        "explanation": "Binary search halves the search space each step.",
+        "videoUrl": "https://youtube.com/watch?v=example",
+        "timeTaken": 45,
+        "topicName": "binary trees",
+        "subjectName": "data structures",
+        "facultyName": "computer science"
+      }
+    ]
+  }
+}
+```
+
+**400 Bad Request:**
+```json
+{
+  "success": false,
+  "message": "Test has not been completed yet"
+}
+```
+
+---
+
+### GET /:testId
+
+Get test session details.
+
+**Path Params:** `testId` — UUID
+
+**200 OK:**
+```json
+{
+  "success": true,
+  "message": "Test retrieved successfully",
+  "data": {
+    "id": "uuid",
+    "test_id": "john_doe_mon_20260708_143000",
+    "status": "completed",
+    "totalQuestions": 25,
+    "attempted": 22,
+    "correct": 18,
+    "score": 72.00
+  }
+}
+```
+
+---
+
+### GET /history
+
+Get own test history (student only).
+
+**Query Params:** `page` (default 1), `limit` (default 10)
+
+**200 OK:**
+```json
+{
+  "success": true,
+  "message": "Tests retrieved successfully",
+  "data": {
+    "tests": [
+      {
+        "id": "uuid",
+        "test_id": "john_doe_mon_20260708_143000",
+        "status": "completed",
+        "totalQuestions": 25,
+        "correct": 18,
+        "score": 72.00,
+        "startedAt": "..."
+      }
+    ],
+    "pagination": {
+      "total": 10,
+      "page": 1,
+      "limit": 10,
+      "totalPages": 1
+    }
+  }
+}
+```
+
+---
+
+### GET /student/:studentId
+
+Get all tests for a student (admin/teacher only).
+
+**Path Params:** `studentId` — UUID
+
+**Query Params:** `page`, `limit`
+
+**200 OK:** Same structure as /history
+
+---
+
+### GET /student/:studentId/performance
+
+Get student performance summary (admin/teacher only).
+
+**Path Params:** `studentId` — UUID
+
+**200 OK:**
+```json
+{
+  "success": true,
+  "message": "Student performance retrieved successfully",
+  "data": {
+    "studentId": "uuid",
+    "totalTests": 10,
+    "averageScore": 72.50,
+    "highestScore": 95.00,
+    "lowestScore": 45.00,
+    "totalQuestions": 250,
+    "totalCorrect": 180,
+    "totalIncorrect": 50,
+    "totalSkipped": 20
+  }
+}
+```
+
+---
+
+### GET /detail/:testId
+
+Get full test detail with answers (admin/teacher only).
+
+**Path Params:** `testId` — UUID
+
+**200 OK:** Same structure as /result
+
+---
+
+### GET /all
+
+Get all tests with filters (admin only).
+
+**Query Params:**
+
+| Param | Type | Description |
+|-------|------|-------------|
+| page | number | Default 1 |
+| limit | number | Default 10, max 100 |
+| status | string | `pending`, `in_progress`, `completed`, `abandoned` |
+| subjectId | string | UUID filter |
+| dateFrom | string | ISO date string |
+| dateTo | string | ISO date string |
+
+**200 OK:** Same structure as /history
+
+---
+
+## Socket.IO
+
+Connect directly to `http://localhost:3005` with JWT token.
+
+**Connection:**
+```javascript
+const socket = io("http://localhost:3005", {
+  auth: { token: "eyJhbGciOiJIUzI1NiIs..." }
+});
+```
+
+### Client → Server Events
+
+| Event | Payload | Description |
+|-------|---------|-------------|
+| `join_test` | `{ testId }` | Join test room, get state |
+| `answer` | `{ testId, questionIndex, questionId, answer, timeTaken }` | Record answer |
+| `skip` | `{ testId, questionIndex, questionId, timeTaken }` | Skip question |
+| `submit_test` | `{ testId }` | Submit and grade test |
+| `heartbeat` | `{ testId, questionIndex }` | Keep-alive ping (send every 30s) |
+
+### Server → Client Events
+
+| Event | Payload | Description |
+|-------|---------|-------------|
+| `test_joined` | `{ testId, totalQuestions, currentIndex }` | Session state on join |
+| `answer_recorded` | `{ testId, questionIndex, success }` | Answer confirmation |
+| `test_submitted` | `{ testId, result }` | Submission result |
+| `error` | `{ message }` | Any error |
+
+### Example Flow
+
+```javascript
+// 1. Join test
+socket.emit("join_test", { testId: "uuid" });
+
+// 2. Listen for confirmation
+socket.on("test_joined", (data) => {
+  console.log(`Test started, ${data.totalQuestions} questions`);
+});
+
+// 3. Record answer
+socket.emit("answer", {
+  testId: "uuid",
+  questionIndex: 0,
+  questionId: "uuid",
+  answer: "O(log n)",
+  timeTaken: 45
+});
+
+// 4. Skip question
+socket.emit("skip", {
+  testId: "uuid",
+  questionIndex: 2,
+  questionId: "uuid",
+  timeTaken: 10
+});
+
+// 5. Heartbeat every 30s
+setInterval(() => {
+  socket.emit("heartbeat", { testId: "uuid", questionIndex: currentIndex });
+}, 30000);
+
+// 6. Submit test
+socket.emit("submit_test", { testId: "uuid" });
+
+// 7. Get result
+socket.on("test_submitted", (data) => {
+  console.log(`Score: ${data.result.score}%`);
+});
+```
+
+---
+
+## Validation Rules
+
+| Rule | Description |
+|------|-------------|
+| Active test check | Cannot start if one is already `pending` or `in_progress` |
+| Rate limit | Cannot create another test within 5 minutes |
+| Auto-abandon | Tests older than 24 hours are marked `abandoned` |
+| Enrollment required | Must be enrolled in the subject/topic |
+| Questions required | At least 1 question must exist for the scope |
+| Only owner | Student can only submit/view their own tests |
+
+---
+
+## Error Responses
+
+| Status | Message |
+|--------|---------|
+| 400 | You are not enrolled in this subject/topic |
+| 400 | No questions found for the selected scope |
+| 400 | Test has not been completed yet |
+| 400 | This test has already been submitted |
+| 400 | This test has been abandoned |
+| 404 | Test not found |
+| 409 | You already have an active test |
+| 409 | Please wait 5 minutes before creating another test |
+| 500 | Internal server error |

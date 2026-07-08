@@ -113,6 +113,72 @@ export const routes: RouteConfig[] = [
     roles: ["student"],
     methods: ["DELETE"],
   },
+
+  // ==================== Test Service ====================
+  // Start test — student only
+  {
+    path: "/test/start",
+    target: `${env.TEST_SERVICE_URL}/api/test/start`,
+    auth: true,
+    roles: ["student"],
+    methods: ["POST"],
+  },
+  // Submit test — student only
+  {
+    path: "/test/submit",
+    target: `${env.TEST_SERVICE_URL}/api/test/submit`,
+    auth: true,
+    roles: ["student"],
+    methods: ["POST"],
+  },
+  // Test history — student only
+  {
+    path: "/test/history",
+    target: `${env.TEST_SERVICE_URL}/api/test/history`,
+    auth: true,
+    roles: ["student"],
+    methods: ["GET"],
+  },
+  // Get student performance — admin and teacher
+  {
+    path: "/test/student",
+    target: `${env.TEST_SERVICE_URL}/api/test/student`,
+    auth: true,
+    roles: ["admin", "teacher"],
+    methods: ["GET"],
+  },
+  // Get test detail for admin — admin and teacher
+  {
+    path: "/test/detail",
+    target: `${env.TEST_SERVICE_URL}/api/test/detail`,
+    auth: true,
+    roles: ["admin", "teacher"],
+    methods: ["GET"],
+  },
+  // Get all tests — admin only
+  {
+    path: "/test/all",
+    target: `${env.TEST_SERVICE_URL}/api/test/all`,
+    auth: true,
+    roles: ["admin"],
+    methods: ["GET"],
+  },
+  // Get test result — student only
+  {
+    path: "/test/result",
+    target: `${env.TEST_SERVICE_URL}/api/test/result`,
+    auth: true,
+    roles: ["student"],
+    methods: ["GET"],
+  },
+  // Get test by ID — student only
+  {
+    path: "/test",
+    target: `${env.TEST_SERVICE_URL}/api/test`,
+    auth: true,
+    roles: ["student"],
+    methods: ["GET"],
+  },
 ];
 
 export function findMatchingRoute(
