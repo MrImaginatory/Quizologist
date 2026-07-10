@@ -156,11 +156,6 @@ const toggleIconVariants = {
   collapsed: { rotate: 180 },
 };
 
-const navItemVariants = {
-  expanded: { opacity: 1, x: 0 },
-  collapsed: { opacity: 0, x: -8 },
-};
-
 const userSectionVariants = {
   expanded: {
     flexDirection: "row" as const,

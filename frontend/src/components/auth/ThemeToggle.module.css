@@ -85,3 +85,9 @@
     background-color: #111827;
   }
 }
+
+@media (max-width: 768px) {
+  .toggle {
+    display: none;
+  }
+}
