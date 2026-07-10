@@ -5,6 +5,7 @@ import styles from "./Students.module.css";
 import { contentService, Faculty, Subject, Topic } from "@/lib/contentService";
 import { capitalize } from "@/utils/helpers";
 import { studentService } from "@/lib/studentService";
+import { useRouter } from "next/navigation";
 
 interface Student {
   id: string;
@@ -30,6 +31,7 @@ export default function StudentsPage() {
   // Students state
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
@@ -279,6 +281,7 @@ export default function StudentsPage() {
                         <button
                           className={styles.viewBtn}
                           title="View student details"
+                          onClick={() => router.push(`/students/${student.id}`)}
                         >
                           <svg
                             className={styles.btnIcon}

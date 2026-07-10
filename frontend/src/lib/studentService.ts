@@ -100,6 +100,17 @@ class StudentService {
     return response.json();
   }
 
+  async getStudentEnrollments(studentId: string, page = 1, limit = 10): Promise<any> {
+    const response = await fetch(
+      `${BACKEND_URL}/api/student/${studentId}/enrollments?page=${page}&limit=${limit}`,
+      {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+      }
+    );
+    return response.json();
+  }
+
   async getStudentById(id: string) {
     const response = await fetch(`${BACKEND_URL}/api/user/${id}`, {
       method: "GET",
