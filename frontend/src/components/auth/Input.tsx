@@ -5,10 +5,11 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string;
   error?: string;
   helperText?: string;
+  rightElement?: React.ReactNode;
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, helperText, className, id, ...props }, ref) => {
+  ({ label, error, helperText, className, id, rightElement, ...props }, ref) => {
     const inputId = id || label.toLowerCase().replace(/\s+/g, "-");
 
     return (
@@ -16,14 +17,17 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         <label htmlFor={inputId} className={styles.label}>
           {label}
         </label>
-        <input
-          ref={ref}
-          id={inputId}
-          className={`${styles.input} ${error ? styles.error : ""} ${className || ""}`}
-          aria-invalid={!!error}
-          aria-describedby={error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined}
-          {...props}
-        />
+        <div className={styles.inputContainer}>
+          <input
+            ref={ref}
+            id={inputId}
+            className={`${styles.input} ${error ? styles.error : ""} ${className || ""}`}
+            aria-invalid={!!error}
+            aria-describedby={error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined}
+            {...props}
+          />
+          {rightElement && <div className={styles.rightElement}>{rightElement}</div>}
+        </div>
         {error && (
           <span id={`${inputId}-error`} className={styles.errorText} role="alert">
             <svg className={styles.errorIcon} viewBox="0 0 20 20" fill="currentColor">

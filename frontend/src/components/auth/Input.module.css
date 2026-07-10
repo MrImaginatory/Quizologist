@@ -12,19 +12,35 @@
 }
 
 .input {
-  height: 46px;
-  padding: 0 16px;
-  border: 1px solid var(--input-border, #d1d5db);
-  border-radius: 8px;
-  background-color: var(--input-bg, #ffffff);
-  font-size: 15px;
-  color: var(--text-primary, #1f2937);
-  transition: border-color 150ms ease-in-out, box-shadow 150ms ease-in-out;
   width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-primary);
+  border-radius: 0.5rem;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  outline: none;
 }
 
-.input::placeholder {
-  color: var(--text-muted, #9ca3af);
+.inputContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.rightElement {
+  position: absolute;
+  right: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+}
+
+/* Ensure input padding accounts for right element if present */
+.inputContainer:has(.rightElement) .input {
+  padding-right: 2.5rem;
 }
 
 .input:focus {

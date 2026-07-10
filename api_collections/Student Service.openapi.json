@@ -1,0 +1,266 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Student Service",
+    "description": "",
+    "version": "1.0.0"
+  },
+  "tags": [],
+  "paths": {
+    "/": {
+      "post": {
+        "summary": "Enrollment",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              },
+              "example": {
+                "enrollments": [
+                  {
+                    "faculty_id": "a15e2800-7a98-41aa-941c-d64755927c8e",
+                    "subject_id": "0383aa2d-16f2-4252-8e4a-82d84e88911b",
+                    "topic_id": "a8e38b6a-b596-45e0-95c2-9d786ff8989e"
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "statusCode": 401,
+                  "success": false,
+                  "message": "Token is required",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "summary": "Get Enrollments",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "statusCode": 200,
+                  "success": true,
+                  "message": "Enrollments retrieved successfully",
+                  "data": {
+                    "enrollments": [
+                      {
+                        "id": "54de09f4-ebe0-4a82-887e-5643d69eb670",
+                        "student_id": "4918de49-1169-41b9-b035-8155d999dc8e",
+                        "faculty_id": "a15e2800-7a98-41aa-941c-d64755927c8e",
+                        "subject_id": "0383aa2d-16f2-4252-8e4a-82d84e88911b",
+                        "topic_id": "a8e38b6a-b596-45e0-95c2-9d786ff8989e",
+                        "faculty": {
+                          "id": "a15e2800-7a98-41aa-941c-d64755927c8e",
+                          "name": "computer science"
+                        },
+                        "subject": {
+                          "id": "0383aa2d-16f2-4252-8e4a-82d84e88911b",
+                          "name": "data structures"
+                        },
+                        "topic": {
+                          "id": "a8e38b6a-b596-45e0-95c2-9d786ff8989e",
+                          "name": "binary trees"
+                        }
+                      }
+                    ],
+                    "pagination": {
+                      "total": 1,
+                      "page": 1,
+                      "limit": 10,
+                      "totalPages": 1
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/{id}": {
+      "get": {
+        "summary": "Get Enrollment by Id",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "54de09f4-ebe0-4a82-887e-5643d69eb670",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "summary": "Remove Enrollment",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "ccc04b8e-0314-4e6b-b3e5-c97a649bebe3",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/student/{studentid}": {
+      "get": {
+        "summary": "Get Student Enrollment",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "studentid",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "4918de49-1169-41b9-b035-8155d999dc8e",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/api/enrollment",
+      "description": "Develop Env"
+    },
+    {
+      "url": "",
+      "description": "Testing Env"
+    },
+    {
+      "url": "",
+      "description": "Prod Env"
+    }
+  ],
+  "security": [
+    {
+      "bearer": []
+    }
+  ]
+}
