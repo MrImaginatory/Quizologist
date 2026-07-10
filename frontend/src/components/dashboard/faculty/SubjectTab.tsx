@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import styles from "../../../app/(dashboard)/faculty/Faculty.module.css";
+import styles from "../../../app/(dashboard)/faculties/Faculty.module.css";
 import { contentService, Subject, Faculty } from "@/lib/contentService";
+import { capitalize } from "@/utils/helpers";
 
 export default function SubjectTab() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -20,6 +21,9 @@ export default function SubjectTab() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [facultyId, setFacultyId] = useState("");
+
+  // Edit State
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const fetchSubjects = async (currentPage: number) => {
     try {
@@ -53,24 +57,57 @@ export default function SubjectTab() {
     fetchFacultiesForDropdown();
   }, [page]);
 
+  const handleOpenModal = (subject?: Subject) => {
+    if (subject) {
+      setEditingId(subject.id);
+      setName(subject.name);
+      setDescription(subject.description || "");
+      setFacultyId(subject.faculty_id);
+    } else {
+      setEditingId(null);
+      setName("");
+      setDescription("");
+      setFacultyId("");
+    }
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this subject?")) return;
+    try {
+      await contentService.deleteSubject(id);
+      fetchSubjects(page);
+    } catch (error: any) {
+      console.error("Error deleting subject:", error);
+      alert(error.message || "Error deleting subject");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !facultyId) return;
 
     try {
       setSubmitting(true);
-      const res = await contentService.createSubject(name, facultyId, description);
+      let res;
+      if (editingId) {
+        res = await contentService.updateSubject(editingId, name, facultyId, description);
+      } else {
+        res = await contentService.createSubject(name, facultyId, description);
+      }
+
       if ((res as any).success) {
         setIsModalOpen(false);
         setName("");
         setDescription("");
         setFacultyId("");
-        setPage(1);
-        fetchSubjects(1);
+        setEditingId(null);
+        if (!editingId) setPage(1);
+        fetchSubjects(editingId ? page : 1);
       }
-    } catch (error) {
-      console.error("Error creating subject:", error);
-      alert("Error creating subject");
+    } catch (error: any) {
+      console.error("Error saving subject:", error);
+      alert(error.message || "Error saving subject");
     } finally {
       setSubmitting(false);
     }
@@ -80,7 +117,7 @@ export default function SubjectTab() {
     <div>
       <div className={styles.toolbar}>
         <h2>All Subjects</h2>
-        <button className={styles.addButton} onClick={() => setIsModalOpen(true)}>
+        <button className={styles.addButton} onClick={() => handleOpenModal()}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="12" y1="5" x2="12" y2="19"></line>
             <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -102,14 +139,32 @@ export default function SubjectTab() {
                   <th>Name</th>
                   <th>Faculty</th>
                   <th>Description</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {subjects.map((s) => (
                   <tr key={s.id}>
-                    <td>{s.name}</td>
-                    <td>{s.faculty?.name || s.faculty_id}</td>
-                    <td>{s.description || "-"}</td>
+                    <td>{capitalize(s.name)}</td>
+                    <td>{s.faculty?.name ? capitalize(s.faculty.name) : s.faculty_id}</td>
+                    <td className={styles.descriptionCell} title={s.description || ""}>{s.description || "-"}</td>
+                    <td>
+                      <div className={styles.tableActions}>
+                        <button className={styles.editBtn} onClick={() => handleOpenModal(s)}>
+                          <svg className={styles.btnIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                          </svg>
+                          <span className={styles.btnText}>Edit</span>
+                        </button>
+                        <button className={styles.deleteBtn} onClick={() => handleDelete(s.id)}>
+                          <svg className={styles.btnIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                          </svg>
+                          <span className={styles.btnText}>Delete</span>
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -144,7 +199,7 @@ export default function SubjectTab() {
         <div className={styles.modalOverlay} onClick={() => setIsModalOpen(false)}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h2>Add New Subject</h2>
+              <h2>{editingId ? "Edit Subject" : "Add New Subject"}</h2>
               <button className={styles.closeButton} onClick={() => setIsModalOpen(false)}>&times;</button>
             </div>
             <form onSubmit={handleSubmit}>
@@ -157,7 +212,7 @@ export default function SubjectTab() {
                 >
                   <option value="">Select a Faculty</option>
                   {faculties.map((f) => (
-                    <option key={f.id} value={f.id}>{f.name}</option>
+                    <option key={f.id} value={f.id}>{capitalize(f.name)}</option>
                   ))}
                 </select>
               </div>
@@ -186,7 +241,7 @@ export default function SubjectTab() {
                   Cancel
                 </button>
                 <button type="submit" className={styles.submitButton} disabled={submitting || !name.trim() || !facultyId}>
-                  {submitting ? "Saving..." : "Save Subject"}
+                  {submitting ? "Saving..." : (editingId ? "Update Subject" : "Save Subject")}
                 </button>
               </div>
             </form>

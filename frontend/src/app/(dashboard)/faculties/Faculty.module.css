@@ -1,6 +1,6 @@
 .container {
   padding: 2rem;
-  max-width: 1200px;
+  max-width: 90%;
   margin: 0 auto;
   color: var(--text-primary);
 }
@@ -52,8 +52,15 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .toolbar {
@@ -101,13 +108,69 @@
   text-align: left;
 }
 
-.table th, .table td {
+.table th,
+.table td {
   padding: 1rem;
   border-bottom: 1px solid var(--border-color, #e2e8f0);
 }
 
-:global(.dark) .table th, :global(.dark) .table td {
+:global(.dark) .table th,
+:global(.dark) .table td {
   border-bottom-color: #333;
+}
+
+.table .descriptionCell {
+  max-width: 250px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tableActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.editBtn, .deleteBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.editBtn {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  cursor: pointer;
+  padding: 0.375rem 0.75rem;
+  border-radius: 6px;
+}
+.editBtn:hover { background: rgba(59, 130, 246, 0.1); }
+
+.deleteBtn {
+  background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  padding: 0.375rem 0.75rem;
+  border-radius: 6px;
+}
+.deleteBtn:hover { background: rgba(239, 68, 68, 0.1); }
+
+.btnIcon {
+  width: 16px;
+  height: 16px;
+}
+
+@media (max-width: 768px) {
+  .btnText {
+    display: none;
+  }
+  .editBtn, .deleteBtn {
+    padding: 0.5rem;
+  }
 }
 
 .table th {
@@ -247,7 +310,9 @@
   margin-bottom: 0.5rem;
 }
 
-.formGroup input, .formGroup select, .formGroup textarea {
+.formGroup input,
+.formGroup select,
+.formGroup textarea {
   width: 100%;
   padding: 0.75rem;
   border: 1px solid var(--border-color, #cbd5e1);
@@ -257,11 +322,15 @@
   font-family: inherit;
 }
 
-:global(.dark) .formGroup input, :global(.dark) .formGroup select, :global(.dark) .formGroup textarea {
+:global(.dark) .formGroup input,
+:global(.dark) .formGroup select,
+:global(.dark) .formGroup textarea {
   border-color: #444;
 }
 
-.formGroup input:focus, .formGroup select:focus, .formGroup textarea:focus {
+.formGroup input:focus,
+.formGroup select:focus,
+.formGroup textarea:focus {
   outline: none;
   border-color: var(--primary-color, rgb(84, 31, 229));
   box-shadow: 0 0 0 1px var(--primary-color, rgb(84, 31, 229));

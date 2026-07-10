@@ -25,7 +25,7 @@ export default function RootLayout({
 
   if (!splashComplete) {
     return (
-      <html lang="en">
+      <html lang="en" suppressHydrationWarning>
         <head>
           <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         </head>
@@ -37,7 +37,7 @@ export default function RootLayout({
   }
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>

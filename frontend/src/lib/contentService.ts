@@ -88,6 +88,19 @@ class ContentService {
     });
   }
 
+  async updateFaculty(id: string, name: string, description?: string) {
+    return this.request(`/api/content/faculty/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({ name, description }),
+    });
+  }
+
+  async deleteFaculty(id: string) {
+    return this.request(`/api/content/faculty/${id}`, {
+      method: "DELETE",
+    });
+  }
+
   // Subject
   async getSubjects(page = 1, limit = 10): Promise<PaginatedResponse<Subject>> {
     return this.request(`/api/content/subject?page=${page}&limit=${limit}`);
@@ -100,6 +113,19 @@ class ContentService {
     });
   }
 
+  async updateSubject(id: string, name: string, faculty_id: string, description?: string) {
+    return this.request(`/api/content/subject/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({ name, faculty_id, description }),
+    });
+  }
+
+  async deleteSubject(id: string) {
+    return this.request(`/api/content/subject/${id}`, {
+      method: "DELETE",
+    });
+  }
+
   // Topic
   async getTopics(page = 1, limit = 10): Promise<PaginatedResponse<Topic>> {
     return this.request(`/api/content/topic?page=${page}&limit=${limit}`);
@@ -109,6 +135,19 @@ class ContentService {
     return this.request("/api/content/topic", {
       method: "POST",
       body: JSON.stringify({ name, subject_id, description }),
+    });
+  }
+
+  async updateTopic(id: string, name: string, subject_id: string, description?: string) {
+    return this.request(`/api/content/topic/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({ name, subject_id, description }),
+    });
+  }
+
+  async deleteTopic(id: string) {
+    return this.request(`/api/content/topic/${id}`, {
+      method: "DELETE",
     });
   }
 }

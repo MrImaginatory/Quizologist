@@ -5,7 +5,7 @@ export const createFacultySchema = z.object({
     .string()
     .min(1, "Faculty name is required")
     .max(100, "Faculty name must be at most 100 characters"),
-  description: z.string().optional(),
+  description: z.string().max(1024, "Description must be at most 1024 characters").optional(),
 });
 
 export const updateFacultySchema = z.object({
@@ -14,7 +14,7 @@ export const updateFacultySchema = z.object({
     .min(1, "Faculty name is required")
     .max(100, "Faculty name must be at most 100 characters")
     .optional(),
-  description: z.string().optional(),
+  description: z.string().max(1024, "Description must be at most 1024 characters").optional(),
 });
 
 export const facultyIdParamSchema = z.object({

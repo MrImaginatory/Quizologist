@@ -35,6 +35,7 @@ class ApiClient {
         success: false,
         message: data.message || "An error occurred",
         status: response.status,
+        data: data.data || data.errors,
       };
     }
 

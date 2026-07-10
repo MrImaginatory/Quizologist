@@ -25,13 +25,12 @@ const PRIMARY_NAV: MobileNavItem[] = [
     ),
   },
   {
-    label: "Topics",
-    href: "/topics",
+    label: "Faculties",
+    href: "/faculties",
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 2L2 7l10 5 10-5-10-5z" />
-        <path d="M2 17l10 5 10-5" />
-        <path d="M2 12l10 5 10-5" />
+        <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+        <path d="M6 12v5c3 3 9 3 12 0v-5" />
       </svg>
     ),
   },
@@ -57,25 +56,7 @@ const PRIMARY_NAV: MobileNavItem[] = [
 ];
 
 const MORE_MENU_ITEMS: MobileNavItem[] = [
-  {
-    label: "Faculties",
-    href: "/faculties",
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-        <path d="M6 12v5c3 3 9 3 12 0v-5" />
-      </svg>
-    ),
-  },
-  {
-    label: "Subjects",
-    href: "/subjects",
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
-      </svg>
-    ),
-  },
+
   {
     label: "Questions",
     href: "/questions",

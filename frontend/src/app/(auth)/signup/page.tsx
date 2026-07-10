@@ -130,15 +130,29 @@ export default function SignUpPage() {
         lname: formData.lname.trim(),
         role: formData.role,
         email: formData.email.trim().toLowerCase(),
-        mobilenumber: formData.mobilenumber.trim(),
+        mobileNumber: formData.mobilenumber.trim(),
         password: formData.password,
-      });
+      } as any);
 
       const data = response as { success: boolean; data: { user: any; token: string } };
       setAuth(data.data.token, data.data.user);
       router.push("/dashboard");
     } catch (err: any) {
-      setError(err.message || "Something went wrong. Please try again.");
+      if (err.data && Array.isArray(err.data)) {
+        // Handle validation errors from backend
+        const newErrors = { ...errors };
+        err.data.forEach((validationErr: any) => {
+          if (validationErr.field && newErrors.hasOwnProperty(validationErr.field)) {
+            (newErrors as any)[validationErr.field] = validationErr.message;
+          } else if (validationErr.field === 'mobileNumber') {
+            newErrors.mobilenumber = validationErr.message;
+          }
+        });
+        setErrors(newErrors);
+        setError("Please fix the highlighted errors.");
+      } else {
+        setError(err.message || "Something went wrong. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }

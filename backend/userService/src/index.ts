@@ -38,12 +38,19 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 
   if (err.name === "ZodError") {
     const zodError = err as any;
-    const messages = zodError.errors?.map((e: any) => e.message) || [];
-    return ApiResponse.error(
-      res,
-      messages.join(", ") || "Validation failed",
-      400
-    );
+    const structuredErrors = zodError.errors?.map((e: any) => ({
+      field: e.path.join("."),
+      message: e.message,
+    })) || [];
+    
+    // We pass the structured errors in the data field of the ApiResponse since ApiResponse.error doesn't take data
+    // Let's manually construct the JSON response to match what the frontend expects
+    return res.status(400).json({
+      statusCode: 400,
+      success: false,
+      message: "Validation failed",
+      data: structuredErrors
+    });
   }
 
   console.error("Unhandled error:", err);

@@ -5,7 +5,7 @@ export const createSubjectSchema = z.object({
     .string()
     .min(1, "Subject name is required")
     .max(100, "Subject name must be at most 100 characters"),
-  description: z.string().optional(),
+  description: z.string().max(1024, "Description must be at most 1024 characters").optional(),
   faculty_id: z.string().uuid("Invalid faculty ID format"),
 });
 
@@ -15,7 +15,7 @@ export const updateSubjectSchema = z.object({
     .min(1, "Subject name is required")
     .max(100, "Subject name must be at most 100 characters")
     .optional(),
-  description: z.string().optional(),
+  description: z.string().max(1024, "Description must be at most 1024 characters").optional(),
   faculty_id: z.string().uuid("Invalid faculty ID format").optional(),
 });
 

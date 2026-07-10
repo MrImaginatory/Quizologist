@@ -22,8 +22,6 @@ const STUDENT_NAV: NavItem[] = [
 const TEACHER_NAV: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: "dashboard" },
   { label: "Faculties", href: "/faculties", icon: "faculties" },
-  { label: "Subjects", href: "/subjects", icon: "subjects" },
-  { label: "Topics", href: "/topics", icon: "topics" },
   { label: "Questions", href: "/questions", icon: "questions" },
   { label: "Tests", href: "/tests", icon: "tests" },
 ];
@@ -31,8 +29,6 @@ const TEACHER_NAV: NavItem[] = [
 const ADMIN_NAV: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: "dashboard" },
   { label: "Faculties", href: "/faculties", icon: "faculties" },
-  { label: "Subjects", href: "/subjects", icon: "subjects" },
-  { label: "Topics", href: "/topics", icon: "topics" },
   { label: "Questions", href: "/questions", icon: "questions" },
   { label: "Students", href: "/students", icon: "students" },
   { label: "Tests", href: "/tests", icon: "tests" },

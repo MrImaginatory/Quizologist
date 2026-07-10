@@ -31,8 +31,8 @@ app.use((_req: Request, res: Response) => {
 });
 
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  if (err instanceof ApiError) {
-    return ApiResponse.error(res, err.message, err.statusCode);
+  if (err instanceof ApiError || (err as any).isOperational) {
+    return ApiResponse.error(res, err.message, (err as any).statusCode || 400);
   }
 
   if (err.name === "ZodError") {
@@ -45,8 +45,27 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
     );
   }
 
+  if (err.name === "SequelizeUniqueConstraintError") {
+    return ApiResponse.error(res, "Resource already exists", 409);
+  }
+
+  if (err.name === "SequelizeValidationError") {
+    const messages = (err as any).errors?.map((e: any) => e.message) || [];
+    return res.status(400).json({
+      statusCode: 400,
+      success: false,
+      message: "Validation failed",
+      data: messages.map((m: string) => ({ message: m }))
+    });
+  }
+
   console.error("Unhandled error:", err);
-  return ApiResponse.error(res, "Internal server error", 500);
+  return res.status(500).json({
+    statusCode: 500,
+    success: false,
+    message: "Internal server error",
+    data: null
+  });
 });
 
 const startServer = async () => {
