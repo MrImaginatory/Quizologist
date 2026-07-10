@@ -12,7 +12,7 @@ Three user roles: **admin** (full control), **teacher** (content management), **
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Next.js 16, React 19, TypeScript, CSS Modules |
+| Frontend | Next.js 16, React 19, TypeScript, CSS Modules, Framer Motion |
 | API Gateway | Node.js, Express, custom proxy middleware |
 | Backend Services | Node.js, Express, Sequelize ORM, Zod validation |
 | Real-time | Socket.IO (WebSocket) |
@@ -37,7 +37,8 @@ Three user roles: **admin** (full control), **teacher** (content management), **
 ```mermaid
 graph TB
     subgraph Client["Client Layer"]
-        FE["Next.js Frontend<br/>:3000"]
+        FE["Next.js Frontend<br/>:3006"]
+        Splash["Splash Screen<br/>(SVG Animation)"]
     end
 
     subgraph Gateway["API Gateway :3000"]
@@ -63,11 +64,24 @@ graph TB
         WS["Socket.IO Server<br/>(port 3005)"]
     end
 
+    subgraph FrontendUI["Frontend UI Components"]
+        Sidebar["Sidebar Navigation<br/>(Collapsible)"]
+        MobileNav["Mobile Bottom Nav<br/>(Responsive)"]
+        Dashboard["Dashboard<br/>(KPI Cards)"]
+        Auth["Auth Pages<br/>(Sign In/Up)"]
+    end
+
     subgraph Users["User Roles"]
         Admin["Admin"]
         Teacher["Teacher"]
         Student["Student"]
     end
+
+    FE --> Splash
+    FE --> Sidebar
+    FE --> MobileNav
+    FE --> Dashboard
+    FE --> Auth
 
     FE -->|HTTP API| GW
     GW --> JWT --> RBAC --> Proxy
@@ -93,7 +107,109 @@ graph TB
 
 ---
 
-## Functional Areas
+## Frontend Architecture
+
+### Component Structure
+
+```
+frontend/src/
+├── app/
+│   ├── (auth)/                    # Auth route group
+│   │   ├── layout.tsx            # AuthLayout wrapper
+│   │   ├── signin/page.tsx       # Login form
+│   │   └── signup/page.tsx       # Registration form
+│   ├── (dashboard)/              # Dashboard route group
+│   │   ├── layout.tsx            # DashboardLayout with sidebar
+│   │   └── dashboard/page.tsx    # Main dashboard page
+│   ├── globals.css               # CSS variables, reset, utilities
+│   ├── layout.tsx                # Root layout with splash screen
+│   └── page.tsx                  # Root redirect to /signin
+├── components/
+│   ├── auth/                     # Auth components
+│   │   ├── AuthLayout.tsx        # Split-screen auth layout
+│   │   ├── BrandPanel.tsx        # Left panel with branding
+│   │   ├── Button.tsx            # Reusable button (4 variants)
+│   │   ├── FormError.tsx         # Error message display
+│   │   ├── Input.tsx             # Form input with validation
+│   │   ├── LoadingSpinner.tsx    # Loading indicator
+│   │   ├── RadioGroup.tsx        # Role selection radios
+│   │   └── ThemeToggle.tsx       # Dark/light mode toggle
+│   ├── dashboard/                # Dashboard components
+│   │   ├── KpiCards.tsx          # 5 KPI cards with animated counters
+│   │   └── MobileNav.tsx         # Mobile bottom navigation
+│   ├── loading/
+│   │   └── LoadingScreen.tsx     # Loading screen with spinner
+│   ├── sidebar/
+│   │   └── Sidebar.tsx           # Collapsible sidebar navigation
+│   └── splash/
+│       └── SplashScreen.tsx      # Splash screen with SVG animation
+├── lib/
+│   ├── api.ts                    # API client (singleton)
+│   └── auth.ts                   # Token/user management
+└── types/
+    └── index.ts                  # TypeScript interfaces
+```
+
+### Key Features Implemented
+
+#### 1. Splash Screen
+- Animated SVG logo with stroke-dashoffset draw animation
+- Title fade-in and spinner
+- 2.5 second display before transitioning to app
+- Uses `NEXT_PUBLIC_SVG_PATH` env variable for SVG path data
+
+#### 2. Collapsible Sidebar
+- Expands to 260px, collapses to 72px
+- Framer Motion animations for smooth transitions
+- Row layout when expanded, column layout when collapsed
+- Role-based navigation (admin: 8 items, teacher: 6, student: 4)
+- Active state highlighting with primary color
+- User section with avatar, name, role, and logout button
+- Persisted collapse state in localStorage
+
+#### 3. Responsive Design
+- Desktop: Sidebar navigation (>768px)
+- Mobile: Bottom navigation bar (≤768px)
+- Mobile "More" menu with additional nav items and theme toggle
+- KPI cards responsive grid: 5 cols → 3 → 2 → 1
+
+#### 4. Dashboard KPI Cards
+- 5 cards: Tests Submitted, Total Questions, Total Topics, Topics Covered, Active Students
+- Animated counters starting from 0
+- Uniform indigo color scheme
+- Staggered entrance animations with Framer Motion
+- Hover lift effect
+
+#### 5. Theme System
+- CSS variables for light/dark modes
+- Manual toggle via ThemeToggle button
+- Theme persisted in localStorage
+- Global styles with design tokens
+
+### Design System
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| Primary | `#6366F1` (Indigo 500) | Buttons, links, active states |
+| Background | `#F9FAFB` (Gray 50) | Page background |
+| Card BG | `#FFFFFF` | Card surfaces |
+| Border | `#E5E7EB` (Gray 200) | Dividers, card borders |
+| Text Primary | `#111827` (Gray 900) | Headings |
+| Text Secondary | `#6B7280` (Gray 500) | Body text |
+
+### Animation Guidelines
+
+| Element | Duration | Easing |
+|---------|----------|--------|
+| Sidebar expand/collapse | 300ms | cubic-bezier(0.4, 0, 0.2, 1) |
+| KPI card entrance | 500ms | Staggered 100ms delay |
+| Nav label fade | 200ms | ease-in-out |
+| Button hover | 150ms | ease-in-out |
+| Splash SVG draw | 1.5s | cubic-bezier(0.47, 0, 0.745, 0.715) |
+
+---
+
+## Backend Architecture
 
 ### 1. API Gateway (`backend/apiGateway/`)
 
@@ -194,30 +310,7 @@ The most complex service - combines REST endpoints with Socket.IO for real-time 
 
 ---
 
-### 7. Frontend (`frontend/src/`)
-
-Early-stage Next.js 16 app with authentication pages only.
-
-**Implemented:**
-- `/signin` - Login form
-- `/signup` - Registration with role selection (student/teacher)
-- Auth components: AuthLayout, BrandPanel, Input, Button, RadioGroup, FormError, LoadingSpinner, ThemeToggle
-
-**Not yet implemented:**
-- Dashboard pages
-- Quiz-taking interface
-- Results viewing
-- Admin/teacher content management panels
-
-**Key files:**
-- `src/lib/api.ts` - API client (singleton `ApiClient` class)
-- `src/lib/auth.ts` - Token/user management via localStorage
-- `src/types/index.ts` - TypeScript interfaces
-- `src/components/auth/` - Reusable auth components with CSS Modules
-
----
-
-### 8. API Collections (`api_collections/`)
+### 7. API Collections (`api_collections/`)
 
 OpenAPI 3.1.0 specifications for the API surface:
 
@@ -233,7 +326,21 @@ OpenAPI 3.1.0 specifications for the API surface:
 
 ## Key Execution Flows
 
-### 1. User Signup & Login
+### 1. App Initialization
+
+```
+1. Root Layout mounts
+2. SplashScreen renders with SVG animation (2.5s)
+3. SVG draws with stroke-dashoffset animation
+4. Title fades in, spinner appears
+5. SplashScreen completes, sets splashComplete=true
+6. Actual app content renders
+7. DashboardLayout checks authentication
+8. If not authenticated -> redirect to /signin
+9. If authenticated -> render Sidebar + main content
+```
+
+### 2. User Signup & Login
 
 ```
 Client -> Gateway (POST /api/auth/signup)
@@ -249,9 +356,24 @@ Client -> Gateway (POST /api/auth/login)
   -> Verify password with bcrypt
   -> Generate JWT
   -> Return token + user object
+  -> Store token + user in localStorage
+  -> Redirect to /dashboard
 ```
 
-### 2. Content Management (Admin/Teacher)
+### 3. Dashboard Rendering
+
+```
+1. DashboardLayout mounts
+2. Check isAuthenticated() from localStorage
+3. If not authenticated -> redirect to /signin
+4. Load sidebar collapsed state from localStorage
+5. Render Sidebar with role-based nav items
+6. Render main content area with margin-left animation
+7. KpiCards animate in with staggered counters
+8. MobileNav renders on screens ≤768px
+```
+
+### 4. Content Management (Admin/Teacher)
 
 ```
 Admin -> Gateway (POST /api/faculty) -> Content Service
@@ -264,7 +386,7 @@ All operations validate:
   - No cascading deletes (Faculty -> Subject -> Topic)
 ```
 
-### 3. Question Creation
+### 5. Question Creation
 
 ```
 Teacher -> Gateway (POST /api/question)
@@ -275,7 +397,7 @@ Teacher -> Gateway (POST /api/question)
   -> Record questionAddedBy (teacher's user ID)
 ```
 
-### 4. Student Enrollment
+### 6. Student Enrollment
 
 ```
 Student -> Gateway (POST /api/enrollment)
@@ -288,7 +410,7 @@ Student -> Gateway (POST /api/enrollment)
   -> Return created + skipped counts
 ```
 
-### 5. Quiz Session (Real-time)
+### 7. Quiz Session (Real-time)
 
 ```
 Student -> Gateway (POST /api/test/start)
@@ -310,7 +432,7 @@ Student -> Gateway (GET /api/test/:id/result)
   -> Return full breakdown with explanations + video URLs
 ```
 
-### 6. Admin Performance Review
+### 8. Admin Performance Review
 
 ```
 Admin -> Gateway (GET /api/test/student/:id/performance)
@@ -345,6 +467,29 @@ Every Sequelize model uses `paranoid: true`, marking records with `deleted_at` r
 
 All services use Zod schemas for request validation. Validation runs at the service level (after gateway proxy), not at the gateway itself.
 
+### Responsive Design
+
+- **Desktop (>768px):** Collapsible sidebar navigation
+- **Mobile (≤768px):** Bottom navigation bar with "More" menu
+- **Breakpoint:** 768px consistent between JS and CSS
+
+### State Management
+
+- **Auth state:** localStorage (`quizologist_token`, `quizologist_user`)
+- **Theme state:** localStorage (`quizologist-theme`)
+- **Sidebar state:** localStorage (`quizologist-sidebar-collapsed`)
+
+---
+
+## Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `NEXT_PUBLIC_BACKEND_URL` | API Gateway URL | `http://localhost:3000` |
+| `NEXT_PUBLIC_TITLE` | App title | `Quizologist` |
+| `NEXT_PUBLIC_LOGO` | Logo SVG path | `/Quizologist.svg` |
+| `NEXT_PUBLIC_SVG_PATH` | SVG path data for animation | (long path string) |
+
 ---
 
 ## Observations & Considerations
@@ -352,7 +497,9 @@ All services use Zod schemas for request validation. Validation runs at the serv
 | Aspect | Status |
 |--------|--------|
 | Backend services | Fully implemented |
-| Frontend | Early stage (auth only) |
+| Frontend auth | Fully implemented |
+| Frontend dashboard | Implemented (KPI cards, sidebar, mobile nav) |
+| Splash screen | Implemented with SVG animation |
 | OpenAPI specs | Partial (3/5 services) |
 | Docker/CI/CD | Not configured |
 | WebSocket auth | Bypasses gateway (direct to :3005) |

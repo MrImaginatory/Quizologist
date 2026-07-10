@@ -22,7 +22,7 @@
 .tabs {
   display: flex;
   gap: 1rem;
-  border-bottom: 1px solid var(--border-color, #e2e8f0);
+  border-bottom: 1px solid var(--border-primary);
   margin-bottom: 2rem;
 }
 
@@ -94,7 +94,7 @@
   border-radius: 8px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   overflow: hidden;
-  border: 1px solid var(--border-color, #e2e8f0);
+  border: 1px solid var(--border-primary);
 }
 
 :global(.dark) .tableContainer {
@@ -111,7 +111,7 @@
 .table th,
 .table td {
   padding: 1rem;
-  border-bottom: 1px solid var(--border-color, #e2e8f0);
+  border-bottom: 1px solid var(--border-primary);
 }
 
 :global(.dark) .table th,
@@ -131,7 +131,8 @@
   gap: 0.5rem;
 }
 
-.editBtn, .deleteBtn {
+.editBtn,
+.deleteBtn {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
@@ -147,7 +148,10 @@
   padding: 0.375rem 0.75rem;
   border-radius: 6px;
 }
-.editBtn:hover { background: rgba(59, 130, 246, 0.1); }
+
+.editBtn:hover {
+  background: rgba(59, 130, 246, 0.1);
+}
 
 .deleteBtn {
   background: none;
@@ -157,7 +161,10 @@
   padding: 0.375rem 0.75rem;
   border-radius: 6px;
 }
-.deleteBtn:hover { background: rgba(239, 68, 68, 0.1); }
+
+.deleteBtn:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
 
 .btnIcon {
   width: 16px;
@@ -168,7 +175,9 @@
   .btnText {
     display: none;
   }
-  .editBtn, .deleteBtn {
+
+  .editBtn,
+  .deleteBtn {
     padding: 0.5rem;
   }
 }
@@ -211,7 +220,7 @@
   align-items: center;
   padding: 1rem;
   background: var(--bg-tertiary, #f8fafc);
-  border-top: 1px solid var(--border-color, #e2e8f0);
+  border-top: 1px solid var(--border-primary);
 }
 
 :global(.dark) .pagination {
@@ -231,7 +240,7 @@
 
 .pageButton {
   padding: 0.375rem 0.75rem;
-  border: 1px solid var(--border-color, #e2e8f0);
+  border: 1px solid var(--border-primary);
   background: var(--bg-primary);
   color: var(--text-primary);
   border-radius: 4px;
