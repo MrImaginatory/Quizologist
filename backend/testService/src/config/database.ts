@@ -23,7 +23,7 @@ export const connectDatabase = async (): Promise<void> => {
     await sequelize.authenticate();
     console.log("Database connected successfully.");
     await sequelize.sync({
-      alter: env.DB_ALTER_TABLES,
+      alter: env.DB_ALTER_TABLES ? { drop: false } : false,
       force: env.DB_DROP_TABLES,
     });
     console.log("Models synchronized.");

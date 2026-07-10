@@ -106,6 +106,10 @@ class ContentService {
     return this.request(`/api/content/subject?page=${page}&limit=${limit}`);
   }
 
+  async getSubjectsByFaculty(facultyId: string, page = 1, limit = 100): Promise<PaginatedResponse<Subject>> {
+    return this.request(`/api/content/subject/faculty/${facultyId}?page=${page}&limit=${limit}`);
+  }
+
   async createSubject(name: string, faculty_id: string, description?: string) {
     return this.request("/api/content/subject", {
       method: "POST",
@@ -129,6 +133,10 @@ class ContentService {
   // Topic
   async getTopics(page = 1, limit = 10): Promise<PaginatedResponse<Topic>> {
     return this.request(`/api/content/topic?page=${page}&limit=${limit}`);
+  }
+
+  async getTopicsBySubject(subjectId: string, page = 1, limit = 100): Promise<PaginatedResponse<Topic>> {
+    return this.request(`/api/content/topic/subject/${subjectId}?page=${page}&limit=${limit}`);
   }
 
   async createTopic(name: string, subject_id: string, description?: string) {

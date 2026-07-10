@@ -12,6 +12,7 @@ import {
   SearchQuestionsInput,
   GetQuestionsByTopicInput,
   GetAllQuestionsInput,
+  FilterQuestionsInput,
 } from "./question.validation";
 
 const TIMESTAMP_EXCLUDE = { exclude: ["createdAt", "updatedAt", "deletedAt"] };
@@ -140,6 +141,35 @@ export class QuestionService {
 
     const { rows, count } = await Question.findAndCountAll({
       where: { topic_id: topicId },
+      attributes: TIMESTAMP_EXCLUDE,
+      include: ALL_INCLUDES,
+      limit,
+      offset,
+      order: [["createdAt", "DESC"]],
+    });
+
+    return {
+      questions: rows.map((q) => q.toJSON()),
+      pagination: {
+        total: count,
+        page,
+        limit,
+        totalPages: Math.ceil(count / limit),
+      },
+    };
+  }
+
+  static async filter(data: FilterQuestionsInput) {
+    const { faculty_id, subject_id, topic_id, page, limit } = data;
+    const offset = (page - 1) * limit;
+
+    const where: any = {};
+    if (faculty_id) where.faculty_id = faculty_id;
+    if (subject_id) where.subject_id = subject_id;
+    if (topic_id) where.topic_id = topic_id;
+
+    const { rows, count } = await Question.findAndCountAll({
+      where,
       attributes: TIMESTAMP_EXCLUDE,
       include: ALL_INCLUDES,
       limit,

@@ -98,7 +98,7 @@ Question.init(
     },
     questionAddedBy: {
       type: DataTypes.UUID,
-      allowNull: false,
+      allowNull: true,
     },
   },
   {

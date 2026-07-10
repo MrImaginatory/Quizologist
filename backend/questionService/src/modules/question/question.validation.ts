@@ -14,7 +14,7 @@ export const createQuestionSchema = z
       .optional(),
     correctAnswer: z.string().min(1, "Correct answer is required"),
     explanation: z.string().optional(),
-    videoUrl: z.string().url("Invalid URL format").optional(),
+    videoUrl: z.union([z.literal(""), z.string().url("Invalid URL format")]).optional(),
     difficulty: difficultyEnum.default("normal"),
     topic_id: z.string().uuid("Invalid topic ID format"),
     subject_id: z.string().uuid("Invalid subject ID format"),
@@ -59,7 +59,7 @@ export const updateQuestionSchema = z
       .optional(),
     correctAnswer: z.string().min(1).optional(),
     explanation: z.string().optional(),
-    videoUrl: z.string().url().optional().nullable(),
+    videoUrl: z.union([z.literal(""), z.string().url()]).optional().nullable(),
     difficulty: difficultyEnum.optional(),
     topic_id: z.string().uuid().optional(),
     subject_id: z.string().uuid().optional(),
@@ -93,6 +93,14 @@ export const getQuestionsByTopicSchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(10),
 });
 
+export const filterQuestionsSchema = z.object({
+  faculty_id: z.string().uuid().optional(),
+  subject_id: z.string().uuid().optional(),
+  topic_id: z.string().uuid().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(10),
+});
+
 export const getAllQuestionsSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(10),
@@ -104,3 +112,4 @@ export type QuestionIdParam = z.infer<typeof questionIdParamSchema>;
 export type SearchQuestionsInput = z.infer<typeof searchQuestionsSchema>;
 export type GetQuestionsByTopicInput = z.infer<typeof getQuestionsByTopicSchema>;
 export type GetAllQuestionsInput = z.infer<typeof getAllQuestionsSchema>;
+export type FilterQuestionsInput = z.infer<typeof filterQuestionsSchema>;

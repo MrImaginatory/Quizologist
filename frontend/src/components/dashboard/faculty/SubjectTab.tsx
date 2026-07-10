@@ -4,12 +4,14 @@ import { useState, useEffect } from "react";
 import styles from "../../../app/(dashboard)/faculties/Faculty.module.css";
 import { contentService, Subject, Faculty } from "@/lib/contentService";
 import { capitalize } from "@/utils/helpers";
+import DeleteConfirmModal from "@/components/common/DeleteConfirmModal";
 
 export default function SubjectTab() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [faculties, setFaculties] = useState<Faculty[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null as string | null });
   const [submitting, setSubmitting] = useState(false);
   
   // Pagination State
@@ -72,14 +74,19 @@ export default function SubjectTab() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this subject?")) return;
+  const confirmDelete = (id: string) => {
+    setDeleteModal({ isOpen: true, id });
+  };
+
+  const handleDelete = async () => {
+    if (!deleteModal.id) return;
     try {
-      await contentService.deleteSubject(id);
+      await contentService.deleteSubject(deleteModal.id);
+      setDeleteModal({ isOpen: false, id: null });
       fetchSubjects(page);
-    } catch (error: any) {
-      console.error("Error deleting subject:", error);
-      alert(error.message || "Error deleting subject");
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : (error as { message?: string })?.message || "Error deleting subject";
+      alert(msg);
     }
   };
 
@@ -156,7 +163,7 @@ export default function SubjectTab() {
                           </svg>
                           <span className={styles.btnText}>Edit</span>
                         </button>
-                        <button className={styles.deleteBtn} onClick={() => handleDelete(s.id)}>
+                        <button className={styles.deleteBtn} onClick={() => confirmDelete(s.id)}>
                           <svg className={styles.btnIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <polyline points="3 6 5 6 21 6"></polyline>
                             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -248,6 +255,14 @@ export default function SubjectTab() {
           </div>
         </div>
       )}
+
+      <DeleteConfirmModal
+        isOpen={deleteModal.isOpen}
+        title="Delete Subject"
+        message="Are you sure you want to delete this subject? This action cannot be undone."
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteModal({ isOpen: false, id: null })}
+      />
     </div>
   );
 }

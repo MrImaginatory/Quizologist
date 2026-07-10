@@ -10,6 +10,7 @@ import {
   searchQuestionsSchema,
   getQuestionsByTopicSchema,
   getAllQuestionsSchema,
+  filterQuestionsSchema,
 } from "./question.validation";
 
 export class QuestionController {
@@ -63,6 +64,21 @@ export class QuestionController {
     try {
       const data = searchQuestionsSchema.parse(req.query);
       const result = await QuestionService.search(data);
+
+      return ApiResponse.success(
+        res,
+        RESPONSE_MESSAGES.SUCCESS.QUESTIONS_FOUND,
+        result
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async filter(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const data = filterQuestionsSchema.parse(req.query);
+      const result = await QuestionService.filter(data);
 
       return ApiResponse.success(
         res,
