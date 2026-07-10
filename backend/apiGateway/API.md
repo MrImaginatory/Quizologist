@@ -614,6 +614,61 @@ Get all enrollments for a specific student. **Admin only.**
 
 ---
 
+## Teacher Assignment Endpoints (Admin Only)
+
+### POST /api/teacher/assign/faculty
+
+Assign a faculty to a teacher.
+
+**Body:**
+```json
+{
+  "teacher_id": "uuid",
+  "faculty_id": "uuid"
+}
+```
+
+**201 Created:** Returns the assignment object.
+
+---
+
+### POST /api/teacher/assign/subject
+
+Assign a subject to a teacher.
+
+**Body:**
+```json
+{
+  "teacher_id": "uuid",
+  "faculty_id": "uuid",
+  "subject_id": "uuid"
+}
+```
+
+**201 Created:** Returns the assignment object.
+
+---
+
+### DELETE /api/teacher/:id
+
+Remove a teacher assignment.
+
+---
+
+### GET /api/teacher
+
+List all teacher assignments with filters.
+
+**Query Params:** `teacher_id`, `faculty_id`, `page`, `limit`
+
+---
+
+### GET /api/teacher/teacher/:teacherId
+
+Get all assignments for a specific teacher. **Admin and Teacher.**
+
+---
+
 ## Error Responses
 
 **400 Bad Request:**

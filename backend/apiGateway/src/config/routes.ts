@@ -201,6 +201,48 @@ export const routes: RouteConfig[] = [
     roles: ["student"],
     methods: ["GET"],
   },
+
+  // ==================== Teacher Service ====================
+  // Assign faculty to teacher — admin only
+  {
+    path: "/teacher/assign/faculty",
+    target: `${env.TEACHER_SERVICE_URL}/api/teacher/assign/faculty`,
+    auth: true,
+    roles: ["admin"],
+    methods: ["POST"],
+  },
+  // Assign subject to teacher — admin only
+  {
+    path: "/teacher/assign/subject",
+    target: `${env.TEACHER_SERVICE_URL}/api/teacher/assign/subject`,
+    auth: true,
+    roles: ["admin"],
+    methods: ["POST"],
+  },
+  // Remove assignment — admin only
+  {
+    path: "/teacher",
+    target: `${env.TEACHER_SERVICE_URL}/api/teacher`,
+    auth: true,
+    roles: ["admin"],
+    methods: ["DELETE"],
+  },
+  // Get all assignments — admin only
+  {
+    path: "/teacher",
+    target: `${env.TEACHER_SERVICE_URL}/api/teacher`,
+    auth: true,
+    roles: ["admin"],
+    methods: ["GET"],
+  },
+  // Get teacher assignments — admin and teacher
+  {
+    path: "/teacher/teacher",
+    target: `${env.TEACHER_SERVICE_URL}/api/teacher/teacher`,
+    auth: true,
+    roles: ["admin", "teacher"],
+    methods: ["GET"],
+  },
 ];
 
 export function findMatchingRoute(
