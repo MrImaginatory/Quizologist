@@ -1,8 +1,139 @@
 # Student Service API Documentation
 
-Base URL: `http://localhost:3004/api/enrollment`
+Base URL: `http://localhost:3004`
 
-> In production, all requests should go through the API Gateway at `http://localhost:3000/api/enrollment`.
+> In production, all requests should go through the API Gateway at `http://localhost:3000`.
+
+---
+
+## Student Endpoints (Admin Only)
+
+### GET /api/student/list
+
+Get all students with optional enrollment-based filtering. **Admin only.**
+
+**Headers:**
+```
+Content-Type: application/json
+Authorization: Bearer <jwt_token>
+```
+
+**Query Parameters:**
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| faculty_id | string | No | Filter by enrolled faculty UUID |
+| subject_id | string | No | Filter by enrolled subject UUID |
+| topic_id | string | No | Filter by enrolled topic UUID |
+| page | number | No | Page number (default: 1) |
+| limit | number | No | Items per page (default: 10, max: 100) |
+
+**Example:** `GET /api/student/list?faculty_id=abc-123&page=1&limit=20`
+
+**200 OK:**
+```json
+{
+  "success": true,
+  "message": "Students retrieved successfully",
+  "data": {
+    "students": [
+      {
+        "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "fname": "john",
+        "lname": "doe",
+        "email": "john@example.com",
+        "mobilenumber": "9876543210",
+        "role": "student",
+        "enrollmentCount": 3,
+        "createdAt": "2026-07-06T13:33:56.566Z",
+        "updatedAt": "2026-07-06T13:33:56.566Z"
+      }
+    ],
+    "pagination": {
+      "total": 50,
+      "page": 1,
+      "limit": 20,
+      "totalPages": 3
+    }
+  }
+}
+```
+
+**403 Forbidden:**
+```json
+{
+  "success": false,
+  "message": "You do not have permission to perform this action",
+  "data": null
+}
+```
+
+---
+
+### GET /api/student/:studentId/enrollments
+
+Get all enrollments for a specific student. **Admin only.**
+
+**Path Parameters:**
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| studentId | string | Yes | UUID of the student |
+
+**Query Parameters:**
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| page | number | No | Page number (default: 1) |
+| limit | number | No | Items per page (default: 10) |
+
+**Example:** `GET /api/student/a1b2c3d4-e5f6-7890-abcd-ef1234567890/enrollments?page=1&limit=20`
+
+**200 OK:**
+```json
+{
+  "success": true,
+  "message": "Student enrollments retrieved successfully",
+  "data": {
+    "student": {
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "fname": "john",
+      "lname": "doe",
+      "email": "john@example.com",
+      "mobileNumber": "9876543210",
+      "role": "student"
+    },
+    "enrollments": [
+      {
+        "id": "d4e5f6a7-...",
+        "student_id": "a1b2c3d4-...",
+        "faculty": { "id": "b2c3d4e5-...", "name": "computer science" },
+        "subject": { "id": "c3d4e5f6-...", "name": "data structures" },
+        "topic": { "id": "d4e5f6a7-...", "name": "binary trees" }
+      }
+    ],
+    "pagination": {
+      "total": 15,
+      "page": 1,
+      "limit": 20,
+      "totalPages": 1
+    }
+  }
+}
+```
+
+**404 Not Found:**
+```json
+{
+  "success": false,
+  "message": "Student not found",
+  "data": null
+}
+```
+
+---
+
+## Enrollment Endpoints
 
 ---
 

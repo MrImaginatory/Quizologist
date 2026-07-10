@@ -1,0 +1,1027 @@
+[
+    {
+        "faculty": "Accounting & Auditing",
+        "subjects": [
+            {
+                "subject_name": "Financial Accounting",
+                "topics": [
+                    "Accounting Principles and Conventions",
+                    "Double Entry System",
+                    "Journalizing Transactions",
+                    "Ledger Posting",
+                    "Trial Balance Preparation",
+                    "Bank Reconciliation Statement",
+                    "Depreciation Methods (SLM and WDV)",
+                    "Inventory Valuation (FIFO/LIFO)",
+                    "Bills of Exchange",
+                    "Final Accounts for Sole Traders",
+                    "Accounting for Non-Profit Organizations",
+                    "Consignment Accounts",
+                    "Joint Venture Accounts",
+                    "Single Entry System",
+                    "Rectification of Errors"
+                ]
+            },
+            {
+                "subject_name": "Corporate Accounting",
+                "topics": [
+                    "Issue of Shares",
+                    "Forfeiture and Reissue of Shares",
+                    "Issue of Debentures",
+                    "Redemption of Preference Shares",
+                    "Redemption of Debentures",
+                    "Final Accounts of Companies",
+                    "Valuation of Goodwill",
+                    "Valuation of Shares",
+                    "Amalgamation of Companies",
+                    "Internal Reconstruction",
+                    "Holding Company Accounts",
+                    "Liquidation of Companies",
+                    "Banking Company Accounts",
+                    "Insurance Company Accounts",
+                    "Profit Prior to Incorporation"
+                ]
+            },
+            {
+                "subject_name": "Cost Accounting",
+                "topics": [
+                    "Cost Concepts and Classification",
+                    "Material Costing and EOQ",
+                    "Labor Cost Control",
+                    "Overhead Allocation",
+                    "Overhead Apportionment",
+                    "Activity Based Costing (ABC)",
+                    "Unit Costing",
+                    "Job and Batch Costing",
+                    "Contract Costing",
+                    "Process Costing",
+                    "Joint Products and By-products",
+                    "Operating Costing",
+                    "Reconciliation of Cost and Financial Accounts",
+                    "Integral Accounting Systems",
+                    "Non-integral Accounting Systems"
+                ]
+            },
+            {
+                "subject_name": "Management Accounting",
+                "topics": [
+                    "Meaning and Scope of Management Accounting",
+                    "Financial Statement Analysis",
+                    "Liquidity Ratios",
+                    "Profitability Ratios",
+                    "Solvency Ratios",
+                    "Fund Flow Statement",
+                    "Cash Flow Statement (AS-3)",
+                    "Marginal Costing",
+                    "Break-Even Analysis",
+                    "Standard Costing: Material Variances",
+                    "Standard Costing: Labor Variances",
+                    "Budgetary Control",
+                    "Zero-Based Budgeting",
+                    "Responsibility Accounting",
+                    "Transfer Pricing"
+                ]
+            },
+            {
+                "subject_name": "Auditing and Assurance",
+                "topics": [
+                    "Nature and Objective of Audit",
+                    "Types of Audit",
+                    "Audit Planning and Strategy",
+                    "Audit Evidence",
+                    "Internal Control Systems",
+                    "Internal Check and Internal Audit",
+                    "Vouching of Cash Transactions",
+                    "Vouching of Trading Transactions",
+                    "Verification of Assets",
+                    "Valuation of Liabilities",
+                    "Company Auditor Appointment and Removal",
+                    "Auditor Rights and Duties",
+                    "Audit Report Types (Qualified/Clean)",
+                    "Audit of Branch Accounts",
+                    "Cost Audit and Secretarial Audit"
+                ]
+            },
+            {
+                "subject_name": "Advanced Financial Reporting",
+                "topics": [
+                    "Framework for Financial Reporting",
+                    "Accounting Standards Basics",
+                    "Presentation of Financial Statements",
+                    "Inventory Accounting Standards",
+                    "Property, Plant, and Equipment (PPE)",
+                    "Intangible Assets",
+                    "Impairment of Assets",
+                    "Financial Instruments",
+                    "Revenue Recognition",
+                    "Consolidated Financial Statements",
+                    "Accounting for Mergers",
+                    "Share-Based Payments",
+                    "Segment Reporting",
+                    "Earnings Per Share (EPS)",
+                    "Corporate Social Responsibility Reporting"
+                ]
+            },
+            {
+                "subject_name": "Accounting Information Systems",
+                "topics": [
+                    "Introduction to AIS",
+                    "AIS and Business Processes",
+                    "Transaction Processing Systems",
+                    "Relational Databases in Accounting",
+                    "Enterprise Resource Planning (ERP)",
+                    "Cloud Accounting",
+                    "Data Security in AIS",
+                    "Internal Controls in IT Environment",
+                    "Computer Assisted Audit Techniques (CAATs)",
+                    "E-commerce and AIS",
+                    "Big Data in Accounting",
+                    "Blockchain in Accounting",
+                    "XBRL Reporting",
+                    "System Development Life Cycle",
+                    "Fraud Detection using AIS"
+                ]
+            },
+            {
+                "subject_name": "Forensic Accounting",
+                "topics": [
+                    "Fundamentals of Forensic Accounting",
+                    "Fraud Triangle Theory",
+                    "Types of Financial Fraud",
+                    "Employee Embezzlement",
+                    "Management Fraud",
+                    "Cyber Frauds in Finance",
+                    "Fraud Investigation Process",
+                    "Gathering Forensic Evidence",
+                    "Interviewing Techniques",
+                    "Data Analytics for Fraud Detection",
+                    "Tracing Illicit Funds",
+                    "Litigation Support",
+                    "Valuation of Damages",
+                    "Expert Witnessing",
+                    "Anti-Money Laundering (AML)"
+                ]
+            },
+            {
+                "subject_name": "Public Sector Accounting",
+                "topics": [
+                    "Scope of Public Sector Accounting",
+                    "Government Accounting Standards",
+                    "Fund Accounting Principles",
+                    "Budgeting in Government Entities",
+                    "Treasury Management",
+                    "Public Expenditure Control",
+                    "Revenue Accounting",
+                    "National Income Accounting",
+                    "Public Debt Management",
+                    "Local Government Finance",
+                    "Audit of Government Accounts",
+                    "Performance Auditing in Public Sector",
+                    "Public-Private Partnerships (PPP)",
+                    "Grants and Subsidies Accounting",
+                    "Reporting by Municipalities"
+                ]
+            },
+            {
+                "subject_name": "International Accounting",
+                "topics": [
+                    "Evolution of International Accounting",
+                    "IFRS Convergence and Adoption",
+                    "Comparative Accounting Systems",
+                    "Foreign Currency Translation",
+                    "International Financial Statement Analysis",
+                    "Global Corporate Governance",
+                    "International Auditing Standards (ISA)",
+                    "Transfer Pricing Multinationals",
+                    "Cross-Border Mergers and Acquisitions",
+                    "Accounting for Multinational Enterprises",
+                    "Harmonization of Accounting Standards",
+                    "Reporting Foreign Operations",
+                    "International Taxation Issues",
+                    "Cultural Influence on Accounting",
+                    "Emerging Issues in Global Accounting"
+                ]
+            }
+        ]
+    },
+    {
+        "faculty": "Finance & Banking",
+        "subjects": [
+            {
+                "subject_name": "Financial Management",
+                "topics": [
+                    "Wealth Maximization vs Profit Maximization",
+                    "Time Value of Money",
+                    "Cost of Capital",
+                    "Cost of Debt and Equity",
+                    "Weighted Average Cost of Capital (WACC)",
+                    "Capital Budgeting Techniques",
+                    "NPV and IRR",
+                    "Payback Period",
+                    "Leverage (Operating and Financial)",
+                    "Capital Structure Theories",
+                    "NI and NOI Approaches",
+                    "Dividend Policies",
+                    "Working Capital Management",
+                    "Cash Management",
+                    "Receivables Management"
+                ]
+            },
+            {
+                "subject_name": "Corporate Finance",
+                "topics": [
+                    "Corporate Financial Planning",
+                    "Raising Long-Term Finance",
+                    "Initial Public Offerings (IPOs)",
+                    "Rights Issue and Private Placement",
+                    "Venture Capital Financing",
+                    "Lease Financing",
+                    "Hire Purchase",
+                    "Mergers and Acquisitions",
+                    "Synergies in M&A",
+                    "Corporate Restructuring",
+                    "Spin-offs and Split-offs",
+                    "Leveraged Buyouts (LBOs)",
+                    "Project Finance",
+                    "Corporate Governance in Finance",
+                    "Dividend Signaling"
+                ]
+            },
+            {
+                "subject_name": "Investment Analysis and Portfolio Management",
+                "topics": [
+                    "Investment Environment",
+                    "Types of Securities",
+                    "Risk and Return Concepts",
+                    "Systematic vs Unsystematic Risk",
+                    "Fundamental Analysis: Economy",
+                    "Fundamental Analysis: Industry",
+                    "Fundamental Analysis: Company",
+                    "Technical Analysis: Charts",
+                    "Technical Analysis: Indicators",
+                    "Efficient Market Hypothesis (EMH)",
+                    "Portfolio Theory (Markowitz)",
+                    "Capital Asset Pricing Model (CAPM)",
+                    "Arbitrage Pricing Theory",
+                    "Portfolio Performance Evaluation",
+                    "Mutual Funds Evaluation"
+                ]
+            },
+            {
+                "subject_name": "Financial Markets and Institutions",
+                "topics": [
+                    "Structure of Financial System",
+                    "Money Market Instruments",
+                    "Treasury Bills and Commercial Paper",
+                    "Capital Markets",
+                    "Stock Exchanges",
+                    "Securities Regulatory Bodies",
+                    "Debt Market",
+                    "Non-Banking Financial Companies (NBFCs)",
+                    "Development Financial Institutions",
+                    "Mutual Funds Organization",
+                    "Insurance Sector",
+                    "Insurance Regulatory Bodies",
+                    "Credit Rating Agencies",
+                    "Depositories",
+                    "Foreign Exchange Market"
+                ]
+            },
+            {
+                "subject_name": "International Finance",
+                "topics": [
+                    "International Monetary System",
+                    "Balance of Payments",
+                    "Foreign Exchange Rates",
+                    "Spot and Forward Markets",
+                    "Purchasing Power Parity",
+                    "Interest Rate Parity",
+                    "Foreign Exchange Exposure: Transaction",
+                    "Foreign Exchange Exposure: Translation",
+                    "Hedging Foreign Exchange Risk",
+                    "International Capital Budgeting",
+                    "Cost of Capital for MNCs",
+                    "International Equity Markets",
+                    "International Bond Markets",
+                    "Eurocurrency Market",
+                    "FDI and FPI"
+                ]
+            },
+            {
+                "subject_name": "Banking Operations and Management",
+                "topics": [
+                    "Role of Banks in Economy",
+                    "Commercial Banking Functions",
+                    "Central Bank and Monetary Policy",
+                    "Banker-Customer Relationship",
+                    "Types of Bank Accounts",
+                    "KYC Norms",
+                    "Negotiable Instruments Act",
+                    "Cheques and Endorsements",
+                    "Core Banking Solutions (CBS)",
+                    "Digital Banking Systems",
+                    "Credit Appraisal Process",
+                    "Non-Performing Assets (NPAs)",
+                    "Basel Accords",
+                    "Retail Banking vs Corporate Banking",
+                    "Asset-Liability Management"
+                ]
+            },
+            {
+                "subject_name": "Risk Management and Insurance",
+                "topics": [
+                    "Concept of Risk",
+                    "Risk Management Process",
+                    "Enterprise Risk Management (ERM)",
+                    "Principles of Insurance",
+                    "Life Insurance Products",
+                    "General Insurance",
+                    "Health Insurance",
+                    "Motor Insurance",
+                    "Reinsurance",
+                    "Insurance Underwriting",
+                    "Claim Settlement Process",
+                    "Actuarial Valuation Basics",
+                    "Bancassurance",
+                    "Role of Insurance Brokers",
+                    "Regulatory Framework of Insurance"
+                ]
+            },
+            {
+                "subject_name": "Financial Derivatives",
+                "topics": [
+                    "Introduction to Derivatives",
+                    "Forward Contracts",
+                    "Pricing of Forwards",
+                    "Futures Contracts",
+                    "Mechanics of Futures Trading",
+                    "Hedging with Futures",
+                    "Options Basics (Call and Put)",
+                    "Option Pricing (Binomial Model)",
+                    "Black-Scholes Model",
+                    "Option Trading Strategies",
+                    "Swaps (Interest Rate Swaps)",
+                    "Currency Swaps",
+                    "Credit Default Swaps (CDS)",
+                    "Commodity Derivatives",
+                    "Derivatives Regulatory Framework"
+                ]
+            },
+            {
+                "subject_name": "Behavioral Finance",
+                "topics": [
+                    "Standard Finance vs Behavioral Finance",
+                    "Prospect Theory",
+                    "Cognitive Biases",
+                    "Emotional Biases",
+                    "Overconfidence and Anchoring",
+                    "Loss Aversion",
+                    "Herd Behavior",
+                    "Mental Accounting",
+                    "Confirmation Bias",
+                    "Market Anomalies",
+                    "Momentum and Value Strategies",
+                    "Limits to Arbitrage",
+                    "Bubble and Crashes",
+                    "Behavioral Corporate Finance",
+                    "Nudging in Financial Decisions"
+                ]
+            },
+            {
+                "subject_name": "Wealth Management",
+                "topics": [
+                    "Introduction to Wealth Management",
+                    "Client Profiling",
+                    "Financial Planning Process",
+                    "Asset Allocation Strategies",
+                    "Retirement Planning",
+                    "Estate Planning and Trusts",
+                    "Tax Planning Strategies",
+                    "Alternative Investments",
+                    "Private Equity and Hedge Funds",
+                    "Art and Collectibles as Investments",
+                    "Philanthropy and Endowments",
+                    "Family Offices",
+                    "Wealth Management Technology",
+                    "Ethics in Wealth Management",
+                    "Measuring Client Portfolio Performance"
+                ]
+            }
+        ]
+    },
+    {
+        "faculty": "Business Management & HR",
+        "subjects": [
+            {
+                "subject_name": "Principles of Management",
+                "topics": [
+                    "Evolution of Management Thought",
+                    "Scientific Management",
+                    "Administrative Management Principles",
+                    "Planning Process and Types",
+                    "Management by Objectives (MBO)",
+                    "Decision-Making Models",
+                    "Organizing and Departmentation",
+                    "Delegation and Decentralization",
+                    "Span of Control",
+                    "Staffing Functions",
+                    "Directing Elements",
+                    "Leadership Styles",
+                    "Motivation Theories",
+                    "Controlling Process",
+                    "Modern Management Control Techniques"
+                ]
+            },
+            {
+                "subject_name": "Human Resource Management",
+                "topics": [
+                    "Strategic Role of HRM",
+                    "Human Resource Planning (HRP)",
+                    "Job Analysis and Job Design",
+                    "Recruitment Channels",
+                    "Selection Tools and Tests",
+                    "Onboarding and Induction",
+                    "Training Methods",
+                    "Management Development Programs",
+                    "Performance Appraisal Systems",
+                    "360-Degree Feedback",
+                    "Compensation Management",
+                    "Fringe Benefits and Incentives",
+                    "Industrial Relations",
+                    "Grievance Redressal Mechanisms",
+                    "Workforce Diversity Management"
+                ]
+            },
+            {
+                "subject_name": "Organizational Behavior",
+                "topics": [
+                    "Foundations of Individual Behavior",
+                    "Personality Determinants and Traits",
+                    "Perception Process and Errors",
+                    "Attitudes and Values",
+                    "Job Satisfaction",
+                    "Group Dynamics and Stages",
+                    "Team Building Interventions",
+                    "Organizational Power and Politics",
+                    "Conflict Resolution Strategies",
+                    "Organizational Culture",
+                    "Organizational Climate",
+                    "Managing Occupational Stress",
+                    "Organizational Change Models",
+                    "Resistance to Change",
+                    "Organizational Development (OD)"
+                ]
+            },
+            {
+                "subject_name": "Strategic Management",
+                "topics": [
+                    "Strategic Management Process",
+                    "Vision, Mission, and Objectives",
+                    "Environmental Scanning",
+                    "SWOT and PESTEL Analysis",
+                    "Porter's Five Forces Model",
+                    "VRIO Framework",
+                    "Value Chain Analysis",
+                    "Cost Leadership Strategy",
+                    "Differentiation Strategy",
+                    "Corporate Level Strategies",
+                    "Diversification and Integration",
+                    "Strategic Alliances",
+                    "Mergers and Acquisitions",
+                    "Strategy Implementation",
+                    "Balanced Scorecard"
+                ]
+            },
+            {
+                "subject_name": "Operations Management",
+                "topics": [
+                    "Nature and Scope of Operations",
+                    "Facility Location Factors",
+                    "Facility Layout Planning",
+                    "Production Planning and Control",
+                    "Materials Management",
+                    "Inventory Control Tools (ABC, VED)",
+                    "Total Quality Management (TQM)",
+                    "Six Sigma Methodology",
+                    "Just-In-Time (JIT) Systems",
+                    "Lean Manufacturing",
+                    "Supply Chain Management (SCM)",
+                    "Work Study and Time Study",
+                    "PERT and CPM Networks",
+                    "Maintenance Management",
+                    "Automation in Operations"
+                ]
+            },
+            {
+                "subject_name": "Entrepreneurship Development",
+                "topics": [
+                    "Concept and Traits of an Entrepreneur",
+                    "Types of Entrepreneurs",
+                    "Entrepreneurship and Economic Growth",
+                    "Identifying Business Opportunities",
+                    "Feasibility Analysis",
+                    "Business Plan Preparation",
+                    "Sources of Startup Funding",
+                    "Venture Capital and Angel Investors",
+                    "Incubators and Accelerators",
+                    "Government Policies for SMEs",
+                    "Women Entrepreneurship",
+                    "Social Entrepreneurship",
+                    "Family Business Dynamics",
+                    "Intellectual Property for Startups",
+                    "Scaling a Business"
+                ]
+            },
+            {
+                "subject_name": "Business Ethics and Corporate Governance",
+                "topics": [
+                    "Concepts of Business Ethics",
+                    "Ethical Dilemmas in Business",
+                    "Theories of Ethics (Utilitarian, Deontological)",
+                    "Ethics in Marketing",
+                    "Ethics in Human Resources",
+                    "Ethics in Finance",
+                    "Corporate Social Responsibility (CSR)",
+                    "Evolution of Corporate Governance",
+                    "Agency Theory",
+                    "Board of Directors Structure",
+                    "Role of Independent Directors",
+                    "Audit Committees",
+                    "Whistleblower Policies",
+                    "Corporate Frauds and Scandals",
+                    "Global Governance Codes (Cadbury, Sarbanes-Oxley)"
+                ]
+            },
+            {
+                "subject_name": "Supply Chain Management",
+                "topics": [
+                    "Basics of Supply Chain Management",
+                    "Supply Chain Strategy",
+                    "Demand Forecasting in SCM",
+                    "Procurement and Sourcing Strategies",
+                    "Supplier Relationship Management",
+                    "Inventory Management in SCM",
+                    "Warehousing Operations",
+                    "Transportation and Logistics",
+                    "Distribution Network Design",
+                    "Reverse Logistics",
+                    "Green Supply Chain Management",
+                    "IT in Supply Chain (ERP, RFID)",
+                    "Supply Chain Risk Management",
+                    "Global Supply Chain Dynamics",
+                    "Agile and Lean Supply Chains"
+                ]
+            },
+            {
+                "subject_name": "International Business",
+                "topics": [
+                    "Nature of International Business",
+                    "Modes of Entry into International Markets",
+                    "Theories of International Trade",
+                    "Tariff and Non-Tariff Barriers",
+                    "World Trade Organization (WTO)",
+                    "Regional Economic Integration (EU, NAFTA/USMCA)",
+                    "International Business Environment",
+                    "Cultural Dimensions in Global Business",
+                    "Multinational Corporations (MNCs)",
+                    "Foreign Direct Investment (FDI) Trends",
+                    "Global Strategic Management",
+                    "International Human Resource Management",
+                    "Global Marketing Strategies",
+                    "International Supply Chains",
+                    "Export-Import Procedures"
+                ]
+            },
+            {
+                "subject_name": "Leadership and Team Dynamics",
+                "topics": [
+                    "Concept of Leadership",
+                    "Trait Theories of Leadership",
+                    "Behavioral Theories (Ohio State, Michigan)",
+                    "Contingency Theories (Fiedler, Path-Goal)",
+                    "Transformational Leadership",
+                    "Transactional Leadership",
+                    "Servant Leadership",
+                    "Emotional Intelligence in Leadership",
+                    "Team Formation Stages (Tuckman)",
+                    "Roles within a Team (Belbin)",
+                    "Virtual Teams Management",
+                    "Cross-Functional Teams",
+                    "Decision Making in Teams",
+                    "Conflict Resolution in Teams",
+                    "Evaluating Team Performance"
+                ]
+            }
+        ]
+    },
+    {
+        "faculty": "Marketing & Digital Commerce",
+        "subjects": [
+            {
+                "subject_name": "Principles of Marketing",
+                "topics": [
+                    "Marketing Core Concepts",
+                    "Marketing Environment Analysis",
+                    "Market Segmentation Bases",
+                    "Targeting Strategies",
+                    "Positioning Frameworks",
+                    "Product Life Cycle (PLC)",
+                    "New Product Development",
+                    "Pricing Objectives and Methods",
+                    "Distribution Channel Selection",
+                    "Retail and Wholesale Logistics",
+                    "Integrated Marketing Communications (IMC)",
+                    "Public Relations and Publicity",
+                    "Sales Promotion Techniques",
+                    "Marketing Metrics and Control",
+                    "Sustainable Marketing"
+                ]
+            },
+            {
+                "subject_name": "Consumer Behavior",
+                "topics": [
+                    "Consumer Decision-Making Models",
+                    "Motivation and Consumer Needs",
+                    "Consumer Perception Processing",
+                    "Consumer Learning and Conditioning",
+                    "Attitude Formation Models",
+                    "Personality and Consumer Behavior",
+                    "Cultural Influences on Buying",
+                    "Subcultural Demographics",
+                    "Social Class Structures",
+                    "Reference Groups and Opinion Leaders",
+                    "Family Decision Making",
+                    "Diffusion of Innovation",
+                    "Post-Purchase Dissonance",
+                    "Organizational Buying Behavior",
+                    "Consumer Rights and Protection"
+                ]
+            },
+            {
+                "subject_name": "Digital Marketing & E-Commerce",
+                "topics": [
+                    "E-Commerce Business Models",
+                    "Digital Marketing Architecture",
+                    "Search Engine Optimization (SEO)",
+                    "Pay-Per-Click (PPC) Advertising",
+                    "Social Media Marketing (SMM)",
+                    "Content Marketing Strategy",
+                    "Email Marketing Automation",
+                    "Affiliate Marketing",
+                    "Influencer Marketing",
+                    "Web Analytics and Metrics",
+                    "Conversion Rate Optimization (CRO)",
+                    "Mobile App Marketing",
+                    "E-Payment Systems",
+                    "UI/UX Principles in E-Commerce",
+                    "Data Privacy and Digital Law"
+                ]
+            },
+            {
+                "subject_name": "Services Marketing",
+                "topics": [
+                    "Characteristics of Services",
+                    "The 7 Ps of Services Marketing",
+                    "Service Quality (SERVQUAL)",
+                    "Gap Model of Service Quality",
+                    "Customer Expectations Management",
+                    "Service Blueprinting",
+                    "Managing Service Demand and Capacity",
+                    "Service Recovery Strategies",
+                    "Physical Evidence and Servicescapes",
+                    "Role of Employees (Internal Marketing)",
+                    "Customer Relationship Marketing",
+                    "Pricing of Services",
+                    "Distribution of Services",
+                    "Marketing of Financial Services",
+                    "Marketing of Healthcare Services"
+                ]
+            },
+            {
+                "subject_name": "Advertising & Brand Management",
+                "topics": [
+                    "Role of Advertising",
+                    "Setting Advertising Objectives (DAGMAR)",
+                    "Advertising Budgeting",
+                    "Creative Strategy Development",
+                    "Media Planning and Scheduling",
+                    "Measuring Advertising Effectiveness",
+                    "Advertising Agencies Structure",
+                    "Concept of Brand Equity",
+                    "Brand Positioning Strategies",
+                    "Brand Identity and Image",
+                    "Brand Extension Risks",
+                    "Brand Portfolios",
+                    "Co-branding and Licensing",
+                    "Rebranding Strategies",
+                    "Global Brand Management"
+                ]
+            },
+            {
+                "subject_name": "Retail Management",
+                "topics": [
+                    "Introduction to Retailing",
+                    "Types of Retail Formats",
+                    "Retail Store Location Strategies",
+                    "Store Layout and Design",
+                    "Visual Merchandising",
+                    "Retail Pricing Strategies",
+                    "Merchandise Management",
+                    "Retail Supply Chain",
+                    "Customer Service in Retail",
+                    "Omnichannel Retailing",
+                    "Private Label Brands",
+                    "Franchising Models",
+                    "Retail Analytics",
+                    "FDI in Retail Sector",
+                    "Future Trends in Retailing"
+                ]
+            },
+            {
+                "subject_name": "Sales and Distribution Management",
+                "topics": [
+                    "Objectives of Sales Management",
+                    "Personal Selling Process",
+                    "Theories of Selling",
+                    "Sales Organization Structures",
+                    "Recruitment and Training of Sales Force",
+                    "Sales Force Motivation and Compensation",
+                    "Sales Territories and Quotas",
+                    "Evaluating Sales Performance",
+                    "Channel Design Decisions",
+                    "Channel Conflict Management",
+                    "Wholesaling Functions",
+                    "Physical Distribution Management",
+                    "Logistics Cost Control",
+                    "IT in Sales Management",
+                    "Ethical Issues in Sales"
+                ]
+            },
+            {
+                "subject_name": "International Marketing",
+                "topics": [
+                    "Scope of International Marketing",
+                    "Assessing Global Market Opportunities",
+                    "International Marketing Environment",
+                    "Standardization vs Adaptation",
+                    "International Product Strategies",
+                    "Global Pricing Decisions",
+                    "Dumping and Transfer Pricing",
+                    "International Distribution Channels",
+                    "Global Advertising Strategies",
+                    "Trade Fairs and Exhibitions",
+                    "Export Documentation",
+                    "Export Finance and Insurance",
+                    "Role of Export Promotion Councils",
+                    "Cross-Cultural Marketing",
+                    "Emerging Markets Dynamics"
+                ]
+            },
+            {
+                "subject_name": "Marketing Research",
+                "topics": [
+                    "Marketing Research Process",
+                    "Defining Research Problems",
+                    "Research Design (Exploratory, Descriptive, Causal)",
+                    "Secondary Data Sources",
+                    "Primary Data Collection Methods",
+                    "Questionnaire Formulation",
+                    "Sampling Techniques",
+                    "Measurement and Scaling",
+                    "Data Preparation and Cleaning",
+                    "Univariate Data Analysis",
+                    "Bivariate Data Analysis",
+                    "Multivariate Data Analysis",
+                    "Hypothesis Testing in Marketing",
+                    "Report Writing and Presentation",
+                    "Applications of Marketing Research"
+                ]
+            },
+            {
+                "subject_name": "Customer Relationship Management",
+                "topics": [
+                    "Evolution of CRM",
+                    "Benefits of CRM",
+                    "CRM Frameworks and Models",
+                    "Customer Lifecycle Management",
+                    "Customer Acquisition Strategies",
+                    "Customer Retention Techniques",
+                    "Customer Lifetime Value (CLV)",
+                    "Loyalty Programs Design",
+                    "Operational CRM",
+                    "Analytical CRM",
+                    "Collaborative CRM",
+                    "CRM Software and Implementation",
+                    "Data Mining for CRM",
+                    "Social CRM",
+                    "Privacy Concerns in CRM"
+                ]
+            }
+        ]
+    },
+    {
+        "faculty": "Taxation & Corporate Law",
+        "subjects": [
+            {
+                "subject_name": "Direct Tax Laws",
+                "topics": [
+                    "Basic Concepts of Income Tax",
+                    "Residential Status and Tax Liability",
+                    "Income Exempt from Tax",
+                    "Income under the Head Salaries",
+                    "Income from House Property",
+                    "Profits and Gains of Business",
+                    "Capital Gains Computation",
+                    "Income from Other Sources",
+                    "Clubbing of Income",
+                    "Set-off and Carry Forward of Losses",
+                    "Deductions from Gross Total Income",
+                    "Assessment of Individuals",
+                    "Assessment of HUFs and Firms",
+                    "Filing of Income Tax Returns",
+                    "Tax Deducted at Source (TDS)"
+                ]
+            },
+            {
+                "subject_name": "Indirect Taxes & GST",
+                "topics": [
+                    "Concept of Indirect Taxation",
+                    "Constitutional Framework of GST",
+                    "CGST, SGST, IGST Mechanisms",
+                    "Meaning and Scope of Supply",
+                    "Time and Value of Supply",
+                    "Place of Supply Rules",
+                    "Input Tax Credit (ITC) Rules",
+                    "Registration under GST",
+                    "Tax Invoices, Credit and Debit Notes",
+                    "GST Returns Filing",
+                    "Payment of Tax and Refunds",
+                    "Customs Act Basic Concepts",
+                    "Classification of Goods under Customs",
+                    "Valuation under Customs Act",
+                    "Duty Drawback Schemes"
+                ]
+            },
+            {
+                "subject_name": "Corporate Tax Planning",
+                "topics": [
+                    "Tax Planning vs Tax Evasion",
+                    "Tax Planning for New Business",
+                    "Location and Nature of Business",
+                    "Tax Planning regarding Capital Structure",
+                    "Dividend Policy and Tax Implications",
+                    "Tax Planning for Managerial Remuneration",
+                    "Tax Planning for Amalgamations",
+                    "Tax Planning for Demergers",
+                    "Make or Buy Decisions",
+                    "Lease vs Buy Decisions",
+                    "Export Promotions and Tax Incentives",
+                    "Special Economic Zones (SEZs)",
+                    "Tax Planning for Foreign Collaborations",
+                    "Advance Tax and Interest Payable",
+                    "Appeals and Revisions"
+                ]
+            },
+            {
+                "subject_name": "International Taxation",
+                "topics": [
+                    "Principles of International Taxation",
+                    "Double Taxation Avoidance Agreements (DTAA)",
+                    "Relief from Double Taxation",
+                    "Transfer Pricing Provisions",
+                    "Arm's Length Price Computation",
+                    "Advance Pricing Agreements (APA)",
+                    "Base Erosion and Profit Shifting (BEPS)",
+                    "General Anti-Avoidance Rules (GAAR)",
+                    "Taxation of E-Commerce Transactions",
+                    "Taxation of Expatriates",
+                    "Permanent Establishment Concepts",
+                    "Foreign Tax Credit Rules",
+                    "Controlled Foreign Corporation (CFC) Rules",
+                    "Mutual Agreement Procedure (MAP)",
+                    "FATCA and CRS Reporting"
+                ]
+            },
+            {
+                "subject_name": "Company Law",
+                "topics": [
+                    "Nature and Classes of Companies",
+                    "Incorporation of a Company",
+                    "Memorandum of Association",
+                    "Articles of Association",
+                    "Prospectus and Allotment of Securities",
+                    "Share Capital and Debentures",
+                    "Transfer and Transmission of Shares",
+                    "Membership in a Company",
+                    "Company Meetings and Resolutions",
+                    "Appointment and Duties of Directors",
+                    "Board Meetings and Committees",
+                    "Prevention of Oppression and Mismanagement",
+                    "Compromises and Arrangements",
+                    "Winding Up of a Company",
+                    "National Company Law Tribunal (NCLT)"
+                ]
+            },
+            {
+                "subject_name": "Business and Commercial Laws",
+                "topics": [
+                    "Indian Contract Act Basics",
+                    "Offer, Acceptance, and Consideration",
+                    "Capacity to Contract",
+                    "Free Consent and Void Agreements",
+                    "Performance and Discharge of Contracts",
+                    "Breach of Contract and Remedies",
+                    "Contracts of Indemnity and Guarantee",
+                    "Bailment and Pledge",
+                    "Law of Agency",
+                    "Sale of Goods Act",
+                    "Conditions and Warranties",
+                    "Rights of Unpaid Seller",
+                    "Indian Partnership Act",
+                    "Limited Liability Partnership (LLP) Act",
+                    "Negotiable Instruments Act Basics"
+                ]
+            },
+            {
+                "subject_name": "Labor and Industrial Laws",
+                "topics": [
+                    "Factories Act Provisions",
+                    "Industrial Disputes Act",
+                    "Trade Unions Act",
+                    "Payment of Wages Act",
+                    "Minimum Wages Act",
+                    "Payment of Bonus Act",
+                    "Employees' Provident Funds Act",
+                    "Employees' State Insurance Act",
+                    "Workmen's Compensation Act",
+                    "Maternity Benefit Act",
+                    "Payment of Gratuity Act",
+                    "Child Labor (Prohibition and Regulation) Act",
+                    "Sexual Harassment of Women at Workplace Act",
+                    "Contract Labor (Regulation and Abolition) Act",
+                    "Recent Labor Codes Overview"
+                ]
+            },
+            {
+                "subject_name": "Intellectual Property Rights",
+                "topics": [
+                    "Concept and Nature of IPR",
+                    "International Treaties (TRIPS, Paris Convention)",
+                    "Patents Act: Patentable Inventions",
+                    "Procedure for Grant of Patent",
+                    "Infringement of Patents and Remedies",
+                    "Copyright Act: Subject Matter",
+                    "Ownership and Assignment of Copyright",
+                    "Fair Use and Copyright Infringement",
+                    "Trademarks Act: Registration Process",
+                    "Passing Off vs Infringement",
+                    "Geographical Indications (GI)",
+                    "Industrial Designs Act",
+                    "Protection of Plant Varieties",
+                    "Trade Secrets and Confidentiality",
+                    "IPR Management and Commercialization"
+                ]
+            },
+            {
+                "subject_name": "Cyber Law and Information Technology Act",
+                "topics": [
+                    "Introduction to Cyber Space",
+                    "Information Technology Act Overview",
+                    "Electronic and Digital Signatures",
+                    "Electronic Governance",
+                    "Attribution and Dispatch of Electronic Records",
+                    "Certifying Authorities Regulation",
+                    "Cyber Appellate Tribunal",
+                    "Offences and Penalties under IT Act",
+                    "Data Protection and Privacy Laws",
+                    "Cyber Crimes (Phishing, Hacking)",
+                    "Cyber Defamation",
+                    "Intellectual Property Issues in Cyber Space",
+                    "Jurisdictional Issues in Cyber Law",
+                    "E-Contracts and Legal Validity",
+                    "Information Technology Rules (Intermediaries)"
+                ]
+            },
+            {
+                "subject_name": "Insolvency and Bankruptcy Code",
+                "topics": [
+                    "Historical Background of IBC",
+                    "Structure and Applicability of IBC",
+                    "Insolvency and Bankruptcy Board of India (IBBI)",
+                    "Insolvency Professionals and Agencies",
+                    "Corporate Insolvency Resolution Process (CIRP)",
+                    "Initiation of CIRP by Creditors",
+                    "Committee of Creditors (CoC)",
+                    "Information Memorandum and Resolution Plan",
+                    "Liquidation Process",
+                    "Distribution of Assets (Waterfall Mechanism)",
+                    "Fast Track Corporate Insolvency",
+                    "Voluntary Liquidation of Corporate Persons",
+                    "Insolvency of Individuals and Partnership Firms",
+                    "Cross Border Insolvency",
+                    "Offences and Penalties under IBC"
+                ]
+            }
+        ]
+    }
+]

@@ -484,6 +484,136 @@ Soft delete a question.
 
 ---
 
+## Enrollment Endpoints
+
+### POST /api/enrollment
+
+Enroll in faculties, subjects, and topics. **Student only.**
+
+**Body:**
+```json
+{
+  "enrollments": [
+    { "faculty_id": "a1b2c3d4-..." },
+    { "faculty_id": "a1b2c3d4-...", "subject_id": "b2c3d4e5-..." }
+  ]
+}
+```
+
+---
+
+### GET /api/enrollment
+
+Get own enrollments. **Student only.**
+
+**Query Params:** `page`, `limit`
+
+---
+
+### GET /api/enrollment/student/:studentId
+
+Get enrollments for a specific student. **Admin/Teacher only.**
+
+---
+
+### DELETE /api/enrollment/:id
+
+Remove an enrollment. **Student only.**
+
+---
+
+## Student Management (Admin Only)
+
+### GET /api/student/list
+
+List all students with optional enrollment-based filtering. **Admin only.**
+
+**Query Params:**
+
+| Param | Type | Description |
+|-------|------|-------------|
+| faculty_id | string | Filter by enrolled faculty UUID |
+| subject_id | string | Filter by enrolled subject UUID |
+| topic_id | string | Filter by enrolled topic UUID |
+| page | number | Page number (default: 1) |
+| limit | number | Items per page (default: 10) |
+
+**Example:** `GET /api/student/list?faculty_id=abc-123&limit=20`
+
+**200 OK:**
+```json
+{
+  "success": true,
+  "message": "Students retrieved successfully",
+  "data": {
+    "students": [
+      {
+        "id": "a1b2c3d4-...",
+        "fname": "john",
+        "lname": "doe",
+        "email": "john@example.com",
+        "mobileNumber": "9876543210",
+        "role": "student",
+        "enrollmentCount": 3,
+        "createdAt": "2026-07-06T13:33:56.566Z"
+      }
+    ],
+    "pagination": {
+      "total": 50,
+      "page": 1,
+      "limit": 20,
+      "totalPages": 3
+    }
+  }
+}
+```
+
+---
+
+### GET /api/student/:studentId/enrollments
+
+Get all enrollments for a specific student. **Admin only.**
+
+**Path Params:** `studentId` — UUID of the student
+
+**Query Params:** `page`, `limit`
+
+**Example:** `GET /api/student/a1b2c3d4-enrollments?page=1&limit=20`
+
+**200 OK:**
+```json
+{
+  "success": true,
+  "message": "Student enrollments retrieved successfully",
+  "data": {
+    "student": {
+      "id": "a1b2c3d4-...",
+      "fname": "john",
+      "lname": "doe",
+      "email": "john@example.com",
+      "mobileNumber": "9876543210",
+      "role": "student"
+    },
+    "enrollments": [
+      {
+        "id": "d4e5f6a7-...",
+        "faculty": { "id": "b2c3d4e5-...", "name": "computer science" },
+        "subject": { "id": "c3d4e5f6-...", "name": "data structures" },
+        "topic": { "id": "d4e5f6a7-...", "name": "binary trees" }
+      }
+    ],
+    "pagination": {
+      "total": 15,
+      "page": 1,
+      "limit": 20,
+      "totalPages": 1
+    }
+  }
+}
+```
+
+---
+
 ## Error Responses
 
 **400 Bad Request:**

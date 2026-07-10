@@ -4,27 +4,17 @@ import { useState, useEffect } from "react";
 import styles from "./Students.module.css";
 import { contentService, Faculty, Subject, Topic } from "@/lib/contentService";
 import { capitalize } from "@/utils/helpers";
+import { studentService } from "@/lib/studentService";
 
 interface Student {
   id: string;
   fname: string;
   lname: string;
   email: string;
-  mobilenumber: string;
+  mobileNumber: string;
   role: string;
   createdAt: string;
-  enrollments?: Enrollment[];
-}
-
-interface Enrollment {
-  id: string;
-  student_id: string;
-  faculty_id: string;
-  subject_id: string | null;
-  topic_id: string | null;
-  faculty?: { id: string; name: string };
-  subject?: { id: string; name: string };
-  topic?: { id: string; name: string };
+  enrollmentCount?: number;
 }
 
 export default function StudentsPage() {
@@ -115,28 +105,16 @@ export default function StudentsPage() {
     try {
       setLoading(true);
 
-      // Build query params
       const params = new URLSearchParams();
       params.append("page", String(currentPage));
       params.append("limit", String(limit));
 
-      if (selectedFaculty) params.append("faculty_id", selectedFaculty);
-      if (selectedSubject) params.append("subject_id", selectedSubject);
-      if (selectedTopic) params.append("topic_id", selectedTopic);
+      const filters: any = {};
+      if (selectedFaculty) filters.faculty_id = selectedFaculty;
+      if (selectedSubject) filters.subject_id = selectedSubject;
+      if (selectedTopic) filters.topic_id = selectedTopic;
 
-      const token = localStorage.getItem("quizologist_token");
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000"}/api/enrollment/students?${params.toString()}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-        }
-      );
-
-      const data = await response.json();
+      const data = await studentService.getStudentsWithFilters(currentPage, limit, filters);
 
       if (data.success && data.data) {
         setStudents(data.data.students || []);
@@ -145,28 +123,6 @@ export default function StudentsPage() {
       }
     } catch (err) {
       console.error("Error fetching students:", err);
-      // Fallback to user service
-      try {
-        const token = localStorage.getItem("quizologist_token");
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000"}/api/user/role/student?page=${currentPage}&limit=${limit}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            },
-          }
-        );
-        const data = await response.json();
-        if (data.success && data.data) {
-          setStudents(data.data.users || []);
-          setTotalPages(data.data.pagination?.totalPages || 1);
-          setTotal(data.data.pagination?.total || 0);
-        }
-      } catch (fallbackErr) {
-        console.error("Fallback error:", fallbackErr);
-      }
     } finally {
       setLoading(false);
     }
@@ -183,7 +139,7 @@ export default function StudentsPage() {
   };
 
   const getEnrollmentCount = (student: Student) => {
-    return student.enrollments?.length || 0;
+    return student.enrollmentCount || 0;
   };
 
   return (
@@ -193,12 +149,12 @@ export default function StudentsPage() {
           <h1>Students</h1>
           <p>View and manage student enrollments</p>
         </div>
-        {/* <div className={styles.headerRight}>
+        <div className={styles.headerRight}>
           <div className={styles.statsBadge}>
             <span className={styles.statsNumber}>{total}</span>
             <span className={styles.statsLabel}>Total Students</span>
           </div>
-        </div> */}
+        </div>
       </div>
 
       <div className={styles.filterBar}>
@@ -309,14 +265,14 @@ export default function StudentsPage() {
                       </div>
                     </td>
                     <td className={styles.emailCell}>{student.email}</td>
-                    <td>{student.mobilenumber}</td>
+                    <td>{student.mobileNumber}</td>
                     <td>
                       <span className={`${styles.badge} ${styles.badgeEnrollment}`}>
                         {getEnrollmentCount(student)} courses
                       </span>
                     </td>
                     <td className={styles.dateCell}>
-                      {new Date(student.createdAt).toLocaleDateString()}
+                      {student.createdAt ? new Date(student.createdAt).toLocaleDateString() : "N/A"}
                     </td>
                     <td>
                       <div className={styles.tableActions}>

@@ -26,6 +26,12 @@ export const routes: RouteConfig[] = [
     auth: true,
     roles: ["admin"],
   },
+  {
+    path: "/user/role",
+    target: `${env.USER_SERVICE_URL}/api/user/role`,
+    auth: true,
+    roles: ["admin"],
+  },
 
   // ==================== Content Service ====================
   {
@@ -81,6 +87,22 @@ export const routes: RouteConfig[] = [
   },
 
   // ==================== Student Service ====================
+  // Get students with filters — admin only
+  {
+    path: "/student/list",
+    target: `${env.STUDENT_SERVICE_URL}/api/student/list`,
+    auth: true,
+    roles: ["admin"],
+    methods: ["GET"],
+  },
+  // Get student enrollments by ID — admin only
+  {
+    path: "/student",
+    target: `${env.STUDENT_SERVICE_URL}/api/student`,
+    auth: true,
+    roles: ["admin"],
+    methods: ["GET"],
+  },
   // Enroll — student only
   {
     path: "/enrollment",

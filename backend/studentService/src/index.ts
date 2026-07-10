@@ -5,6 +5,7 @@ import { connectDatabase } from "./config/database";
 import "./config/associations";
 import { extractGatewayUser } from "./middlewares/gatewayUser.middleware";
 import enrollmentRoutes from "./modules/enrollment/enrollment.routes";
+import studentRoutes from "./modules/student/student.routes";
 import { ApiError } from "./utils/ApiError";
 import { ApiResponse } from "./utils/ApiResponse";
 
@@ -15,6 +16,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/enrollment", extractGatewayUser, enrollmentRoutes);
+app.use("/api/student", extractGatewayUser, studentRoutes);
 
 app.get("/health", (_req: Request, res: Response) => {
   ApiResponse.success(res, "Service is healthy", {
