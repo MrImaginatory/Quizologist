@@ -28,8 +28,8 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background: var(--color-primary);
-  color: white;
+  background: var(--color-primary-600);
+  color: var(--color-primary-50);
   border: none;
   border-radius: 8px;
   font-weight: 500;
@@ -40,7 +40,7 @@
 }
 
 .startBtn:hover:not(:disabled) {
-  background: var(--color-primary-hover);
+  background: var(--color-primary-700);
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(79, 70, 229, 0.3);
 }

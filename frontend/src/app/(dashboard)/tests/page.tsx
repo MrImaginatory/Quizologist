@@ -133,12 +133,12 @@ export default function MyTestsPage() {
                     onClick={() => router.push(`/live-test/${test.test_id}`)}
                     style={{ 
                       padding: '0.25rem 0.5rem', 
-                      backgroundColor: 'var(--color-primary)', 
-                      color: 'white', 
+                      backgroundColor: 'var(--color-primary-600)', 
+                      color: 'var(--color-primary-50)', 
                       border: 'none', 
                       borderRadius: '4px', 
                       cursor: 'pointer',
-                      fontSize: '0.75rem'
+                      fontSize: '0.875rem'
                     }}
                   >
                     Resume
@@ -167,6 +167,22 @@ export default function MyTestsPage() {
                     Abandon
                   </button>
                 </div>
+              )}
+              {test.status === "completed" && (
+                <button 
+                  onClick={() => router.push(`/tests/results/${test.id}`)}
+                  style={{ 
+                    padding: '0.25rem 0.5rem', 
+                    backgroundColor: 'transparent', 
+                    color: 'var(--color-primary-600)', 
+                    border: '1px solid var(--color-primary-600)', 
+                    borderRadius: '4px', 
+                    cursor: 'pointer',
+                    fontSize: '0.875rem'
+                  }}
+                >
+                  View
+                </button>
               )}
             </td>
           </tr>

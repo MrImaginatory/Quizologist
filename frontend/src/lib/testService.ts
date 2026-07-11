@@ -45,6 +45,14 @@ class TestService {
     });
     return response.json();
   }
+
+  async getResult(testId: string) {
+    const response = await fetch(`${BACKEND_URL}/api/test/result/${testId}`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+    return response.json();
+  }
 }
 
 export const testService = new TestService();

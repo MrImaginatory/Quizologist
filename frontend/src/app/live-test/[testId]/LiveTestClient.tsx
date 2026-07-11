@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { io, Socket } from "socket.io-client";
-import { getToken } from "@/lib/auth";
+import { Socket } from "socket.io-client";
+import { capitalize } from "@/utils/helpers";
+import { connectSocket, disconnectSocket } from "@/lib/socket";
+import { testService } from "@/lib/testService";
 import styles from "./LiveTestClient.module.css";
 import LoadingSpinner from "@/components/auth/LoadingSpinner";
 
@@ -16,6 +18,7 @@ export default function LiveTestClient({ testId }: LiveTestClientProps) {
   
   const [loading, setLoading] = useState(true);
   const [testData, setTestData] = useState<any>(null);
+  const [connectionStatus, setConnectionStatus] = useState<"connecting" | "connected" | "reconnecting" | "error">("connecting");
   
   const [currentIndex, setCurrentIndex] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
@@ -23,105 +26,110 @@ export default function LiveTestClient({ testId }: LiveTestClientProps) {
   const [skipped, setSkipped] = useState<Set<number>>(new Set());
   
   const [socket, setSocket] = useState<Socket | null>(null);
+  const [submitted, setSubmitted] = useState(false);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
   const timeTakenRef = useRef<number>(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const heartbeatRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Load test data from localStorage and initialize socket
+  // Initialize test data from localStorage
   useEffect(() => {
-    // MOCK DATA FOR UI TESTING
-    const dummyTestData = {
-      duration_minutes: 15,
-      questions: [
-        { questionId: 'q1', question: 'What is 2+2?', choices: ['1', '2', '3', '4'], subjectName: 'Math', difficulty: 'easy' },
-        { questionId: 'q2', question: 'Capital of France?', choices: ['Paris', 'London', 'Berlin', 'Rome'], subjectName: 'Geography', difficulty: 'medium' },
-        { questionId: 'q3', question: 'Which planet is known as the Red Planet?', choices: ['Earth', 'Mars', 'Jupiter', 'Saturn'], subjectName: 'Science', difficulty: 'easy' },
-        { questionId: 'q4', question: 'Who wrote Hamlet?', choices: ['Shakespeare', 'Dickens', 'Tolkien', 'Austen'], subjectName: 'Literature', difficulty: 'hard' },
-        { questionId: 'q5', question: 'What is the largest mammal?', choices: ['Elephant', 'Blue Whale', 'Giraffe', 'Shark'], subjectName: 'Science', difficulty: 'medium' },
-      ]
-    };
-    
-    setTestData(dummyTestData);
-    setTimeRemaining(dummyTestData.duration_minutes * 60);
-    setLoading(false);
-    
-    /* 
-    // REAL BACKEND LOGIC COMMENTED OUT FOR UI TESTING
-    const stored = localStorage.getItem(`test_session_${testId}`);
+    // URL may decode the testId differently, try both raw and decoded
+    const key = `test_session_${testId}`;
+    const decodedKey = `test_session_${decodeURIComponent(testId)}`;
+    const stored = localStorage.getItem(key) || localStorage.getItem(decodedKey);
+
     if (!stored) {
       alert("Test session not found. Please start the test again from the dashboard.");
       router.push("/tests");
       return;
     }
-    
+
     try {
       const parsed = JSON.parse(stored);
       setTestData(parsed);
-      
-      // Initialize Socket connection
-      const token = getToken();
-      const newSocket = io(process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3005", {
-        auth: { token }
-      });
-      
+
+      // Restore progress from localStorage
+      const progressKey = `test_progress_${testId}`;
+      const savedProgress = localStorage.getItem(progressKey);
+      if (savedProgress) {
+        const progress = JSON.parse(savedProgress);
+        if (progress.answers) setAnswers(progress.answers);
+        if (progress.skipped) setSkipped(new Set(progress.skipped));
+        if (typeof progress.currentIndex === 'number') setCurrentIndex(progress.currentIndex);
+        if (typeof progress.timeRemaining === 'number') {
+          setTimeRemaining(progress.timeRemaining);
+        } else {
+          setTimeRemaining(parsed.duration_minutes ? parsed.duration_minutes * 60 : 1800);
+        }
+      } else {
+        setTimeRemaining(parsed.duration_minutes ? parsed.duration_minutes * 60 : 1800);
+      }
+      setLoading(false);
+
+      // Connect socket using UUID (parsed.id), not the human-readable test_id
+      const socketTestId = parsed.id;
+      const newSocket = connectSocket();
       setSocket(newSocket);
-      
       newSocket.on("connect", () => {
-        newSocket.emit("join_test", { testId });
+        setConnectionStatus("connected");
+        newSocket.emit("join_test", { testId: socketTestId });
       });
-      
+      newSocket.on("disconnect", () => setConnectionStatus("reconnecting"));
+      newSocket.on("reconnect", () => {
+        setConnectionStatus("connected");
+        newSocket.emit("join_test", { testId: socketTestId });
+      });
       newSocket.on("test_joined", (data) => {
         setTimeRemaining(data.timeRemaining);
-        setLoading(false);
       });
-      
-      newSocket.on("time_update", (data) => {
-        setTimeRemaining(data.timeRemaining);
-      });
-      
+      newSocket.on("time_update", (data) => setTimeRemaining(data.timeRemaining));
       newSocket.on("test_submitted", (data) => {
-        if (data.reason === "timeout") {
-          alert("Time's up! Your test has been automatically submitted.");
-        } else {
-          alert("Test submitted successfully!");
-        }
+        setSubmitted(true);
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        if (heartbeatRef.current) clearInterval(heartbeatRef.current);
+        const message = data.reason === "timeout"
+          ? "Time's up! Your test has been automatically submitted."
+          : "Test submitted successfully!";
+        setToastMsg(message);
         localStorage.removeItem(`test_session_${testId}`);
-        router.push("/results");
+        localStorage.removeItem(`test_progress_${testId}`);
+        setTimeout(() => {
+          router.push(`/tests/results/${socketTestId}`);
+        }, 2000);
       });
-      
       newSocket.on("error", (err) => {
         console.error("Socket error:", err);
+        setConnectionStatus("error");
       });
-
-      return () => {
-        newSocket.disconnect();
-      };
+      return () => disconnectSocket();
     } catch (err) {
-      console.error("Failed to parse test session:", err);
+      console.error("Failed to initialize test:", err);
+      alert("Failed to load test session. Please try again.");
       router.push("/tests");
     }
-    */
   }, [testId, router]);
 
-  // Security: Prevent Back Navigation
+  // Prevent Back Navigation, Refresh (F5), and show warning on close
   useEffect(() => {
-    // Push dummy state to intercept back button
     window.history.pushState(null, "", window.location.href);
     
     const handlePopState = () => {
       window.history.pushState(null, "", window.location.href);
-      alert("You cannot go back during an active test. Please submit the test if you wish to exit.");
     };
-    
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
 
-  // Security: Prevent Refresh (F5)
-  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Prevent F5 or Ctrl+R
+      if (e.key === "F5" || (e.ctrlKey && e.key === "r")) {
+        e.preventDefault();
+        alert("Refreshing the page is not allowed during a live test.");
+      }
+    };
+
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       e.preventDefault();
-      e.returnValue = "Are you sure you want to leave? Your test progress might be affected.";
+      e.returnValue = "Your test progress might be affected.";
       return e.returnValue;
     };
     
@@ -129,11 +137,29 @@ export default function LiveTestClient({ testId }: LiveTestClientProps) {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, []);
 
-  // Local Timer for UI updates and time_taken calculation
+  // Local Timer
+  // Persist progress to localStorage on every change
   useEffect(() => {
-    if (!loading && timeRemaining !== null) {
+    if (!loading && testData) {
+      const progressKey = `test_progress_${testId}`;
+      localStorage.setItem(progressKey, JSON.stringify({
+        answers,
+        skipped: Array.from(skipped),
+        currentIndex,
+        timeRemaining
+      }));
+    }
+  }, [answers, skipped, currentIndex, timeRemaining, loading, testData, testId]);
+
+  useEffect(() => {
+    if (!loading && !submitted && timeRemaining !== null && timeRemaining > 0) {
       intervalRef.current = setInterval(() => {
-        setTimeRemaining(prev => (prev !== null && prev > 0 ? prev - 1 : 0));
+        setTimeRemaining(prev => {
+          if (prev !== null && prev > 0) {
+            return prev - 1;
+          }
+          return 0;
+        });
         timeTakenRef.current += 1;
       }, 1000);
     }
@@ -141,20 +167,20 @@ export default function LiveTestClient({ testId }: LiveTestClientProps) {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [loading]); // Only re-run when loading finishes, rely on state updater function
+  }, [loading, submitted]);
 
   // Heartbeat every 30s
   useEffect(() => {
-    if (!loading && socket) {
+    if (!loading && !submitted && socket) {
       heartbeatRef.current = setInterval(() => {
-        socket.emit("heartbeat", { testId, questionIndex: currentIndex });
+        socket.emit("heartbeat", { testId: testData.id, questionIndex: currentIndex });
       }, 30000);
     }
     
     return () => {
       if (heartbeatRef.current) clearInterval(heartbeatRef.current);
     };
-  }, [loading, socket, testId, currentIndex]);
+  }, [loading, submitted, socket, testId, currentIndex]);
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -175,14 +201,13 @@ export default function LiveTestClient({ testId }: LiveTestClientProps) {
     if (answer) {
       if (socket) {
         socket.emit("answer", {
-          testId,
+          testId: testData.id,
           questionIndex: currentIndex,
           questionId: currentQ.questionId,
           answer,
           timeTaken: timeTakenRef.current
         });
       }
-      // Remove from skipped if it was skipped before
       if (skipped.has(currentIndex)) {
         const newSkipped = new Set(skipped);
         newSkipped.delete(currentIndex);
@@ -190,7 +215,7 @@ export default function LiveTestClient({ testId }: LiveTestClientProps) {
       }
     }
     
-    timeTakenRef.current = 0; // Reset local timer for the next question
+    timeTakenRef.current = 0;
   };
 
   const handleNext = () => {
@@ -214,7 +239,7 @@ export default function LiveTestClient({ testId }: LiveTestClientProps) {
     
     if (socket) {
       socket.emit("skip", {
-        testId,
+        testId: testData.id,
         questionIndex: currentIndex,
         questionId: currentQ.questionId,
         timeTaken: timeTakenRef.current
@@ -232,11 +257,67 @@ export default function LiveTestClient({ testId }: LiveTestClientProps) {
     }
   };
 
-  const handleSubmit = () => {
-    if (window.confirm("Are you sure you want to submit the test? You cannot change your answers after submission.")) {
-      saveCurrentAnswer();
-      socket?.emit("submit_test", { testId });
+  const handleClearResponse = () => {
+    if (!testData || !answers[currentIndex]) return;
+    
+    const currentQ = testData.questions[currentIndex];
+    const newAnswers = { ...answers };
+    delete newAnswers[currentIndex];
+    setAnswers(newAnswers);
+
+    if (socket) {
+      socket.emit("answer", {
+        testId: testData.id,
+        questionIndex: currentIndex,
+        questionId: currentQ.questionId,
+        answer: "",
+        timeTaken: timeTakenRef.current
+      });
     }
+  };
+
+  const handleSubmitClick = () => {
+    setShowSubmitConfirm(true);
+  };
+
+  const handleCancelTest = async () => {
+    if (window.confirm("Are you sure you want to cancel and abandon this test? This action cannot be undone.")) {
+      try {
+        if (socket) {
+          socket.emit("submit_test", { testId: testData.id }); // optional fallback or just abandon directly
+        }
+        await testService.abandonTest(testData.id);
+        localStorage.removeItem(`test_session_${testId}`);
+        localStorage.removeItem(`test_session_${decodeURIComponent(testId)}`);
+        localStorage.removeItem(`test_progress_${testId}`);
+        router.push("/tests");
+      } catch (error) {
+        console.error("Failed to abandon test", error);
+        alert("Failed to cancel the test. Please try again.");
+      }
+    }
+  };
+
+  const confirmSubmit = () => {
+    setShowSubmitConfirm(false);
+    saveCurrentAnswer();
+    setSubmitted(true);
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    if (heartbeatRef.current) clearInterval(heartbeatRef.current);
+
+    if (socket) {
+      socket.emit("submit_test", { testId: testData.id });
+    } else {
+      localStorage.removeItem(`test_session_${testId}`);
+      localStorage.removeItem(`test_session_${decodeURIComponent(testId)}`);
+      localStorage.removeItem(`test_progress_${testId}`);
+      alert("Test submitted successfully!");
+      router.push("/tests");
+    }
+  };
+
+  const cancelSubmit = () => {
+    setShowSubmitConfirm(false);
   };
 
   const jumpToQuestion = (index: number) => {
@@ -249,19 +330,28 @@ export default function LiveTestClient({ testId }: LiveTestClientProps) {
       <div className={styles.loadingScreen}>
         <LoadingSpinner />
         <p>Connecting to secure test environment...</p>
+        {connectionStatus === "reconnecting" && (
+          <p className={styles.reconnectMsg}>Reconnecting...</p>
+        )}
       </div>
     );
   }
 
   const currentQ = testData.questions[currentIndex];
   const isLastQuestion = currentIndex === testData.questions.length - 1;
-  const isTimeCritical = timeRemaining !== null && timeRemaining <= 300; // < 5 mins
+  const isTimeCritical = timeRemaining !== null && timeRemaining <= 300;
 
   return (
     <div className={styles.container}>
       <header className={styles.header}>
         <div className={styles.headerLeft}>
           <h1 className={styles.title}>Live Test</h1>
+          
+          <div className={styles.statusIndicator}>
+            <div className={`${styles.statusDot} ${styles[`status${connectionStatus}`]}`}></div>
+            <span>{connectionStatus === "connected" ? "Connected" : connectionStatus === "reconnecting" ? "Reconnecting..." : "Connecting..."}</span>
+          </div>
+          
           {timeRemaining !== null && (
             <div className={`${styles.timer} ${isTimeCritical ? styles.timerWarning : ''}`}>
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -272,8 +362,12 @@ export default function LiveTestClient({ testId }: LiveTestClientProps) {
             </div>
           )}
         </div>
-        <button className={styles.submitBtn} onClick={handleSubmit}>
-          Submit Test
+        <button 
+          className={styles.cancelTopBtn} 
+          onClick={handleCancelTest}
+          disabled={Object.keys(answers).length === 0}
+        >
+          Cancel
         </button>
       </header>
 
@@ -328,8 +422,8 @@ export default function LiveTestClient({ testId }: LiveTestClientProps) {
             <div className={styles.questionMeta}>
               <span className={styles.questionNumber}>Question {currentIndex + 1} of {testData.questions.length}</span>
               <div className={styles.questionTags}>
-                <span className={styles.tag}>{currentQ.subjectName}</span>
-                <span className={styles.tag}>{currentQ.difficulty}</span>
+                <span className={styles.tag}>{capitalize(currentQ.subjectName)}</span>
+                <span className={styles.tag}>{capitalize(currentQ.topicName || currentQ.difficulty)}</span>
               </div>
             </div>
             
@@ -370,10 +464,19 @@ export default function LiveTestClient({ testId }: LiveTestClientProps) {
               >
                 Skip
               </button>
+
+              {answers[currentIndex] && (
+                <button 
+                  className={styles.navBtn}
+                  onClick={handleClearResponse}
+                >
+                  Clear
+                </button>
+              )}
               
               <button 
                 className={`${styles.navBtn} ${styles.primaryBtn}`}
-                onClick={isLastQuestion ? handleSubmit : handleNext}
+                onClick={isLastQuestion ? handleSubmitClick : handleNext}
               >
                 {isLastQuestion ? 'Submit Test' : 'Next'}
               </button>
@@ -381,6 +484,31 @@ export default function LiveTestClient({ testId }: LiveTestClientProps) {
           </div>
         </main>
       </div>
+
+      {showSubmitConfirm && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <h3>Submit Test?</h3>
+            <p>Are you sure you want to submit the test? You cannot change your answers after submission.</p>
+            <div className={styles.modalActions}>
+              <button className={styles.cancelBtn} onClick={cancelSubmit}>Cancel</button>
+              <button className={styles.confirmBtn} onClick={confirmSubmit}>Confirm Submit</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {toastMsg && (
+        <div className={styles.toastContainer}>
+          <div className={styles.toast}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={styles.toastIcon}>
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            <span>{toastMsg}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
