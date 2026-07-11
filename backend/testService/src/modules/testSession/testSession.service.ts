@@ -398,8 +398,11 @@ export class TestSessionService {
   }
 
   static async getResult(data: TestIdParam, studentId: string) {
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(data.testId);
     const session = await TestSession.findOne({
-      where: { id: data.testId, student_id: studentId },
+      where: isUUID 
+        ? { id: data.testId, student_id: studentId }
+        : { test_id: data.testId, student_id: studentId }
     });
 
     if (!session) {

@@ -17,6 +17,34 @@ export default function TestResultsPage() {
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const handleDownloadPDF = async () => {
+    const element = document.getElementById("pdf-content");
+    if (!element) return;
+    
+    // @ts-ignore
+    const html2pdf = (await import("html2pdf.js")).default;
+    
+    const opt = {
+      margin:       0.4,
+      filename:     'TestResults.pdf',
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { 
+        scale: 2, 
+        useCORS: true,
+        onclone: (doc: any) => {
+          doc.documentElement.classList.remove("dark");
+          doc.body.classList.remove("dark");
+          const actions = doc.getElementById("header-actions");
+          if (actions) actions.style.display = "none";
+        }
+      },
+      jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' },
+      pagebreak:    { mode: ['css', 'legacy'] }
+    };
+
+    html2pdf().set(opt).from(element).save();
+  };
+
   useEffect(() => {
     if (!testId) return;
 
@@ -60,12 +88,17 @@ export default function TestResultsPage() {
   }
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container} id="pdf-content">
       <header className={styles.header}>
         <h1 className={styles.title}>Test Results</h1>
-        <Link href="/tests" className={styles.backBtn}>
-          Back to Tests
-        </Link>
+        <div className={styles.headerActions} id="header-actions">
+          {/* <button onClick={handleDownloadPDF} className={styles.downloadBtn}>
+            Download PDF
+          </button> */}
+          <Link href="/tests" className={styles.backBtn}>
+            Back to Tests
+          </Link>
+        </div>
       </header>
 
       <div className={styles.scorecard}>

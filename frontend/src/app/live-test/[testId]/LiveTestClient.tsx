@@ -96,7 +96,7 @@ export default function LiveTestClient({ testId }: LiveTestClientProps) {
         localStorage.removeItem(`test_session_${testId}`);
         localStorage.removeItem(`test_progress_${testId}`);
         setTimeout(() => {
-          router.push(`/tests/results/${socketTestId}`);
+          router.push(`/tests/results/${testId}`);
         }, 2000);
       });
       newSocket.on("error", (err) => {

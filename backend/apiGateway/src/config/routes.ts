@@ -279,6 +279,14 @@ export const routes: RouteConfig[] = [
     roles: ["admin", "teacher", "student"],
     methods: ["GET"],
   },
+  // Student analytics — student only
+  {
+    path: "/dashboard/student",
+    target: `${env.DASHBOARD_SERVICE_URL}/api/dashboard/student`,
+    auth: true,
+    roles: ["student"],
+    methods: ["GET"],
+  },
 ];
 
 export function findMatchingRoute(

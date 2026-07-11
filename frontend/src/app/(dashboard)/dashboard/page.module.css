@@ -25,6 +25,17 @@
   gap: var(--space-6, 24px);
 }
 
+.analyticsSection {
+  margin-top: var(--space-4, 16px);
+}
+
+.sectionTitle {
+  font-size: var(--text-xl, 20px);
+  font-weight: var(--font-semibold, 600);
+  color: var(--text-primary, #111827);
+  margin-bottom: var(--space-4, 16px);
+}
+
 @media (max-width: 768px) {
   .dashboard {
     padding-bottom: 80px;

@@ -170,7 +170,7 @@ export default function MyTestsPage() {
               )}
               {test.status === "completed" && (
                 <button 
-                  onClick={() => router.push(`/tests/results/${test.id}`)}
+                  onClick={() => router.push(`/tests/results/${test.test_id}`)}
                   style={{ 
                     padding: '0.25rem 0.5rem', 
                     backgroundColor: 'transparent', 
