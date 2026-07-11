@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Status</title>
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --up-color: #10b981;
+      --down-color: #ef4444;
+      --border-color: #334155;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 3rem 1.5rem;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 800px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.025em;
+    }
+
+    p.subtitle {
+      color: var(--text-muted);
+      font-size: 1.125rem;
+    }
+
+    .overall-status {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      background-color: var(--card-bg);
+      padding: 1.25rem;
+      border-radius: 12px;
+      margin-bottom: 2.5rem;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+
+    .status-indicator {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+    }
+
+    .status-indicator.up { background-color: var(--up-color); box-shadow: 0 0 12px var(--up-color); }
+    .status-indicator.down { background-color: var(--down-color); box-shadow: 0 0 12px var(--down-color); }
+    .status-indicator.loading { background-color: #eab308; animation: pulse 1.5s infinite; }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    .overall-text {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      padding: 1.5rem;
+      border: 1px solid var(--border-color);
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: #475569;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .service-name {
+      font-weight: 600;
+      font-size: 1.125rem;
+      text-transform: capitalize;
+    }
+
+    .badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      text-transform: uppercase;
+    }
+
+    .badge.up {
+      background-color: rgba(16, 185, 129, 0.1);
+      color: var(--up-color);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .badge.down {
+      background-color: rgba(239, 68, 68, 0.1);
+      color: var(--down-color);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .badge.loading {
+      background-color: rgba(234, 179, 8, 0.1);
+      color: #eab308;
+      border: 1px solid rgba(234, 179, 8, 0.2);
+    }
+
+    .service-url {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      word-break: break-all;
+    }
+
+    .error-msg {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      background-color: rgba(239, 68, 68, 0.1);
+      border-left: 3px solid var(--down-color);
+      color: #fca5a5;
+      font-size: 0.875rem;
+      border-radius: 0 4px 4px 0;
+    }
+
+    .loader-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 200px;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      border-top-color: var(--text-main);
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .footer {
+      margin-top: 4rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>System Status</h1>
+      <p class="subtitle">Real-time health check for all microservices</p>
+    </header>
+
+    <div class="overall-status" id="overall-status">
+      <div class="status-indicator loading"></div>
+      <div class="overall-text">Checking systems...</div>
+    </div>
+
+    <div id="services-grid" class="grid">
+      <!-- Loading placeholders -->
+      <div class="loader-container" style="grid-column: 1 / -1;">
+        <div class="spinner"></div>
+      </div>
+    </div>
+    
+    <div class="footer">
+      Last updated: <span id="last-updated">Never</span>
+    </div>
+  </div>
+
+  <script>
+    async function fetchStatus() {
+      const grid = document.getElementById('services-grid');
+      const overallStatus = document.getElementById('overall-status');
+      const lastUpdated = document.getElementById('last-updated');
+      
+      try {
+        const response = await fetch('/api/internal/status');
+        const data = await response.json();
+        
+        // Update overall status
+        const isAllUp = data.success;
+        overallStatus.innerHTML = `
+          <div class="status-indicator ${isAllUp ? 'up' : 'down'}"></div>
+          <div class="overall-text">${data.message || (isAllUp ? 'All Systems Operational' : 'Some Systems Are Experiencing Issues')}</div>
+        `;
+        
+        // Update grid
+        if (data.data && Array.isArray(data.data)) {
+          grid.innerHTML = data.data.map(service => {
+            const isUp = service.status === 'UP';
+            const name = service.name.replace('-', ' ');
+            
+            let errorHtml = '';
+            if (!isUp && service.error) {
+              errorHtml = `<div class="error-msg">${service.error}</div>`;
+            }
+            
+            return `
+              <div class="card">
+                <div class="card-header">
+                  <div class="service-name">${name}</div>
+                  <div class="badge ${isUp ? 'up' : 'down'}">${service.status}</div>
+                </div>
+                <div class="service-url">${service.url}</div>
+                ${errorHtml}
+              </div>
+            `;
+          }).join('');
+        }
+        
+      } catch (error) {
+        overallStatus.innerHTML = `
+          <div class="status-indicator down"></div>
+          <div class="overall-text">Failed to connect to API Gateway</div>
+        `;
+        grid.innerHTML = `
+          <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 3rem 1.5rem;">
+            <div style="color: var(--down-color); margin-bottom: 1rem;">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+            </div>
+            <h3>Connection Error</h3>
+            <p style="color: var(--text-muted); margin-top: 0.5rem;">Could not fetch status data. Ensure the API Gateway is running.</p>
+          </div>
+        `;
+      }
+      
+      const now = new Date();
+      lastUpdated.textContent = now.toLocaleTimeString();
+    }
+
+    // Fetch immediately
+    fetchStatus();
+
+    // Refresh every 30 seconds
+    setInterval(fetchStatus, 30000);
+  </script>
+</body>
+</html>

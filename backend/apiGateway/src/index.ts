@@ -1,5 +1,6 @@
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
+import path from "path";
 import { env } from "./config/env";
 import { authenticate } from "./middlewares/auth.middleware";
 import { authorize } from "./middlewares/rbac.middleware";
@@ -18,6 +19,47 @@ app.get("/health", (_req: Request, res: Response) => {
   ApiResponse.success(res, "Gateway is healthy", {
     service: "api-gateway",
     timestamp: new Date().toISOString(),
+  });
+});
+
+app.use("/public", express.static(path.join(__dirname, "../public")));
+
+app.get("/status", (_req: Request, res: Response) => {
+  res.sendFile(path.join(__dirname, "../public/status.html"));
+});
+
+app.get("/api/internal/status", async (_req: Request, res: Response) => {
+  const services = [
+    { name: "user-service", url: env.USER_SERVICE_URL },
+    { name: "content-service", url: env.CONTENT_SERVICE_URL },
+    { name: "question-service", url: env.QUESTION_SERVICE_URL },
+    { name: "student-service", url: env.STUDENT_SERVICE_URL },
+    { name: "test-service", url: env.TEST_SERVICE_URL },
+    { name: "teacher-service", url: env.TEACHER_SERVICE_URL },
+  ];
+
+  const statuses = await Promise.all(
+    services.map(async (service) => {
+      try {
+        const response = await fetch(`${service.url}/health`);
+        if (response.ok) {
+          return { name: service.name, status: "UP", url: service.url };
+        } else {
+          return { name: service.name, status: "DOWN", url: service.url, error: response.statusText };
+        }
+      } catch (error: any) {
+        return { name: service.name, status: "DOWN", url: service.url, error: error.message };
+      }
+    })
+  );
+
+  const allUp = statuses.every((s) => s.status === "UP");
+
+  res.status(allUp ? 200 : 503).json({
+    statusCode: allUp ? 200 : 503,
+    success: allUp,
+    message: allUp ? "All services are running" : "Some services are down",
+    data: statuses,
   });
 });
 

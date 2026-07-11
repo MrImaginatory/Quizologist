@@ -1,0 +1,13 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "Backend services runner",
+  "scripts": {
+    "start": "concurrently \"cd apiGateway && pnpm start\" \"cd contentService && pnpm start\" \"cd questionService && pnpm start\" \"cd studentService && pnpm start\" \"cd teacherService && pnpm start\" \"cd testService && pnpm start\" \"cd userService && pnpm start\"",
+    "dev": "concurrently \"cd apiGateway && pnpm dev\" \"cd contentService && pnpm dev\" \"cd questionService && pnpm dev\" \"cd studentService && pnpm dev\" \"cd teacherService && pnpm dev\" \"cd testService && pnpm dev\" \"cd userService && pnpm dev\"",
+    "install:all": "concurrently \"cd apiGateway && pnpm install\" \"cd contentService && pnpm install\" \"cd questionService && pnpm install\" \"cd studentService && pnpm install\" \"cd teacherService && pnpm install\" \"cd testService && pnpm install\" \"cd userService && pnpm install\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
