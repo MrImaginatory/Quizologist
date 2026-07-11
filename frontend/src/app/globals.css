@@ -109,6 +109,7 @@
   --bg-primary: #ffffff;
   --bg-secondary: #f9fafb;
   --bg-tertiary: #f3f4f6;
+  --bg-hover: #f3f4f6;
 
   /* Text Colors */
   --text-primary: #111827;
@@ -156,6 +157,7 @@
   --bg-primary: #09090b;
   --bg-secondary: #18181b;
   --bg-tertiary: #27272a;
+  --bg-hover: #27272a;
 
   /* Text Colors — Dark */
   --text-primary: #fafafa;

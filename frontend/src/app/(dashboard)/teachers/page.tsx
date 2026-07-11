@@ -5,6 +5,8 @@ import styles from "./Teachers.module.css";
 import { capitalize } from "@/utils/helpers";
 import { teacherService, TeacherProfile } from "@/lib/teacherService";
 import AssignmentModal from "./AssignmentModal";
+import DataTable from "@/components/common/DataTable/DataTable";
+import Pagination from "@/components/common/Pagination/Pagination";
 
 export default function TeachersPage() {
   const [users, setUsers] = useState<TeacherProfile[]>([]);
@@ -56,99 +58,66 @@ export default function TeachersPage() {
         </div>
       </div>
 
-      <div className={styles.tableContainer}>
-        {loading && users.length === 0 ? (
-          <div className={styles.emptyState}>Loading teachers...</div>
-        ) : users.length === 0 ? (
-          <div className={styles.emptyState}>No teachers found.</div>
-        ) : (
-          <>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Teacher</th>
-                  <th>Email</th>
-                  <th>Mobile</th>
-                  <th>Assignments</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((user) => (
-                  <tr key={user.id}>
-                    <td>
-                      <div className={styles.userInfo}>
-                        <div className={styles.avatar}>
-                          {getInitials(user.fname, user.lname)}
-                        </div>
-                        <div className={styles.userName}>
-                          <span className={styles.name}>
-                            {capitalize(user.fname)} {capitalize(user.lname)}
-                          </span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className={styles.emailCell}>{user.email}</td>
-                    <td>{user.mobileNumber}</td>
-                    <td title={`${user.facultyCount || 0} Faculty, ${user.subjectCount || 0} Subjects`}>
-                      <span className={`${styles.badge} ${styles.badgeEnrollment}`}>
-                        {user.totalAssignments || 0} assigned
-                      </span>
-                    </td>
-                    <td>
-                      <div className={styles.tableActions}>
-                        <button
-                          className={styles.viewBtn}
-                          title="Manage assignments"
-                          onClick={() => setSelectedTeacher(user)}
-                        >
-                          <svg
-                            className={styles.btnIcon}
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                          </svg>
-                          <span className={styles.btnText}>Assign</span>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            {totalPages > 1 && (
-              <div className={styles.pagination}>
-                <div className={styles.pageInfo}>
-                  Showing page {page} of {totalPages}
+      <DataTable
+        columns={["Teacher", "Email", "Mobile", "Assignments", "Actions"]}
+        loading={loading}
+        loadingMessage="Loading teachers..."
+        isEmpty={users.length === 0}
+        emptyMessage="No teachers found."
+      >
+        {users.map((user) => (
+          <tr key={user.id}>
+            <td>
+              <div className={styles.userInfo}>
+                <div className={styles.avatar}>
+                  {getInitials(user.fname, user.lname)}
                 </div>
-                <div className={styles.pageControls}>
-                  <button
-                    className={styles.pageBtn}
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                  >
-                    Previous
-                  </button>
-                  <button
-                    className={styles.pageBtn}
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={page === totalPages}
-                  >
-                    Next
-                  </button>
+                <div className={styles.userName}>
+                  <span className={styles.name}>
+                    {capitalize(user.fname)} {capitalize(user.lname)}
+                  </span>
                 </div>
               </div>
-            )}
-          </>
-        )}
-      </div>
+            </td>
+            <td className={styles.emailCell}>{user.email}</td>
+            <td>{user.mobileNumber}</td>
+            <td title={`${user.facultyCount || 0} Faculty, ${user.subjectCount || 0} Subjects`}>
+              <span className={`${styles.badge} ${styles.badgeEnrollment}`}>
+                {user.totalAssignments || 0} assigned
+              </span>
+            </td>
+            <td>
+              <div className={styles.tableActions}>
+                <button
+                  className={styles.viewBtn}
+                  title="Manage assignments"
+                  onClick={() => setSelectedTeacher(user)}
+                >
+                  <svg
+                    className={styles.btnIcon}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                  <span className={styles.btnText}>Assign</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+        ))}
+      </DataTable>
+
+      <Pagination
+        currentPage={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+      />
 
       {selectedTeacher && (
         <AssignmentModal

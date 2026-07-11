@@ -6,6 +6,8 @@ import { contentService, Faculty, Subject, Topic } from "@/lib/contentService";
 import { capitalize } from "@/utils/helpers";
 import { studentService } from "@/lib/studentService";
 import { useRouter } from "next/navigation";
+import DataTable from "@/components/common/DataTable/DataTable";
+import Pagination from "@/components/common/Pagination/Pagination";
 
 interface Student {
   id: string;
@@ -230,104 +232,69 @@ export default function StudentsPage() {
         </button>
       </div>
 
-      <div className={styles.tableContainer}>
-        {loading ? (
-          <div className={styles.emptyState}>Loading students...</div>
-        ) : students.length === 0 ? (
-          <div className={styles.emptyState}>
-            Click &quot;Show Students&quot; to load data or adjust filters.
-          </div>
-        ) : (
-          <>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Student</th>
-                  <th>Email</th>
-                  <th>Mobile</th>
-                  <th>Enrollments</th>
-                  <th>Joined</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {students.map((student) => (
-                  <tr key={student.id}>
-                    <td>
-                      <div className={styles.studentInfo}>
-                        <div className={styles.avatar}>
-                          {getInitials(student.fname, student.lname)}
-                        </div>
-                        <div className={styles.studentName}>
-                          <span className={styles.name}>
-                            {capitalize(student.fname)}{" "}
-                            {capitalize(student.lname)}
-                          </span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className={styles.emailCell}>{student.email}</td>
-                    <td>{student.mobileNumber}</td>
-                    <td>
-                      <span className={`${styles.badge} ${styles.badgeEnrollment}`}>
-                        {getEnrollmentCount(student)} courses
-                      </span>
-                    </td>
-                    <td className={styles.dateCell}>
-                      {student.createdAt ? new Date(student.createdAt).toLocaleDateString() : "N/A"}
-                    </td>
-                    <td>
-                      <div className={styles.tableActions}>
-                        <button
-                          className={styles.viewBtn}
-                          title="View student details"
-                          onClick={() => router.push(`/students/${student.id}`)}
-                        >
-                          <svg
-                            className={styles.btnIcon}
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                            <circle cx="12" cy="12" r="3"></circle>
-                          </svg>
-                          <span className={styles.btnText}>View</span>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            <div className={styles.pagination}>
-              <span className={styles.paginationText}>
-                Page {page} of {totalPages} ({total} students)
+      <DataTable
+        columns={["Student", "Email", "Mobile", "Enrollments", "Actions"]}
+        loading={loading}
+        loadingMessage="Loading students..."
+        isEmpty={students.length === 0}
+        emptyMessage="Click 'Show Students' to load data or adjust filters."
+      >
+        {students.map((student) => (
+          <tr key={student.id}>
+            <td>
+              <div className={styles.studentInfo}>
+                <div className={styles.avatar}>
+                  {getInitials(student.fname, student.lname)}
+                </div>
+                <div className={styles.studentName}>
+                  <span className={styles.name}>
+                    {capitalize(student.fname)}{" "}
+                    {capitalize(student.lname)}
+                  </span>
+                </div>
+              </div>
+            </td>
+            <td className={styles.emailCell}>{student.email}</td>
+            <td>{student.mobileNumber}</td>
+            <td>
+              <span className={`${styles.badge} ${styles.badgeEnrollment}`}>
+                {getEnrollmentCount(student)} courses
               </span>
-              <div className={styles.paginationControls}>
+            </td>
+            <td>
+              <div className={styles.tableActions}>
                 <button
-                  className={styles.pageButton}
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => p - 1)}
+                  className={styles.viewBtn}
+                  title="View student details"
+                  onClick={() => router.push(`/students/${student.id}`)}
                 >
-                  Previous
-                </button>
-                <button
-                  className={styles.pageButton}
-                  disabled={page >= totalPages}
-                  onClick={() => setPage((p) => p + 1)}
-                >
-                  Next
+                  <svg
+                    className={styles.btnIcon}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                  <span className={styles.btnText}>View</span>
                 </button>
               </div>
-            </div>
-          </>
-        )}
-      </div>
+            </td>
+          </tr>
+        ))}
+      </DataTable>
+
+      <Pagination
+        currentPage={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+        totalItems={total}
+        itemLabel="students"
+      />
     </div>
   );
 }

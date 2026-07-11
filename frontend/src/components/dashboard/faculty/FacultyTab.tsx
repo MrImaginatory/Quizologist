@@ -5,6 +5,8 @@ import styles from "../../../app/(dashboard)/faculties/Faculty.module.css";
 import { contentService, Faculty } from "@/lib/contentService";
 import { capitalize } from "@/utils/helpers";
 import DeleteConfirmModal from "@/components/common/DeleteConfirmModal";
+import DataTable from "@/components/common/DataTable/DataTable";
+import Pagination from "@/components/common/Pagination/Pagination";
 
 export default function FacultyTab() {
   const [faculties, setFaculties] = useState<Faculty[]>([]);
@@ -115,72 +117,43 @@ export default function FacultyTab() {
         </button>
       </div>
 
-      <div className={styles.tableContainer}>
-        {loading ? (
-          <div className={styles.emptyState}>Loading...</div>
-        ) : faculties.length === 0 ? (
-          <div className={styles.emptyState}>No faculties found.</div>
-        ) : (
-          <>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Description</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {faculties.map((f) => (
-                  <tr key={f.id}>
-                    <td>{capitalize(f.name)}</td>
-                    <td className={styles.descriptionCell} title={f.description || ""}>{f.description || "-"}</td>
-                    <td>
-                      <div className={styles.tableActions}>
-                        <button className={styles.editBtn} onClick={() => handleOpenModal(f)}>
-                          <svg className={styles.btnIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
-                          </svg>
-                          <span className={styles.btnText}>Edit</span>
-                        </button>
-                        <button className={styles.deleteBtn} onClick={() => confirmDelete(f.id)}>
-                          <svg className={styles.btnIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="3 6 5 6 21 6"></polyline>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                          </svg>
-                          <span className={styles.btnText}>Delete</span>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            
-            <div className={styles.pagination}>
-              <span className={styles.paginationText}>
-                Page {page} of {totalPages}
-              </span>
-              <div className={styles.paginationControls}>
-                <button 
-                  className={styles.pageButton} 
-                  disabled={page <= 1} 
-                  onClick={() => setPage(p => p - 1)}
-                >
-                  Previous
+      <DataTable
+        columns={["Name", "Description", "Actions"]}
+        loading={loading}
+        loadingMessage="Loading faculties..."
+        isEmpty={faculties.length === 0}
+        emptyMessage="No faculties found."
+      >
+        {faculties.map((f) => (
+          <tr key={f.id}>
+            <td>{capitalize(f.name)}</td>
+            <td className={styles.descriptionCell} title={f.description || ""}>{f.description || "-"}</td>
+            <td>
+              <div className={styles.tableActions}>
+                <button className={styles.editBtn} onClick={() => handleOpenModal(f)}>
+                  <svg className={styles.btnIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                  </svg>
+                  <span className={styles.btnText}>Edit</span>
                 </button>
-                <button 
-                  className={styles.pageButton} 
-                  disabled={page >= totalPages} 
-                  onClick={() => setPage(p => p + 1)}
-                >
-                  Next
+                <button className={styles.deleteBtn} onClick={() => confirmDelete(f.id)}>
+                  <svg className={styles.btnIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                  <span className={styles.btnText}>Delete</span>
                 </button>
               </div>
-            </div>
-          </>
-        )}
-      </div>
+            </td>
+          </tr>
+        ))}
+      </DataTable>
+
+      <Pagination
+        currentPage={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+      />
 
       {isModalOpen && (
         <div className={styles.modalOverlay} onClick={() => setIsModalOpen(false)}>

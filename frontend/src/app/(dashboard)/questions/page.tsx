@@ -6,6 +6,8 @@ import { contentService, Faculty, Subject, Topic } from "@/lib/contentService";
 import { questionService, Question, QuestionType, Difficulty } from "@/lib/questionService";
 import { capitalize } from "@/utils/helpers";
 import DeleteConfirmModal from "@/components/common/DeleteConfirmModal";
+import DataTable from "@/components/common/DataTable/DataTable";
+import Pagination from "@/components/common/Pagination/Pagination";
 
 export default function QuestionsPage() {
   // Filter state
@@ -305,24 +307,14 @@ export default function QuestionsPage() {
         </button>
       </div>
 
-      <div className={styles.tableContainer}>
-        {loading ? (
-          <div className={styles.emptyState}>Loading questions...</div>
-        ) : questions.length === 0 ? (
-          <div className={styles.emptyState}>Click "Show Questions" to load data or adjust filters.</div>
-        ) : (
-          <>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Type</th>
-                  <th>Question</th>
-                  <th>Difficulty</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {questions.map((q) => (
+      <DataTable
+        columns={["Type", "Question", "Difficulty", "Actions"]}
+        loading={loading}
+        loadingMessage="Loading questions..."
+        isEmpty={questions.length === 0}
+        emptyMessage="Click 'Show Questions' to load data or adjust filters."
+      >
+        {questions.map((q) => (
                   <tr key={q.id}>
                     <td>
                       <span className={`${styles.badge} ${styles.badgeType}`}>
@@ -354,33 +346,13 @@ export default function QuestionsPage() {
                     </td>
                   </tr>
                 ))}
-              </tbody>
-            </table>
+      </DataTable>
 
-            <div className={styles.pagination}>
-              <span className={styles.paginationText}>
-                Page {page} of {totalPages}
-              </span>
-              <div className={styles.paginationControls}>
-                <button 
-                  className={styles.pageButton} 
-                  disabled={page <= 1} 
-                  onClick={() => setPage(p => p - 1)}
-                >
-                  Previous
-                </button>
-                <button 
-                  className={styles.pageButton} 
-                  disabled={page >= totalPages} 
-                  onClick={() => setPage(p => p + 1)}
-                >
-                  Next
-                </button>
-              </div>
-            </div>
-          </>
-        )}
-      </div>
+      <Pagination
+        currentPage={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+      />
 
       {isModalOpen && (
         <div className={styles.modalOverlay} onClick={() => setIsModalOpen(false)}>

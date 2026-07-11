@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import styles from "./Users.module.css";
 import { capitalize } from "@/utils/helpers";
 import { userService, User } from "@/lib/userService";
+import DataTable from "@/components/common/DataTable/DataTable";
+import Pagination from "@/components/common/Pagination/Pagination";
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -76,28 +78,17 @@ export default function UsersPage() {
         </div>
       </div>
 
-      <div className={styles.tableContainer}>
-        {loading && users.length === 0 ? (
-          <div className={styles.emptyState}>Loading users...</div>
-        ) : users.length === 0 ? (
-          <div className={styles.emptyState}>No users found.</div>
-        ) : (
-          <>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>User</th>
-                  <th>Email</th>
-                  <th>Mobile</th>
-                  <th>Role</th>
-                  <th>Joined Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((user) => (
-                  <tr key={user.id}>
-                    <td>
-                      <div className={styles.userInfo}>
+      <DataTable
+        columns={["User", "Email", "Mobile", "Role"]}
+        loading={loading}
+        loadingMessage="Loading users..."
+        isEmpty={users.length === 0}
+        emptyMessage="No users found."
+      >
+        {users.map((user) => (
+          <tr key={user.id}>
+            <td>
+              <div className={styles.userInfo}>
                         <div className={styles.avatar}>
                           {getInitials(user.fname, user.lname)}
                         </div>
@@ -115,44 +106,15 @@ export default function UsersPage() {
                         {capitalize(user.role)}
                       </span>
                     </td>
-                    <td className={styles.dateCell}>
-                      {new Date(user.createdAt).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+        ))}
+      </DataTable>
 
-            {totalPages > 1 && (
-              <div className={styles.pagination}>
-                <div className={styles.pageInfo}>
-                  Showing page {page} of {totalPages}
-                </div>
-                <div className={styles.pageControls}>
-                  <button
-                    className={styles.pageBtn}
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                  >
-                    Previous
-                  </button>
-                  <button
-                    className={styles.pageBtn}
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={page === totalPages}
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
+      <Pagination
+        currentPage={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+      />
     </div>
   );
 }
