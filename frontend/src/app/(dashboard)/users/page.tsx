@@ -12,12 +12,17 @@ export default function UsersPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const limit = 10;
-  const role = "teacher"; // Admin wants to see teachers
+  const [filterRole, setFilterRole] = useState<string>("all"); // 'all', 'student', 'teacher'
 
-  const fetchUsers = async (currentPage: number) => {
+  const fetchUsers = async (currentPage: number, currentRole: string) => {
     try {
       setLoading(true);
-      const res = await userService.getUsersByRole(role, currentPage, limit);
+      let res;
+      if (currentRole === "all") {
+        res = await userService.getAllUsers(currentPage, limit);
+      } else {
+        res = await userService.getUsersByRole(currentRole, currentPage, limit);
+      }
       if (res.success && res.data) {
         setUsers(res.data.users || []);
         setTotalPages(res.data.pagination?.totalPages || 1);
@@ -31,8 +36,13 @@ export default function UsersPage() {
   };
 
   useEffect(() => {
-    fetchUsers(page);
-  }, [page]);
+    fetchUsers(page, filterRole);
+  }, [page, filterRole]);
+
+  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFilterRole(e.target.value);
+    setPage(1); // Reset to page 1 on filter change
+  };
 
   const getInitials = (fname: string, lname: string) => {
     return `${fname[0] || ""}${lname[0] || ""}`.toUpperCase();
@@ -42,22 +52,35 @@ export default function UsersPage() {
     <div className={styles.container}>
       <div className={styles.header}>
         <div className={styles.headerInfo}>
-          <h1>Teachers</h1>
-          <p>View and manage all registered teachers</p>
+          <h1>Users Management</h1>
+          <p>View and manage all registered users</p>
         </div>
         <div className={styles.headerRight}>
+          <div className={styles.filterGroup}>
+            <label htmlFor="roleFilter">Filter by Role:</label>
+            <select 
+              id="roleFilter" 
+              value={filterRole} 
+              onChange={handleFilterChange}
+              className={styles.filterSelect}
+            >
+              <option value="all">All Users</option>
+              <option value="student">Students</option>
+              <option value="teacher">Teachers</option>
+            </select>
+          </div>
           <div className={styles.statsBadge}>
             <span className={styles.statsNumber}>{total}</span>
-            <span className={styles.statsLabel}>Total Teachers</span>
+            <span className={styles.statsLabel}>Total Users</span>
           </div>
         </div>
       </div>
 
       <div className={styles.tableContainer}>
-        {loading ? (
-          <div className={styles.emptyState}>Loading teachers...</div>
+        {loading && users.length === 0 ? (
+          <div className={styles.emptyState}>Loading users...</div>
         ) : users.length === 0 ? (
-          <div className={styles.emptyState}>No teachers found.</div>
+          <div className={styles.emptyState}>No users found.</div>
         ) : (
           <>
             <table className={styles.table}>
@@ -67,7 +90,7 @@ export default function UsersPage() {
                   <th>Email</th>
                   <th>Mobile</th>
                   <th>Role</th>
-                  <th>Joined</th>
+                  <th>Joined Date</th>
                 </tr>
               </thead>
               <tbody>
@@ -88,12 +111,16 @@ export default function UsersPage() {
                     <td className={styles.emailCell}>{user.email}</td>
                     <td>{user.mobileNumber}</td>
                     <td>
-                      <span className={`${styles.badge} ${styles.badgeRole}`}>
+                      <span className={`${styles.badge} ${user.role === 'admin' ? styles.badgeAdmin : user.role === 'teacher' ? styles.badgeTeacher : styles.badgeStudent}`}>
                         {capitalize(user.role)}
                       </span>
                     </td>
                     <td className={styles.dateCell}>
-                      {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "N/A"}
+                      {new Date(user.createdAt).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
                     </td>
                   </tr>
                 ))}

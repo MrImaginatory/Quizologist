@@ -51,6 +51,17 @@ class UserService {
     );
     return response.json();
   }
+
+  async getAllUsers(page = 1, limit = 10): Promise<GetUsersResponse> {
+    const response = await fetch(
+      `${BACKEND_URL}/api/user?page=${page}&limit=${limit}`,
+      {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+      }
+    );
+    return response.json();
+  }
 }
 
 export const userService = new UserService();
