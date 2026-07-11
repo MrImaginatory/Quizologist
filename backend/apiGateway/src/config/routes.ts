@@ -34,11 +34,21 @@ export const routes: RouteConfig[] = [
   },
 
   // ==================== Content Service ====================
+  // Faculty — write operations admin only
   {
     path: "/content/faculty",
     target: `${env.CONTENT_SERVICE_URL}/api/content/faculty`,
     auth: true,
     roles: ["admin"],
+    methods: ["POST", "PUT", "DELETE"],
+  },
+  // Faculty — read operations all authenticated users
+  {
+    path: "/content/faculty",
+    target: `${env.CONTENT_SERVICE_URL}/api/content/faculty`,
+    auth: true,
+    roles: ["admin", "teacher", "student"],
+    methods: ["GET"],
   },
   {
     path: "/content/subject",

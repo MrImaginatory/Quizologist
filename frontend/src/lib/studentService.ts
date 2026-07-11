@@ -111,6 +111,34 @@ class StudentService {
     return response.json();
   }
 
+  async getMyEnrollments(page = 1, limit = 10): Promise<any> {
+    const response = await fetch(
+      `${BACKEND_URL}/api/enrollment?page=${page}&limit=${limit}`,
+      {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+      }
+    );
+    return response.json();
+  }
+
+  async enroll(enrollments: { faculty_id: string; subject_id?: string; topic_id?: string }[]) {
+    const response = await fetch(`${BACKEND_URL}/api/enrollment`, {
+      method: "POST",
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify({ enrollments }),
+    });
+    return response.json();
+  }
+
+  async unenroll(id: string) {
+    const response = await fetch(`${BACKEND_URL}/api/enrollment/${id}`, {
+      method: "DELETE",
+      headers: this.getAuthHeaders(),
+    });
+    return response.json();
+  }
+
   async getStudentById(id: string) {
     const response = await fetch(`${BACKEND_URL}/api/user/${id}`, {
       method: "GET",
