@@ -20,7 +20,7 @@ export interface QuestionAttributes {
   topic_id: string;
   subject_id: string;
   faculty_id: string;
-  questionAddedBy: string;
+  questionAddedBy: string | null;
   createdAt?: Date;
   updatedAt?: Date;
   deletedAt?: Date | null;
