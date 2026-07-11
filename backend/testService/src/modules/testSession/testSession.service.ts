@@ -4,6 +4,7 @@ import { ApiError } from "../../utils/ApiError";
 import { RESPONSE_MESSAGES } from "../../utils/responseMessages";
 import TestSession from "./testSession.model";
 import TestAnswer from "../testAnswer/testAnswer.model";
+import TestSelection from "../testSelection/testSelection.model";
 import Enrollment from "../enrollment/enrollment.model";
 import Question from "../question/question.model";
 import Faculty from "../faculty/faculty.model";
@@ -91,43 +92,37 @@ export class TestSessionService {
       }
     );
 
-    // Check enrollment
-    const whereClause: any = { student_id: studentId };
-    if (data.subject_id) whereClause.subject_id = data.subject_id;
-    if (data.topic_id) whereClause.topic_id = data.topic_id;
+    // Validate enrollment for each selection
+    for (const selection of data.selections) {
+      const whereClause: any = {
+        student_id: studentId,
+        faculty_id: selection.faculty_id,
+      };
+      if (selection.subject_id) whereClause.subject_id = selection.subject_id;
+      if (selection.topic_id) whereClause.topic_id = selection.topic_id;
 
-    const enrollment = await Enrollment.findOne({ where: whereClause });
-    if (!enrollment) {
-      throw ApiError.badRequest(RESPONSE_MESSAGES.ERROR.NO_ENROLLMENT);
-    }
-
-    // Fetch questions based on scope
-    const questionWhere: any = {};
-    if (data.topic_id) {
-      questionWhere.topic_id = data.topic_id;
-    } else if (data.subject_id) {
-      questionWhere.subject_id = data.subject_id;
-    } else {
-      // All enrolled subjects/topics
-      const enrollments = await Enrollment.findAll({
-        where: { student_id: studentId },
-      });
-      const subjectIds = enrollments
-        .map((e) => e.subject_id)
-        .filter((id): id is string => id !== null);
-      const topicIds = enrollments
-        .map((e) => e.topic_id)
-        .filter((id): id is string => id !== null);
-
-      if (subjectIds.length > 0 || topicIds.length > 0) {
-        questionWhere[Op.or] = [];
-        if (subjectIds.length > 0) questionWhere[Op.or].push({ subject_id: { [Op.in]: subjectIds } });
-        if (topicIds.length > 0) questionWhere[Op.or].push({ topic_id: { [Op.in]: topicIds } });
+      const enrollment = await Enrollment.findOne({ where: whereClause });
+      if (!enrollment) {
+        throw ApiError.badRequest(
+          `You are not enrolled in the selected faculty/subject/topic`
+        );
       }
     }
 
+    // Fetch questions based on selections (union of all selections)
+    const questionConditions: any[] = [];
+
+    for (const selection of data.selections) {
+      const condition: any = { faculty_id: selection.faculty_id };
+      if (selection.subject_id) condition.subject_id = selection.subject_id;
+      if (selection.topic_id) condition.topic_id = selection.topic_id;
+      questionConditions.push(condition);
+    }
+
     const questions = await Question.findAll({
-      where: questionWhere,
+      where: {
+        [Op.or]: questionConditions,
+      },
       include: [
         { model: Topic, as: "topic", attributes: ["id", "name"] },
         { model: Subject, as: "subject", attributes: ["id", "name"] },
@@ -140,25 +135,34 @@ export class TestSessionService {
       throw ApiError.badRequest(RESPONSE_MESSAGES.ERROR.NO_QUESTIONS);
     }
 
+    // Apply question limit (use all available if less than requested)
+    const actualQuestionCount = Math.min(questions.length, data.question_limit);
+    const selectedQuestions = questions.slice(0, actualQuestionCount);
+
     // Generate test ID
     const nameParts = studentName.split(" ");
     const firstName = nameParts[0] || "student";
     const lastName = nameParts.slice(1).join(" ") || "user";
     const testId = generateTestId(firstName, lastName);
 
+    // Calculate end time
+    const startedAt = new Date();
+    const endsAt = new Date(startedAt.getTime() + data.duration_minutes * 60 * 1000);
+
     // Create test session
     const session = await TestSession.create({
       test_id: testId,
       student_id: studentId,
-      status: "pending",
-      subject_id: data.subject_id || null,
-      topic_id: data.topic_id || null,
-      total_questions: questions.length,
-      started_at: new Date(),
+      status: "in_progress",
+      duration_minutes: data.duration_minutes,
+      question_limit: data.question_limit,
+      ends_at: endsAt,
+      total_questions: actualQuestionCount,
+      started_at: startedAt,
     });
 
     // Create answer stubs for each question
-    const answerStubs = questions.map((q, index) => ({
+    const answerStubs = selectedQuestions.map((q) => ({
       test_session_id: session.id,
       question_id: q.id,
       time_taken: 0,
@@ -167,8 +171,18 @@ export class TestSessionService {
 
     await TestAnswer.bulkCreate(answerStubs);
 
+    // Create test selections
+    const selectionStubs = data.selections.map((s) => ({
+      test_session_id: session.id,
+      faculty_id: s.faculty_id,
+      subject_id: s.subject_id || null,
+      topic_id: s.topic_id || null,
+    }));
+
+    await TestSelection.bulkCreate(selectionStubs);
+
     // Add index to questions for client reference
-    const questionsWithIndex = questions.map((q, index) => {
+    const questionsWithIndex = selectedQuestions.map((q, index) => {
       const plain = q.toJSON();
       (plain as any)._index = index;
       return plain;
@@ -178,6 +192,9 @@ export class TestSessionService {
       id: session.id,
       test_id: session.test_id,
       status: session.status,
+      duration_minutes: session.duration_minutes,
+      question_limit: session.question_limit,
+      ends_at: session.ends_at,
       totalQuestions: session.total_questions,
       questions: questionsWithIndex.map(stripQuestionForTest),
     };

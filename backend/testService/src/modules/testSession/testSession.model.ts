@@ -9,6 +9,9 @@ interface TestSessionAttributes {
   status: TestStatus;
   subject_id: string | null;
   topic_id: string | null;
+  duration_minutes: number;
+  question_limit: number;
+  ends_at: Date | null;
   total_questions: number;
   attempted: number;
   skipped: number;
@@ -27,6 +30,9 @@ interface TestSessionAttributes {
 type TestSessionCreationAttributes = Optional<
   TestSessionAttributes,
   | "id"
+  | "subject_id"
+  | "topic_id"
+  | "ends_at"
   | "attempted"
   | "skipped"
   | "correct"
@@ -50,6 +56,9 @@ class TestSession
   declare status: TestStatus;
   declare subject_id: string | null;
   declare topic_id: string | null;
+  declare duration_minutes: number;
+  declare question_limit: number;
+  declare ends_at: Date | null;
   declare total_questions: number;
   declare attempted: number;
   declare skipped: number;
@@ -92,6 +101,20 @@ TestSession.init(
     },
     topic_id: {
       type: DataTypes.UUID,
+      allowNull: true,
+    },
+    duration_minutes: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 30,
+    },
+    question_limit: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 30,
+    },
+    ends_at: {
+      type: DataTypes.DATE,
       allowNull: true,
     },
     total_questions: {

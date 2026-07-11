@@ -12,24 +12,46 @@ All endpoints require a Bearer token or gateway headers (`x-user-id`, `x-user-em
 
 ---
 
+## Duration & Question Limits
+
+| Duration (min) | Min Questions | Max Questions |
+|----------------|---------------|---------------|
+| 15 | 15 | 30 |
+| 20 | 20 | 40 |
+| 25 | 25 | 50 |
+| 30 | 30 | 60 |
+| 40 | 30 | 80 |
+| 45 | 40 | 120 |
+
+---
+
 ## REST Endpoints
 
 ### POST /start
 
-Start a new test session.
+Start a new test session with multiple faculty/subject/topic selections.
 
 **Body:**
 ```json
 {
-  "subject_id": "uuid",   // optional — null for all enrolled
-  "topic_id": "uuid"      // optional — null for all enrolled
+  "duration_minutes": 30,
+  "question_limit": 45,
+  "selections": [
+    { "faculty_id": "uuid", "subject_id": "uuid", "topic_id": "uuid" },
+    { "faculty_id": "uuid", "subject_id": "uuid" },
+    { "faculty_id": "uuid" }
+  ]
 }
 ```
 
 | Field | Type | Required | Rules |
 |-------|------|----------|-------|
-| subject_id | string | No | UUID, must have enrollment |
-| topic_id | string | No | UUID, must have enrollment. Requires subject_id if provided. |
+| duration_minutes | number | Yes | One of: 15, 20, 25, 30, 40, 45 |
+| question_limit | number | Yes | Must be within min/max for selected duration |
+| selections | array | Yes | 1-50 selections, each with faculty_id required |
+| selections[].faculty_id | string | Yes | UUID, must have enrollment |
+| selections[].subject_id | string | No | UUID, must have enrollment |
+| selections[].topic_id | string | No | UUID, must have enrollment |
 
 **201 Created:**
 ```json
@@ -39,8 +61,11 @@ Start a new test session.
   "data": {
     "id": "uuid",
     "test_id": "john_doe_mon_20260708_143000",
-    "status": "pending",
-    "totalQuestions": 25,
+    "status": "in_progress",
+    "duration_minutes": 30,
+    "question_limit": 45,
+    "ends_at": "2026-07-08T15:00:00Z",
+    "totalQuestions": 42,
     "questions": [
       {
         "index": 0,
@@ -61,7 +86,15 @@ Start a new test session.
 ```json
 {
   "success": false,
-  "message": "You are not enrolled in this subject/topic"
+  "message": "You are not enrolled in the selected faculty/subject/topic"
+}
+```
+
+**400 Bad Request (no questions):**
+```json
+{
+  "success": false,
+  "message": "No questions found for the selected scope"
 }
 ```
 
@@ -317,9 +350,10 @@ const socket = io("http://localhost:3005", {
 
 | Event | Payload | Description |
 |-------|---------|-------------|
-| `test_joined` | `{ testId, totalQuestions, currentIndex }` | Session state on join |
-| `answer_recorded` | `{ testId, questionIndex, success }` | Answer confirmation |
-| `test_submitted` | `{ testId, result }` | Submission result |
+| `test_joined` | `{ testId, totalQuestions, currentIndex, timeRemaining, endsAt }` | Session state on join |
+| `answer_recorded` | `{ testId, questionIndex, success, timeRemaining }` | Answer confirmation |
+| `time_update` | `{ timeRemaining }` | Seconds remaining (from heartbeat) |
+| `test_submitted` | `{ testId, result, reason? }` | Submission result (reason: "timeout" if auto-submit) |
 | `error` | `{ message }` | Any error |
 
 ### Example Flow
@@ -328,9 +362,11 @@ const socket = io("http://localhost:3005", {
 // 1. Join test
 socket.emit("join_test", { testId: "uuid" });
 
-// 2. Listen for confirmation
+// 2. Listen for confirmation with timer info
 socket.on("test_joined", (data) => {
   console.log(`Test started, ${data.totalQuestions} questions`);
+  console.log(`Time remaining: ${data.timeRemaining} seconds`);
+  console.log(`Ends at: ${data.endsAt}`);
 });
 
 // 3. Record answer
@@ -350,17 +386,25 @@ socket.emit("skip", {
   timeTaken: 10
 });
 
-// 5. Heartbeat every 30s
+// 5. Heartbeat every 30s (also gets time_update)
 setInterval(() => {
   socket.emit("heartbeat", { testId: "uuid", questionIndex: currentIndex });
 }, 30000);
 
-// 6. Submit test
+// 6. Listen for time updates
+socket.on("time_update", (data) => {
+  console.log(`Time remaining: ${data.timeRemaining}s`);
+});
+
+// 7. Submit test
 socket.emit("submit_test", { testId: "uuid" });
 
-// 7. Get result
+// 8. Get result (includes timeout auto-submit)
 socket.on("test_submitted", (data) => {
   console.log(`Score: ${data.result.score}%`);
+  if (data.reason === "timeout") {
+    console.log("Test was auto-submitted due to timeout");
+  }
 });
 ```
 
@@ -373,9 +417,13 @@ socket.on("test_submitted", (data) => {
 | Active test check | Cannot start if one is already `pending` or `in_progress` |
 | Rate limit | Cannot create another test within 5 minutes |
 | Auto-abandon | Tests older than 24 hours are marked `abandoned` |
-| Enrollment required | Must be enrolled in the subject/topic |
-| Questions required | At least 1 question must exist for the scope |
+| Enrollment required | Must be enrolled in each selected faculty/subject/topic |
+| Questions required | At least 1 question must exist for the selected scope |
 | Only owner | Student can only submit/view their own tests |
+| Duration validation | Must be one of: 15, 20, 25, 30, 40, 45 minutes |
+| Question limit | Must be within min/max for selected duration |
+| Question availability | If available questions < limit, use all available (no repeats) |
+| Server-side timer | Test auto-submits when `ends_at` is reached |
 
 ---
 
@@ -383,7 +431,7 @@ socket.on("test_submitted", (data) => {
 
 | Status | Message |
 |--------|---------|
-| 400 | You are not enrolled in this subject/topic |
+| 400 | You are not enrolled in the selected faculty/subject/topic |
 | 400 | No questions found for the selected scope |
 | 400 | Test has not been completed yet |
 | 400 | This test has already been submitted |

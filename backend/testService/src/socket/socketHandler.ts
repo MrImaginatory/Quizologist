@@ -32,6 +32,41 @@ interface SubmitTestPayload {
   testId: string;
 }
 
+// Helper: Calculate time remaining in seconds
+function getTimeRemaining(endsAt: Date | null): number {
+  if (!endsAt) return -1;
+  return Math.max(0, Math.floor((endsAt.getTime() - Date.now()) / 1000));
+}
+
+// Helper: Check if test has expired and auto-submit if needed
+async function checkAndAutoSubmit(
+  socket: Socket,
+  session: any,
+  studentId: string
+): Promise<boolean> {
+  if (!session.ends_at) return false;
+
+  const timeRemaining = getTimeRemaining(new Date(session.ends_at));
+
+  if (timeRemaining <= 0 && session.status === "in_progress") {
+    try {
+      const result = await TestSessionService.submit(session.id, studentId);
+      sessionManager.removeSession(socket.id);
+      socket.leave(`test:${session.id}`);
+      socket.emit("test_submitted", {
+        testId: session.id,
+        result,
+        reason: "timeout",
+      });
+      return true;
+    } catch (error) {
+      console.error("Auto-submit error:", error);
+    }
+  }
+
+  return false;
+}
+
 export function registerSocketHandlers(socket: Socket, studentId: string) {
   socket.on("join_test", async (payload: JoinTestPayload) => {
     try {
@@ -64,6 +99,14 @@ export function registerSocketHandlers(socket: Socket, studentId: string) {
         return;
       }
 
+      // Check if test has expired
+      const timeRemaining = getTimeRemaining(session.ends_at);
+      if (timeRemaining <= 0 && session.status === "in_progress") {
+        // Auto-submit expired test
+        await checkAndAutoSubmit(socket, session, studentId);
+        return;
+      }
+
       // Update status to in_progress
       if (session.status === "pending") {
         await session.update({ status: "in_progress" });
@@ -83,6 +126,8 @@ export function registerSocketHandlers(socket: Socket, studentId: string) {
         testId,
         totalQuestions: session.total_questions,
         currentIndex,
+        timeRemaining,
+        endsAt: session.ends_at,
       });
     } catch (error) {
       console.error("join_test error:", error);
@@ -103,6 +148,10 @@ export function registerSocketHandlers(socket: Socket, studentId: string) {
         socket.emit("error", { message: "Active test session not found" });
         return;
       }
+
+      // Check if test has expired
+      const expired = await checkAndAutoSubmit(socket, session, studentId);
+      if (expired) return;
 
       // Find existing answer record
       const existingAnswer = await TestAnswer.findOne({
@@ -132,10 +181,14 @@ export function registerSocketHandlers(socket: Socket, studentId: string) {
       // Update session index
       sessionManager.updateIndex(socket.id, questionIndex + 1);
 
+      // Calculate remaining time
+      const timeRemaining = getTimeRemaining(session.ends_at);
+
       socket.emit("answer_recorded", {
         testId,
         questionIndex,
         success: true,
+        timeRemaining,
       });
     } catch (error) {
       console.error("answer error:", error);
@@ -155,6 +208,10 @@ export function registerSocketHandlers(socket: Socket, studentId: string) {
         socket.emit("error", { message: "Active test session not found" });
         return;
       }
+
+      // Check if test has expired
+      const expired = await checkAndAutoSubmit(socket, session, studentId);
+      if (expired) return;
 
       const existingAnswer = await TestAnswer.findOne({
         where: { test_session_id: testId, question_id: questionId },
@@ -180,10 +237,13 @@ export function registerSocketHandlers(socket: Socket, studentId: string) {
 
       sessionManager.updateIndex(socket.id, questionIndex + 1);
 
+      const timeRemaining = getTimeRemaining(session.ends_at);
+
       socket.emit("answer_recorded", {
         testId,
         questionIndex,
         success: true,
+        timeRemaining,
       });
     } catch (error) {
       console.error("skip error:", error);
@@ -191,10 +251,23 @@ export function registerSocketHandlers(socket: Socket, studentId: string) {
     }
   });
 
-  socket.on("heartbeat", (payload: HeartbeatPayload) => {
+  socket.on("heartbeat", async (payload: HeartbeatPayload) => {
     sessionManager.updateHeartbeat(socket.id);
     if (payload.questionIndex !== undefined) {
       sessionManager.updateIndex(socket.id, payload.questionIndex);
+    }
+
+    // Check if test has expired
+    const session = await TestSession.findOne({
+      where: { id: payload.testId, student_id: studentId, status: "in_progress" },
+    });
+
+    if (session) {
+      const expired = await checkAndAutoSubmit(socket, session, studentId);
+      if (!expired) {
+        const timeRemaining = getTimeRemaining(session.ends_at);
+        socket.emit("time_update", { timeRemaining });
+      }
     }
   });
 
