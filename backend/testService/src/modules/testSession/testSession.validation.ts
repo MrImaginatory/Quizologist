@@ -35,7 +35,7 @@ export const startTestSchema = z.object({
 });
 
 export const testIdParamSchema = z.object({
-  testId: z.string().uuid("Invalid test ID format"),
+  testId: z.string().min(1, "Test ID is required"),
 });
 
 export const getTestsByStudentSchema = z.object({

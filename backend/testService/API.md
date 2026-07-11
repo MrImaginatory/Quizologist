@@ -143,6 +143,43 @@ Submit and grade the test.
 
 ---
 
+### POST /abandon/:testId
+
+Abandon an ongoing test. **Student only.**
+
+**Path Params:** `testId` — UUID of the test session
+
+**200 OK:**
+```json
+{
+  "success": true,
+  "message": "Test abandoned successfully",
+  "data": {
+    "id": "uuid",
+    "test_id": "john_doe_mon_20260708_143000",
+    "status": "abandoned"
+  }
+}
+```
+
+**400 Bad Request:**
+```json
+{
+  "success": false,
+  "message": "This test has already been completed"
+}
+```
+
+**404 Not Found:**
+```json
+{
+  "success": false,
+  "message": "Test not found"
+}
+```
+
+---
+
 ### GET /result/:testId
 
 Get full result with correct answers and explanations. Only works after test is completed.

@@ -119,6 +119,21 @@ export class TestSessionController {
     }
   }
 
+  static async abandon(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const data = testIdParamSchema.parse(req.params);
+      const result = await TestSessionService.abandon(data.testId, req.user!.userId);
+
+      return ApiResponse.success(
+        res,
+        "Test abandoned successfully",
+        result
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async getTestDetailForAdmin(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const data = testIdParamSchema.parse(req.params);

@@ -15,17 +15,15 @@
   font-size: 1.875rem;
   font-weight: 700;
   color: var(--text-primary);
-  letter-spacing: -0.025em;
   margin: 0;
 }
 
 .subtitle {
   color: var(--text-secondary);
-  font-size: 1rem;
   margin-top: 0.25rem;
 }
 
-.addBtn {
+.startBtn {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -41,33 +39,54 @@
   box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
 }
 
-.addBtn:hover:not(:disabled) {
+.startBtn:hover:not(:disabled) {
   background: var(--color-primary-hover);
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(79, 70, 229, 0.3);
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.5rem;
+.statusBadge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
 }
 
-.empty {
-  grid-column: 1 / -1;
-  text-align: center;
-  padding: 4rem 2rem;
-  background: var(--bg-secondary);
-  border-radius: 12px;
-  border: 1px dashed var(--border-primary);
-  color: var(--text-muted);
+.statusCompleted {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10B981;
 }
 
-.loading {
-  grid-column: 1 / -1;
-  display: flex;
-  justify-content: center;
-  padding: 4rem;
+.statusPending {
+  background: rgba(245, 158, 11, 0.1);
+  color: #F59E0B;
+}
+
+.statusInProgress {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3B82F6;
+}
+
+.statusAbandoned {
+  background: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
+}
+
+.score {
+  font-weight: 600;
+}
+
+.scoreHigh {
+  color: #10B981;
+}
+
+.scoreMedium {
+  color: #F59E0B;
+}
+
+.scoreLow {
+  color: #EF4444;
 }
 
 @media (max-width: 768px) {
@@ -80,14 +99,8 @@
     align-items: flex-start;
     gap: 1rem;
   }
-  .addBtn {
+  .startBtn {
     width: 100%;
     justify-content: center;
-  }
-}
-
-@media (max-width: 480px) {
-  .grid {
-    grid-template-columns: 1fr;
   }
 }

@@ -238,7 +238,7 @@ Base unit: `4px`
 ## Layout Guidelines
 
 ### Page Layout
-- Max width: 1200px
+- Max width: 90%
 - Horizontal padding: 24px (mobile: 16px)
 - Vertical padding: 48px (mobile: 32px)
 

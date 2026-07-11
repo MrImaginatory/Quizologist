@@ -92,19 +92,19 @@ export class TestSessionService {
       }
     );
 
-    // Validate enrollment for each selection
+    // Validate enrollment for each selection (hierarchical check)
     for (const selection of data.selections) {
-      const whereClause: any = {
-        student_id: studentId,
-        faculty_id: selection.faculty_id,
-      };
-      if (selection.subject_id) whereClause.subject_id = selection.subject_id;
-      if (selection.topic_id) whereClause.topic_id = selection.topic_id;
+      // Check if student has ANY enrollment for this faculty
+      const enrollment = await Enrollment.findOne({
+        where: {
+          student_id: studentId,
+          faculty_id: selection.faculty_id,
+        },
+      });
 
-      const enrollment = await Enrollment.findOne({ where: whereClause });
       if (!enrollment) {
         throw ApiError.badRequest(
-          `You are not enrolled in the selected faculty/subject/topic`
+          `You are not enrolled in the selected faculty`
         );
       }
     }
@@ -544,6 +544,32 @@ export class TestSessionService {
       correct,
       incorrect,
       score: Math.round(score * 100) / 100,
+    };
+  }
+
+  static async abandon(testId: string, studentId: string) {
+    const session = await TestSession.findOne({
+      where: { id: testId, student_id: studentId },
+    });
+
+    if (!session) {
+      throw ApiError.notFound(RESPONSE_MESSAGES.ERROR.TEST_NOT_FOUND);
+    }
+
+    if (session.status === "completed") {
+      throw ApiError.badRequest("This test has already been completed");
+    }
+
+    if (session.status === "abandoned") {
+      throw ApiError.badRequest("This test has already been abandoned");
+    }
+
+    await session.update({ status: "abandoned" });
+
+    return {
+      id: session.id,
+      test_id: session.test_id,
+      status: "abandoned",
     };
   }
 }

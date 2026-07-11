@@ -19,3 +19,7 @@ TestSelection.belongsTo(Topic, { foreignKey: "topic_id", as: "topic" });
 TestSession.belongsTo(Faculty, { foreignKey: "faculty_id", as: "faculty", constraints: false });
 TestSession.belongsTo(Subject, { foreignKey: "subject_id", as: "subject", constraints: false });
 TestSession.belongsTo(Topic, { foreignKey: "topic_id", as: "topic", constraints: false });
+
+Question.belongsTo(Topic, { foreignKey: "topic_id", as: "topic" });
+Question.belongsTo(Subject, { foreignKey: "subject_id", as: "subject" });
+Question.belongsTo(Faculty, { foreignKey: "faculty_id", as: "faculty" });

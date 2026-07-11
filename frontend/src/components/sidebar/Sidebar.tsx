@@ -15,7 +15,7 @@ interface NavItem {
 const STUDENT_NAV: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: "dashboard" },
   { label: "My Enrollments", href: "/enrollments", icon: "enrollments" },
-  { label: "Take Test", href: "/tests/start", icon: "test" },
+  { label: "My Tests", href: "/tests", icon: "test" },
   { label: "My Results", href: "/results", icon: "results" },
 ];
 

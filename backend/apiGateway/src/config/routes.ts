@@ -163,6 +163,14 @@ export const routes: RouteConfig[] = [
     roles: ["student"],
     methods: ["POST"],
   },
+  // Abandon test — student only
+  {
+    path: "/test/abandon",
+    target: `${env.TEST_SERVICE_URL}/api/test/abandon`,
+    auth: true,
+    roles: ["student"],
+    methods: ["POST"],
+  },
   // Test history — student only
   {
     path: "/test/history",
