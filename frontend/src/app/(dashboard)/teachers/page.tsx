@@ -3,27 +3,26 @@
 import { useState, useEffect } from "react";
 import styles from "./Teachers.module.css";
 import { capitalize } from "@/utils/helpers";
-import { userService, User } from "@/lib/userService";
+import { teacherService, TeacherProfile } from "@/lib/teacherService";
 import AssignmentModal from "./AssignmentModal";
 
 export default function TeachersPage() {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<TeacherProfile[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const limit = 10;
-  const role = "teacher"; 
 
   // Modal State
-  const [selectedTeacher, setSelectedTeacher] = useState<User | null>(null);
+  const [selectedTeacher, setSelectedTeacher] = useState<TeacherProfile | null>(null);
 
   const fetchUsers = async (currentPage: number) => {
     try {
       setLoading(true);
-      const res = await userService.getUsersByRole(role, currentPage, limit);
+      const res = await teacherService.getTeachersList(currentPage, limit);
       if (res.success && res.data) {
-        setUsers(res.data.users || []);
+        setUsers(res.data.teachers || []);
         setTotalPages(res.data.pagination?.totalPages || 1);
         setTotal(res.data.pagination?.total || 0);
       }
@@ -70,6 +69,7 @@ export default function TeachersPage() {
                   <th>Teacher</th>
                   <th>Email</th>
                   <th>Mobile</th>
+                  <th>Assignments</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -90,6 +90,11 @@ export default function TeachersPage() {
                     </td>
                     <td className={styles.emailCell}>{user.email}</td>
                     <td>{user.mobileNumber}</td>
+                    <td title={`${user.facultyCount || 0} Faculty, ${user.subjectCount || 0} Subjects`}>
+                      <span className={`${styles.badge} ${styles.badgeEnrollment}`}>
+                        {user.totalAssignments || 0} assigned
+                      </span>
+                    </td>
                     <td>
                       <div className={styles.tableActions}>
                         <button

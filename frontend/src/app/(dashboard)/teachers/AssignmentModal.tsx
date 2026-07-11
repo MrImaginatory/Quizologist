@@ -5,6 +5,7 @@ import styles from "./Teachers.module.css";
 import { teacherService, TeacherAssignment } from "@/lib/teacherService";
 import { contentService, Faculty, Subject } from "@/lib/contentService";
 import { capitalize } from "@/utils/helpers";
+import DeleteConfirmModal from "@/components/common/DeleteConfirmModal";
 
 interface Props {
   teacherId: string;
@@ -25,6 +26,8 @@ export default function AssignmentModal({ teacherId, teacherName, onClose }: Pro
   const [selectedFacultyId, setSelectedFacultyId] = useState("");
   const [selectedSubjectId, setSelectedSubjectId] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  
+  const [assignmentToDelete, setAssignmentToDelete] = useState<string | null>(null);
   
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -128,15 +131,19 @@ export default function AssignmentModal({ teacherId, teacherName, onClose }: Pro
     }
   };
 
-  const handleRemove = async (assignmentId: string) => {
-    if (!confirm("Are you sure you want to remove this assignment?")) return;
+  const handleRemove = (assignmentId: string) => {
+    setAssignmentToDelete(assignmentId);
+  };
+
+  const confirmRemove = async () => {
+    if (!assignmentToDelete) return;
     
     try {
       setLoading(true);
       setError("");
       setSuccess("");
       
-      const res = await teacherService.removeAssignment(assignmentId);
+      const res = await teacherService.removeAssignment(assignmentToDelete);
       if (res.success) {
         setSuccess("Assignment removed!");
         loadData();
@@ -148,6 +155,8 @@ export default function AssignmentModal({ teacherId, teacherName, onClose }: Pro
       console.error(err);
       setError("Network error occurred.");
       setLoading(false);
+    } finally {
+      setAssignmentToDelete(null);
     }
   };
 
@@ -308,6 +317,14 @@ export default function AssignmentModal({ teacherId, teacherName, onClose }: Pro
           )}
         </div>
       </div>
+
+      <DeleteConfirmModal 
+        isOpen={!!assignmentToDelete} 
+        onConfirm={confirmRemove} 
+        onCancel={() => setAssignmentToDelete(null)} 
+        title="Remove Assignment" 
+        message="Are you sure you want to remove this assignment?" 
+      />
     </div>
   );
 }

@@ -2,6 +2,18 @@ import { getToken } from "./auth";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000";
 
+export interface TeacherProfile {
+  id: string;
+  fname: string;
+  lname: string;
+  email: string;
+  mobileNumber: string;
+  createdAt: string;
+  facultyCount: number;
+  subjectCount: number;
+  totalAssignments: number;
+}
+
 export interface TeacherAssignment {
   id: string;
   name: string; // Faculty name
@@ -53,6 +65,14 @@ class TeacherService {
 
   async getTeacherAssignments(teacherId: string) {
     const response = await fetch(`${BACKEND_URL}/api/teacher/teacher/${teacherId}`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+    return response.json();
+  }
+
+  async getTeachersList(page: number = 1, limit: number = 10) {
+    const response = await fetch(`${BACKEND_URL}/api/teacher/list?page=${page}&limit=${limit}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });

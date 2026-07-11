@@ -119,6 +119,21 @@
   font-size: 0.875rem;
 }
 
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.badgeEnrollment {
+  background: rgba(16, 185, 129, 0.1);
+  color: rgb(16, 185, 129);
+  cursor: pointer;
+}
+
 .tableActions {
   display: flex;
   gap: 0.5rem;
