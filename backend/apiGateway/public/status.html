@@ -4,15 +4,65 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>System Status</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
+    /* ---- Theme: Light ---- */
     :root {
-      --bg-color: #0f172a;
-      --card-bg: #1e293b;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --up-color: #10b981;
-      --down-color: #ef4444;
-      --border-color: #334155;
+      --bg-page: #F9FAFB;
+      --bg-surface: #FFFFFF;
+      --bg-surface-hover: #F3F4F6;
+      --text-primary: #111827;
+      --text-secondary: #6B7280;
+      --border: #E5E7EB;
+      --border-strong: #D1D5DB;
+      --green: #10B981;
+      --green-soft: #D1FAE5;
+      --green-border: #A7F3D0;
+      --red: #EF4444;
+      --red-soft: #FEE2E2;
+      --red-border: #FECACA;
+      --amber: #F59E0B;
+      --amber-soft: #FEF3C7;
+      --amber-border: #FDE68A;
+      --primary: #6366F1;
+      --primary-soft: #EEF2FF;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-base: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --radius-sm: 0.25rem;
+      --radius-base: 0.375rem;
+      --radius-md: 0.5rem;
+      --radius-lg: 0.75rem;
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    /* ---- Theme: Dark ---- */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-page: #0F1117;
+        --bg-surface: #1A1D27;
+        --bg-surface-hover: #242836;
+        --text-primary: #F3F4F6;
+        --text-secondary: #9CA3AF;
+        --border: #2D3244;
+        --border-strong: #3E4458;
+        --green: #34D399;
+        --green-soft: rgba(16, 185, 129, 0.12);
+        --green-border: rgba(52, 211, 153, 0.25);
+        --red: #F87171;
+        --red-soft: rgba(239, 68, 68, 0.12);
+        --red-border: rgba(248, 113, 113, 0.25);
+        --amber: #FBBF24;
+        --amber-soft: rgba(245, 158, 11, 0.12);
+        --amber-border: rgba(251, 191, 36, 0.25);
+        --primary: #818CF8;
+        --primary-soft: rgba(99, 102, 241, 0.1);
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.2);
+        --shadow-base: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.25);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.25);
+      }
     }
 
     * {
@@ -22,267 +72,358 @@
     }
 
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-main);
+      font-family: var(--font);
+      background-color: var(--bg-page);
+      color: var(--text-primary);
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 3rem 1.5rem;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
-    .container {
-      width: 100%;
-      max-width: 800px;
+    .page {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 4rem 1.5rem 3rem;
     }
 
-    header {
-      text-align: center;
-      margin-bottom: 3rem;
-    }
-
-    h1 {
-      font-size: 2.5rem;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-      letter-spacing: -0.025em;
-    }
-
-    p.subtitle {
-      color: var(--text-muted);
-      font-size: 1.125rem;
-    }
-
-    .overall-status {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.75rem;
-      background-color: var(--card-bg);
-      padding: 1.25rem;
-      border-radius: 12px;
+    /* Header */
+    .header {
       margin-bottom: 2.5rem;
-      border: 1px solid var(--border-color);
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     }
 
-    .status-indicator {
-      width: 16px;
-      height: 16px;
+    .header h1 {
+      font-size: 1.875rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      margin-bottom: 0.25rem;
+    }
+
+    .header p {
+      font-size: 0.9375rem;
+      color: var(--text-secondary);
+    }
+
+    /* Banner */
+    .banner {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.875rem 1.125rem;
+      border-radius: var(--radius-lg);
+      margin-bottom: 2rem;
+      transition: background 200ms ease, border-color 200ms ease;
+    }
+
+    .banner.operational {
+      background: var(--green-soft);
+      border: 1px solid var(--green-border);
+    }
+
+    .banner.degraded {
+      background: var(--red-soft);
+      border: 1px solid var(--red-border);
+    }
+
+    .banner.checking {
+      background: var(--amber-soft);
+      border: 1px solid var(--amber-border);
+    }
+
+    .banner-dot {
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
+      flex-shrink: 0;
     }
 
-    .status-indicator.up { background-color: var(--up-color); box-shadow: 0 0 12px var(--up-color); }
-    .status-indicator.down { background-color: var(--down-color); box-shadow: 0 0 12px var(--down-color); }
-    .status-indicator.loading { background-color: #eab308; animation: pulse 1.5s infinite; }
+    .banner.operational .banner-dot {
+      background: var(--green);
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
+    }
+
+    .banner.degraded .banner-dot {
+      background: var(--red);
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18);
+    }
+
+    .banner.checking .banner-dot {
+      background: var(--amber);
+      animation: pulse 1.8s ease-in-out infinite;
+    }
 
     @keyframes pulse {
-      0% { opacity: 1; }
-      50% { opacity: 0.5; }
-      100% { opacity: 1; }
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.35; }
     }
 
-    .overall-text {
-      font-size: 1.25rem;
-      font-weight: 600;
+    .banner-text {
+      font-size: 0.9375rem;
+      font-weight: 500;
     }
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 1.5rem;
-    }
-
-    .card {
-      background-color: var(--card-bg);
-      border-radius: 12px;
-      padding: 1.5rem;
-      border: 1px solid var(--border-color);
-      transition: transform 0.2s, border-color 0.2s;
-    }
-
-    .card:hover {
-      transform: translateY(-2px);
-      border-color: #475569;
-    }
-
-    .card-header {
+    /* Service list */
+    .services {
       display: flex;
-      justify-content: space-between;
+      flex-direction: column;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+
+    .service-row {
+      display: flex;
       align-items: center;
-      margin-bottom: 1rem;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      opacity: 0;
+      transform: translateY(6px);
+      animation: fadeUp 0.35s ease forwards;
+    }
+
+    .service-row:last-child {
+      border-bottom: none;
+    }
+
+    @keyframes fadeUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .service-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .service-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .service-dot.up {
+      background: var(--green);
+    }
+
+    .service-dot.down {
+      background: var(--red);
+    }
+
+    .service-dot.loading {
+      background: var(--amber);
+      animation: pulse 1.8s ease-in-out infinite;
     }
 
     .service-name {
-      font-weight: 600;
-      font-size: 1.125rem;
+      font-size: 0.9375rem;
+      font-weight: 500;
       text-transform: capitalize;
     }
 
-    .badge {
-      padding: 0.25rem 0.75rem;
-      border-radius: 9999px;
-      font-size: 0.875rem;
-      font-weight: 500;
-      text-transform: uppercase;
+    .service-status {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
     }
 
-    .badge.up {
-      background-color: rgba(16, 185, 129, 0.1);
-      color: var(--up-color);
-      border: 1px solid rgba(16, 185, 129, 0.2);
+    .service-status.up {
+      color: var(--green);
     }
 
-    .badge.down {
-      background-color: rgba(239, 68, 68, 0.1);
-      color: var(--down-color);
-      border: 1px solid rgba(239, 68, 68, 0.2);
+    .service-status.down {
+      color: var(--red);
     }
 
-    .badge.loading {
-      background-color: rgba(234, 179, 8, 0.1);
-      color: #eab308;
-      border: 1px solid rgba(234, 179, 8, 0.2);
+    .service-error {
+      padding: 0.5rem 0.75rem;
+      margin: 0 1.25rem 0.75rem;
+      background: var(--red-soft);
+      border-left: 2px solid var(--red);
+      color: var(--red);
+      font-size: 0.8125rem;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
     }
 
-    .service-url {
-      color: var(--text-muted);
-      font-size: 0.875rem;
-      word-break: break-all;
-    }
-
-    .error-msg {
-      margin-top: 1rem;
-      padding: 0.75rem;
-      background-color: rgba(239, 68, 68, 0.1);
-      border-left: 3px solid var(--down-color);
-      color: #fca5a5;
-      font-size: 0.875rem;
-      border-radius: 0 4px 4px 0;
-    }
-
-    .loader-container {
+    /* Loader */
+    .loader {
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
-      min-height: 200px;
+      justify-content: center;
+      padding: 3rem 0;
+      gap: 0.75rem;
     }
 
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid rgba(255, 255, 255, 0.1);
+    .loader-ring {
+      width: 24px;
+      height: 24px;
+      border: 2.5px solid var(--border);
+      border-top-color: var(--primary);
       border-radius: 50%;
-      border-top-color: var(--text-main);
-      animation: spin 1s ease-in-out infinite;
+      animation: spin 0.75s linear infinite;
     }
 
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
 
-    .footer {
-      margin-top: 4rem;
-      text-align: center;
-      color: var(--text-muted);
+    .loader-text {
       font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    /* Footer */
+    .footer {
+      margin-top: 3rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.8125rem;
+      color: var(--text-secondary);
+    }
+
+    .auto-refresh {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+    }
+
+    .auto-refresh-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+
+    /* Error state */
+    .error-state {
+      text-align: center;
+      padding: 3rem 1.5rem;
+    }
+
+    .error-state h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.375rem;
+    }
+
+    .error-state p {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    @media (max-width: 480px) {
+      .page {
+        padding: 2.5rem 1rem 2rem;
+      }
+
+      .header h1 {
+        font-size: 1.5rem;
+      }
+
+      .footer {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>System Status</h1>
-      <p class="subtitle">Real-time health check for all microservices</p>
-    </header>
-
-    <div class="overall-status" id="overall-status">
-      <div class="status-indicator loading"></div>
-      <div class="overall-text">Checking systems...</div>
+  <div class="page">
+    <div class="header">
+      <h1>Status</h1>
+      <p>Service health at a glance</p>
     </div>
 
-    <div id="services-grid" class="grid">
-      <!-- Loading placeholders -->
-      <div class="loader-container" style="grid-column: 1 / -1;">
-        <div class="spinner"></div>
+    <div class="banner checking" id="banner">
+      <div class="banner-dot"></div>
+      <span class="banner-text">Checking systems&hellip;</span>
+    </div>
+
+    <div id="services-list" class="services">
+      <div class="loader">
+        <div class="loader-ring"></div>
+        <span class="loader-text">Loading&hellip;</span>
       </div>
     </div>
-    
+
     <div class="footer">
-      Last updated: <span id="last-updated">Never</span>
+      <span>Updated <span id="last-updated">never</span></span>
+      <div class="auto-refresh">
+        <div class="auto-refresh-dot"></div>
+        <span>Auto-refresh 30s</span>
+      </div>
     </div>
   </div>
 
   <script>
     async function fetchStatus() {
-      const grid = document.getElementById('services-grid');
-      const overallStatus = document.getElementById('overall-status');
+      const list = document.getElementById('services-list');
+      const banner = document.getElementById('banner');
       const lastUpdated = document.getElementById('last-updated');
-      
+
       try {
-        const response = await fetch('/api/internal/status');
-        const data = await response.json();
-        
-        // Update overall status
+        const res = await fetch('/api/internal/status');
+        const data = await res.json();
         const isAllUp = data.success;
-        overallStatus.innerHTML = `
-          <div class="status-indicator ${isAllUp ? 'up' : 'down'}"></div>
-          <div class="overall-text">${data.message || (isAllUp ? 'All Systems Operational' : 'Some Systems Are Experiencing Issues')}</div>
+
+        banner.className = `banner ${isAllUp ? 'operational' : 'degraded'}`;
+        banner.innerHTML = `
+          <div class="banner-dot"></div>
+          <span class="banner-text">${data.message || (isAllUp ? 'All systems operational' : 'Some systems are down')}</span>
         `;
-        
-        // Update grid
+
         if (data.data && Array.isArray(data.data)) {
-          grid.innerHTML = data.data.map(service => {
+          list.innerHTML = data.data.map((service, i) => {
             const isUp = service.status === 'UP';
-            const name = service.name.replace('-', ' ');
-            
+            const name = service.name.replace(/-/g, ' ');
+
             let errorHtml = '';
             if (!isUp && service.error) {
-              errorHtml = `<div class="error-msg">${service.error}</div>`;
+              errorHtml = `<div class="service-error">${service.error}</div>`;
             }
-            
+
             return `
-              <div class="card">
-                <div class="card-header">
-                  <div class="service-name">${name}</div>
-                  <div class="badge ${isUp ? 'up' : 'down'}">${service.status}</div>
+              <div class="service-row" style="animation-delay: ${i * 50}ms">
+                <div class="service-left">
+                  <div class="service-dot ${isUp ? 'up' : 'down'}"></div>
+                  <span class="service-name">${name}</span>
                 </div>
-                <div class="service-url">${service.url}</div>
-                ${errorHtml}
+                <span class="service-status ${isUp ? 'up' : 'down'}">${isUp ? 'Running' : 'Down'}</span>
               </div>
+              ${errorHtml}
             `;
           }).join('');
         }
-        
-      } catch (error) {
-        overallStatus.innerHTML = `
-          <div class="status-indicator down"></div>
-          <div class="overall-text">Failed to connect to API Gateway</div>
+
+      } catch (err) {
+        banner.className = 'banner degraded';
+        banner.innerHTML = `
+          <div class="banner-dot"></div>
+          <span class="banner-text">Cannot reach API Gateway</span>
         `;
-        grid.innerHTML = `
-          <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 3rem 1.5rem;">
-            <div style="color: var(--down-color); margin-bottom: 1rem;">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="12"></line>
-                <line x1="12" y1="16" x2="12.01" y2="16"></line>
-              </svg>
-            </div>
+
+        list.innerHTML = `
+          <div class="error-state">
             <h3>Connection Error</h3>
-            <p style="color: var(--text-muted); margin-top: 0.5rem;">Could not fetch status data. Ensure the API Gateway is running.</p>
+            <p>Could not fetch status data. Ensure the API Gateway is running.</p>
           </div>
         `;
       }
-      
-      const now = new Date();
-      lastUpdated.textContent = now.toLocaleTimeString();
+
+      lastUpdated.textContent = new Date().toLocaleTimeString();
     }
 
-    // Fetch immediately
     fetchStatus();
-
-    // Refresh every 30 seconds
     setInterval(fetchStatus, 30000);
   </script>
 </body>

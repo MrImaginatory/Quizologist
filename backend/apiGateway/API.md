@@ -713,6 +713,35 @@ Get all assignments for a specific teacher. **Admin and Teacher.**
 
 ---
 
+## Dashboard Endpoints
+
+### GET /api/dashboard/stats
+
+Get dashboard statistics based on user role. **All authenticated users.**
+
+Returns different KPI data depending on the user's role:
+
+**Admin KPIs:**
+- `testsSubmitted` — Total completed tests
+- `totalQuestions` — Total questions in system
+- `totalTopics` — Total topics in system
+- `topicsCovered` — Topics that have at least one question
+- `studentsCount` — Total registered students
+- `totalSubjects` — Total subjects in system
+- `totalTeachers` — Total registered teachers
+
+**Teacher KPIs:**
+- `questionsAdded` — Questions created by this teacher
+- `studentsInFaculties` — Students enrolled in teacher's assigned faculties
+- `testsSubmitted` — Tests completed by students in teacher's faculties
+- `questionsInFaculties` — Total questions in teacher's assigned faculties
+
+**Student KPIs:**
+- `questionsInEnrolledFaculties` — Questions in student's enrolled faculties
+- `testsSubmitted` — Tests completed by this student
+
+---
+
 ## Error Responses
 
 **400 Bad Request:**

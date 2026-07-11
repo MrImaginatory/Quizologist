@@ -36,6 +36,7 @@ app.get("/api/internal/status", async (_req: Request, res: Response) => {
     { name: "student-service", url: env.STUDENT_SERVICE_URL },
     { name: "test-service", url: env.TEST_SERVICE_URL },
     { name: "teacher-service", url: env.TEACHER_SERVICE_URL },
+    { name: "dashboard-service", url: env.DASHBOARD_SERVICE_URL },
   ];
 
   const statuses = await Promise.all(

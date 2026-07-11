@@ -251,6 +251,16 @@ export const routes: RouteConfig[] = [
     roles: ["admin", "teacher"],
     methods: ["GET"],
   },
+
+  // ==================== Dashboard Service ====================
+  // Get dashboard stats — all authenticated users
+  {
+    path: "/dashboard/stats",
+    target: `${env.DASHBOARD_SERVICE_URL}/api/dashboard/stats`,
+    auth: true,
+    roles: ["admin", "teacher", "student"],
+    methods: ["GET"],
+  },
 ];
 
 export function findMatchingRoute(

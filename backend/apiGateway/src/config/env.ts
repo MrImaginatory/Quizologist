@@ -13,4 +13,5 @@ export const env = {
   STUDENT_SERVICE_URL: process.env.STUDENT_SERVICE_URL || "http://localhost:3004",
   TEST_SERVICE_URL: process.env.TEST_SERVICE_URL || "http://localhost:3005",
   TEACHER_SERVICE_URL: process.env.TEACHER_SERVICE_URL || "http://localhost:3006",
+  DASHBOARD_SERVICE_URL: process.env.DASHBOARD_SERVICE_URL || "http://localhost:3007",
 };
