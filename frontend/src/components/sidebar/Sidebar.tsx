@@ -30,6 +30,7 @@ const ADMIN_NAV: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: "dashboard" },
   { label: "Faculties", href: "/faculties", icon: "faculties" },
   { label: "Questions", href: "/questions", icon: "questions" },
+  { label: "Teachers", href: "/teachers", icon: "teachers" },
   { label: "Students", href: "/students", icon: "students" },
   { label: "Tests", href: "/tests", icon: "tests" },
   { label: "Users", href: "/users", icon: "users" },
@@ -125,6 +126,13 @@ function NavIcon({ icon }: { icon: string }) {
         <svg {...svgProps}>
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
           <circle cx="12" cy="7" r="4" />
+        </svg>
+      );
+    case "teachers":
+      return (
+        <svg {...svgProps}>
+          <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+          <path d="M6 12v5c3 3 9 3 12 0v-5" />
         </svg>
       );
     default:
