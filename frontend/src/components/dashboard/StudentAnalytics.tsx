@@ -17,6 +17,7 @@ import {
 } from "chart.js";
 import { Bar, Radar, Doughnut, Line } from "react-chartjs-2";
 import { analyticsService } from "@/lib/analyticsService";
+import { capitalize } from "@/utils/helpers";
 import styles from "./StudentAnalytics.module.css";
 
 ChartJS.register(
@@ -152,7 +153,7 @@ function OverviewPanel({ topicData, difficultyData }: any) {
   const weak = topicData?.topics?.filter((t: any) => t.status === "weak") || [];
 
   const radarData = {
-    labels: topicData?.topics?.slice(0, 8).map((t: any) => t.topicName.substring(0, 15)) || [],
+    labels: topicData?.topics?.slice(0, 8).map((t: any) => capitalize(t.topicName || "").substring(0, 15)) || [],
     datasets: [
       {
         label: "Accuracy %",
@@ -166,7 +167,7 @@ function OverviewPanel({ topicData, difficultyData }: any) {
   };
 
   const doughnutData = {
-    labels: difficultyData?.difficulties?.map((d: any) => d.level) || [],
+    labels: difficultyData?.difficulties?.map((d: any) => capitalize(d.level || "")) || [],
     datasets: [
       {
         data: difficultyData?.difficulties?.map((d: any) => d.totalAttempts) || [],
@@ -224,7 +225,7 @@ function OverviewPanel({ topicData, difficultyData }: any) {
           <div className={styles.topicList}>
             {strong.map((t: any) => (
               <div key={t.topicId} className={styles.topicItem}>
-                <span className={styles.topicName}>{t.topicName}</span>
+                <span className={styles.topicName}>{capitalize(t.topicName || "")}</span>
                 <span className={`${styles.accuracy} ${styles.strong}`}>{t.accuracy}%</span>
               </div>
             ))}
@@ -238,7 +239,7 @@ function OverviewPanel({ topicData, difficultyData }: any) {
           <div className={styles.topicList}>
             {weak.map((t: any) => (
               <div key={t.topicId} className={styles.topicItem}>
-                <span className={styles.topicName}>{t.topicName}</span>
+                <span className={styles.topicName}>{capitalize(t.topicName || "")}</span>
                 <span className={`${styles.accuracy} ${styles.weak}`}>{t.accuracy}%</span>
               </div>
             ))}
@@ -254,7 +255,7 @@ function TopicsPanel({ topicData }: any) {
   if (topics.length === 0) return <div className={styles.noDataSmall}>No topic data available.</div>;
 
   const barData = {
-    labels: topics.map((t: any) => t.topicName.substring(0, 20)),
+    labels: topics.map((t: any) => capitalize(t.topicName || "").substring(0, 20)),
     datasets: [
       {
         label: "Accuracy %",
@@ -304,8 +305,8 @@ function TopicsPanel({ topicData }: any) {
             <tbody>
               {topics.map((t: any) => (
                 <tr key={t.topicId}>
-                  <td>{t.topicName}</td>
-                  <td className={styles.secondaryText}>{t.subjectName}</td>
+                  <td>{capitalize(t.topicName || "")}</td>
+                  <td className={styles.secondaryText}>{capitalize(t.subjectName || "")}</td>
                   <td>{t.totalAttempts}</td>
                   <td>{t.accuracy}%</td>
                   <td>{t.avgTimePerQuestion}s</td>
@@ -329,7 +330,7 @@ function SubjectsPanel({ subjectData }: any) {
   if (subjects.length === 0) return <div className={styles.noDataSmall}>No subject data available.</div>;
 
   const barData = {
-    labels: subjects.map((s: any) => s.subjectName),
+    labels: subjects.map((s: any) => capitalize(s.subjectName || "")),
     datasets: [
       {
         label: "Accuracy %",
@@ -377,7 +378,7 @@ function SubjectsPanel({ subjectData }: any) {
             <tbody>
               {subjects.map((s: any) => (
                 <tr key={s.subjectId}>
-                  <td>{s.subjectName}</td>
+                  <td>{capitalize(s.subjectName || "")}</td>
                   <td>{s.totalAttempts}</td>
                   <td>{s.accuracy}%</td>
                   <td>{s.avgTimePerQuestion}s</td>
