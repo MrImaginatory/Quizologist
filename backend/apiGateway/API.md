@@ -616,6 +616,50 @@ Get all enrollments for a specific student. **Admin only.**
 
 ## Teacher Assignment Endpoints (Admin Only)
 
+### GET /api/teacher/list
+
+Get all teachers with their assignment counts. **Admin only.**
+
+**Query Params:**
+
+| Param | Type | Description |
+|-------|------|-------------|
+| page | number | Page number (default: 1) |
+| limit | number | Items per page (default: 10) |
+
+**Example:** `GET /api/teacher/list?page=1&limit=20`
+
+**200 OK:**
+```json
+{
+  "success": true,
+  "message": "Teachers retrieved successfully",
+  "data": {
+    "teachers": [
+      {
+        "id": "a1b2c3d4-...",
+        "fname": "john",
+        "lname": "doe",
+        "email": "john@example.com",
+        "mobileNumber": "9876543210",
+        "createdAt": "2026-07-06T13:34:50.631Z",
+        "facultyCount": 2,
+        "subjectCount": 5,
+        "totalAssignments": 7
+      }
+    ],
+    "pagination": {
+      "total": 11,
+      "page": 1,
+      "limit": 10,
+      "totalPages": 2
+    }
+  }
+}
+```
+
+---
+
 ### POST /api/teacher/assign/faculty
 
 Assign a faculty to a teacher.

@@ -62,7 +62,7 @@ export default function AssignmentModal({ teacherId, teacherName, onClose }: Pro
     if (activeTab === "subject" && selectedFacultyId) {
       const fetchSubjects = async () => {
         try {
-          const res = await contentService.getSubjects(selectedFacultyId);
+          const res = await contentService.getSubjectsByFaculty(selectedFacultyId);
           if (res.success && res.data) {
             setSubjects(res.data.subjects || []);
           }

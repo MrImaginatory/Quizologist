@@ -9,7 +9,7 @@ export const sequelize = new Sequelize(
     host: env.DB_HOST,
     port: env.DB_PORT,
     dialect: "postgres",
-    logging: env.NODE_ENV === "development" ? console.log : false,
+    //logging: env.NODE_ENV === "development" ? console.log : false,
     define: {
       timestamps: true,
       paranoid: true,

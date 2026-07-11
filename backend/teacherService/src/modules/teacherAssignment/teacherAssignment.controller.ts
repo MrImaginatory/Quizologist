@@ -4,6 +4,20 @@ import { TeacherAssignmentService } from "./teacherAssignment.service";
 import { ApiResponse } from "../../utils/ApiResponse";
 
 export class TeacherAssignmentController {
+  static async getTeachersWithCounts(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { page = "1", limit = "10" } = req.query;
+
+      const result = await TeacherAssignmentService.getTeachersWithCounts(
+        parseInt(page as string, 10),
+        parseInt(limit as string, 10)
+      );
+
+      return ApiResponse.success(res, "Teachers retrieved successfully", result);
+    } catch (error) {
+      next(error);
+    }
+  }
   static async assignFaculty(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { teacher_id, faculty_id } = req.body;

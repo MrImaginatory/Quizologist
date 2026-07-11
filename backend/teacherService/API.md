@@ -8,6 +8,56 @@ Base URL: `http://localhost:3006/api/teacher`
 
 ## Admin Endpoints
 
+### GET /list
+
+Get all teachers with their assignment counts. **Admin only.**
+
+**Headers:**
+```
+Content-Type: application/json
+Authorization: Bearer <jwt_token>
+```
+
+**Query Params:**
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| page | number | No | Page number (default: 1) |
+| limit | number | No | Items per page (default: 10) |
+
+**Example:** `GET /api/teacher/list?page=1&limit=20`
+
+**200 OK:**
+```json
+{
+  "success": true,
+  "message": "Teachers retrieved successfully",
+  "data": {
+    "teachers": [
+      {
+        "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "fname": "john",
+        "lname": "doe",
+        "email": "john@example.com",
+        "mobileNumber": "9876543210",
+        "createdAt": "2026-07-06T13:34:50.631Z",
+        "facultyCount": 2,
+        "subjectCount": 5,
+        "totalAssignments": 7
+      }
+    ],
+    "pagination": {
+      "total": 11,
+      "page": 1,
+      "limit": 10,
+      "totalPages": 2
+    }
+  }
+}
+```
+
+---
+
 ### POST /assign/faculty
 
 Assign a faculty to a teacher. **Admin only.**

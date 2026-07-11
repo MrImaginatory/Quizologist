@@ -203,6 +203,14 @@ export const routes: RouteConfig[] = [
   },
 
   // ==================== Teacher Service ====================
+  // Get teachers with assignment counts — admin only
+  {
+    path: "/teacher/list",
+    target: `${env.TEACHER_SERVICE_URL}/api/teacher/list`,
+    auth: true,
+    roles: ["admin"],
+    methods: ["GET"],
+  },
   // Assign faculty to teacher — admin only
   {
     path: "/teacher/assign/faculty",

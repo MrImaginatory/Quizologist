@@ -1,3 +1,4 @@
+import { fn, col } from "sequelize";
 import TeacherAssignment from "./teacherAssignment.model";
 import Teacher from "../teacher/teacher.model";
 import Faculty from "../faculty/faculty.model";
@@ -23,6 +24,89 @@ interface GetAssignmentsInput {
 }
 
 export class TeacherAssignmentService {
+  static async getTeachersWithCounts(page: number, limit: number): Promise<any> {
+    const offset = (page - 1) * limit;
+
+    const { rows: teachers, count: total } = await Teacher.findAndCountAll({
+      where: { role: "teacher" },
+      attributes: {
+        exclude: ["password"],
+        include: [
+          [fn("COUNT", col("assignments.id")), "totalAssignments"],
+        ],
+      },
+      include: [
+        {
+          model: TeacherAssignment,
+          as: "assignments",
+          attributes: [],
+        },
+      ],
+      group: ["User.id"],
+      order: [["createdAt", "DESC"]],
+      limit,
+      offset,
+      subQuery: false,
+      distinct: true,
+    });
+
+    const teacherIds = teachers.map((t: any) => t.id);
+
+    const facultyCounts = await TeacherAssignment.findAll({
+      attributes: [
+        "teacher_id",
+        [fn("COUNT", fn("DISTINCT", col("faculty_id"))), "facultyCount"],
+      ],
+      where: { teacher_id: teacherIds },
+      group: ["teacher_id"],
+      raw: true,
+    });
+
+    const subjectCounts = await TeacherAssignment.findAll({
+      attributes: [
+        "teacher_id",
+        [fn("COUNT", fn("DISTINCT", col("subject_id"))), "subjectCount"],
+      ],
+      where: { teacher_id: teacherIds, subject_id: { [Symbol.for("ne")]: null } },
+      group: ["teacher_id"],
+      raw: true,
+    });
+
+    const facultyMap = new Map<string, number>();
+    const subjectMap = new Map<string, number>();
+
+    for (const fc of facultyCounts as any[]) {
+      facultyMap.set(fc.teacher_id, parseInt(fc.facultyCount, 10));
+    }
+
+    for (const sc of subjectCounts as any[]) {
+      subjectMap.set(sc.teacher_id, parseInt(sc.subjectCount, 10));
+    }
+
+    const result = teachers.map((t: any) => ({
+      id: t.id,
+      fname: t.fname,
+      lname: t.lname,
+      email: t.email,
+      mobileNumber: t.mobileNumber,
+      createdAt: t.createdAt,
+      facultyCount: facultyMap.get(t.id) || 0,
+      subjectCount: subjectMap.get(t.id) || 0,
+      totalAssignments: parseInt(t.dataValues.totalAssignments, 10) || 0,
+    }));
+
+    const countVal = Array.isArray(total) ? total.length : Number(total);
+
+    return {
+      teachers: result,
+      pagination: {
+        total: countVal,
+        page,
+        limit,
+        totalPages: Math.ceil(countVal / limit),
+      },
+    };
+  }
   static async assignFaculty(data: AssignFacultyInput): Promise<any> {
     const { teacher_id, faculty_id } = data;
 
@@ -173,7 +257,7 @@ export class TeacherAssignmentService {
       order: [["createdAt", "DESC"]],
     });
 
-    const facultyMap = new Map<string, { id: string; name: string; subjects: { id: string; name: string }[] }>();
+    const facultyMap = new Map<string, { id: string; name: string; assignment_id?: string; subjects: { id: string; name: string; assignment_id: string }[] }>();
 
     for (const assignment of assignments) {
       const a = assignment.toJSON() as any;
@@ -191,7 +275,11 @@ export class TeacherAssignmentService {
         facultyMap.get(facultyId)!.subjects.push({
           id: a.subject.id,
           name: a.subject.name,
+          assignment_id: a.id,
         });
+      } else {
+        // This assignment represents the faculty assignment itself
+        facultyMap.get(facultyId)!.assignment_id = a.id;
       }
     }
 
