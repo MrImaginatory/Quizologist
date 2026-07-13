@@ -27,7 +27,7 @@ export default function TestResultsPage() {
     const opt = {
       margin:       0.4,
       filename:     'TestResults.pdf',
-      image:        { type: 'jpeg', quality: 0.98 },
+      image:        { type: 'jpeg' as const, quality: 0.98 },
       html2canvas:  { 
         scale: 2, 
         useCORS: true,
@@ -38,7 +38,7 @@ export default function TestResultsPage() {
           if (actions) actions.style.display = "none";
         }
       },
-      jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' },
+      jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' as const },
       pagebreak:    { mode: ['css', 'legacy'] }
     };
 
