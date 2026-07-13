@@ -24,15 +24,16 @@ interface StartTestModalProps {
 export default function StartTestModal({ onClose, onSuccess }: StartTestModalProps) {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [extraTopics, setExtraTopics] = useState<Map<string, any[]>>(new Map());
-  
+  const [fetchedSubjects, setFetchedSubjects] = useState<Map<string, any[]>>(new Map());
+
   // Selection sets
   const [selectedFaculties, setSelectedFaculties] = useState<Set<string>>(new Set());
   const [selectedSubjects, setSelectedSubjects] = useState<Set<string>>(new Set());
   const [selectedTopics, setSelectedTopics] = useState<Set<string>>(new Set());
-  
+
   const [duration, setDuration] = useState<number>(30);
   const [questionCount, setQuestionCount] = useState<number>(30);
-  
+
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -46,7 +47,8 @@ export default function StartTestModal({ onClose, onSuccess }: StartTestModalPro
   useEffect(() => {
     if (questionCount < limits.min) setQuestionCount(limits.min);
     if (questionCount > limits.max) setQuestionCount(limits.max);
-  }, [duration, limits, questionCount]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [limits.min, limits.max]);
 
   // Helper to safely get IDs
   const getFId = (env: Enrollment) => env.faculty_id || env.faculty?.id || "";
@@ -83,6 +85,54 @@ export default function StartTestModal({ onClose, onSuccess }: StartTestModalPro
           }
         }
         setExtraTopics(newExtraTopics);
+
+        // Check which faculties have no enrolled subjects and fetch them
+        const facultiesWithSubjects = new Set<string>();
+        const facultiesNeedingSubjects = new Set<string>();
+        envs.forEach((env: Enrollment) => {
+          const fId = getFId(env);
+          const sId = getSId(env);
+          if (fId) {
+            if (sId) {
+              facultiesWithSubjects.add(fId);
+            } else {
+              facultiesNeedingSubjects.add(fId);
+            }
+          }
+        });
+
+        // Only fetch subjects for faculties that have no enrolled subjects
+        const facultiesToFetch = Array.from(facultiesNeedingSubjects).filter(
+          fId => !facultiesWithSubjects.has(fId)
+        );
+
+        const newFetchedSubjects = new Map<string, any[]>();
+        for (const fId of facultiesToFetch) {
+          try {
+            const subjectRes = await contentService.getSubjectsByFaculty(fId, 1, 100);
+            const subjects = subjectRes.data?.subjects || (subjectRes.data as any) || [];
+            newFetchedSubjects.set(fId, Array.isArray(subjects) ? subjects : []);
+
+            // Also fetch topics for each fetched subject
+            for (const subject of (Array.isArray(subjects) ? subjects : [])) {
+              if (subject.id && !newExtraTopics.has(subject.id)) {
+                try {
+                  const topicRes = await contentService.getTopicsBySubject(subject.id, 1, 100);
+                  const topics = topicRes.data?.topics || (topicRes.data as any) || [];
+                  if (Array.isArray(topics) && topics.length > 0) {
+                    newExtraTopics.set(subject.id, topics);
+                  }
+                } catch (err) {
+                  console.error("Failed to fetch topics for subject", subject.id, err);
+                }
+              }
+            }
+          } catch (err) {
+            console.error("Failed to fetch subjects for faculty", fId, err);
+          }
+        }
+        setFetchedSubjects(newFetchedSubjects);
+        setExtraTopics(newExtraTopics);
       }
     } catch (err: any) {
       console.error(err);
@@ -105,21 +155,40 @@ export default function StartTestModal({ onClose, onSuccess }: StartTestModalPro
 
   const subjectOptions = useMemo(() => {
     const map = new Map<string, { id: string; name: string; facultyId: string; group?: string }>();
+
+    // First, add subjects from enrollments
     enrollments.forEach(env => {
       const fId = getFId(env);
       const sId = getSId(env);
       if (selectedFaculties.size > 0 && !selectedFaculties.has(fId)) return;
       if (env.subject && sId && !map.has(sId)) {
-        map.set(sId, { 
-          id: sId, 
-          name: env.subject.name, 
+        map.set(sId, {
+          id: sId,
+          name: env.subject.name,
           facultyId: fId,
           group: env.faculty?.name || "Other"
         });
       }
     });
+
+    // Then, add fetched subjects for faculties with no enrolled subjects
+    fetchedSubjects.forEach((subjects, fId) => {
+      if (selectedFaculties.size > 0 && !selectedFaculties.has(fId)) return;
+      const facultyName = enrollments.find(env => getFId(env) === fId)?.faculty?.name || "Other";
+      subjects.forEach((subject: any) => {
+        if (subject.id && !map.has(subject.id)) {
+          map.set(subject.id, {
+            id: subject.id,
+            name: subject.name,
+            facultyId: fId,
+            group: facultyName
+          });
+        }
+      });
+    });
+
     return Array.from(map.values());
-  }, [enrollments, selectedFaculties]);
+  }, [enrollments, selectedFaculties, fetchedSubjects]);
 
   const topicOptions = useMemo(() => {
     const map = new Map<string, { id: string; name: string; subjectId: string; group?: string }>();
@@ -135,17 +204,17 @@ export default function StartTestModal({ onClose, onSuccess }: StartTestModalPro
       const fId = getFId(env);
       const sId = getSId(env);
       const tId = getTId(env);
-      
+
       if (selectedFaculties.size > 0 && !selectedFaculties.has(fId)) return;
       if (selectedSubjects.size > 0 && (!sId || !selectedSubjects.has(sId))) return;
-      
+
       const groupName = env.subject?.name || subjectNameMap.get(sId) || "Other";
 
       // Explicit topics
       if (env.topic && tId && !map.has(tId)) {
-        map.set(tId, { 
-          id: tId, 
-          name: env.topic.name, 
+        map.set(tId, {
+          id: tId,
+          name: env.topic.name,
           subjectId: sId,
           group: groupName
         });
@@ -157,9 +226,9 @@ export default function StartTestModal({ onClose, onSuccess }: StartTestModalPro
         if (topics) {
           topics.forEach((t: any) => {
             if (!map.has(t.id)) {
-              map.set(t.id, { 
-                id: t.id, 
-                name: t.name, 
+              map.set(t.id, {
+                id: t.id,
+                name: t.name,
                 subjectId: sId,
                 group: groupName
               });
@@ -168,8 +237,32 @@ export default function StartTestModal({ onClose, onSuccess }: StartTestModalPro
         }
       }
     });
+
+    // Also include topics from fetched subjects (not in enrollments)
+    fetchedSubjects.forEach((subjects, fId) => {
+      if (selectedFaculties.size > 0 && !selectedFaculties.has(fId)) return;
+      subjects.forEach((subject: any) => {
+        const sId = subject.id;
+        if (selectedSubjects.size > 0 && !selectedSubjects.has(sId)) return;
+        const groupName = subject.name || "Other";
+        const topics = extraTopics.get(sId);
+        if (topics) {
+          topics.forEach((t: any) => {
+            if (!map.has(t.id)) {
+              map.set(t.id, {
+                id: t.id,
+                name: t.name,
+                subjectId: sId,
+                group: groupName
+              });
+            }
+          });
+        }
+      });
+    });
+
     return Array.from(map.values());
-  }, [enrollments, selectedFaculties, selectedSubjects, extraTopics]);
+  }, [enrollments, selectedFaculties, selectedSubjects, extraTopics, fetchedSubjects]);
 
   // Handle cascading clears
   const handleFacultyChange = (newFaculties: Set<string>) => {
@@ -234,11 +327,14 @@ export default function StartTestModal({ onClose, onSuccess }: StartTestModalPro
         } else {
           subsForFaculty.forEach(s => {
             // Find topics belonging to this subject that are selected
-            const topicsForSubject = topicOptions.filter(t => t.subjectId === s.id && selectedTopics.has(t.id));
-            
-            if (topicsForSubject.length === 0) {
+            const allTopicsForSubject = topicOptions.filter(t => t.subjectId === s.id);
+            const topicsForSubject = allTopicsForSubject.filter(t => selectedTopics.has(t.id));
+
+            if (topicsForSubject.length === 0 || topicsForSubject.length === allTopicsForSubject.length) {
+              // No topics selected or ALL topics selected — use subject-level selection
               selections.push({ faculty_id: fId, subject_id: s.id });
             } else {
+              // Partial topic selection — create per-topic entries
               topicsForSubject.forEach(t => {
                 selections.push({ faculty_id: fId, subject_id: s.id, topic_id: t.id });
               });
@@ -309,8 +405,15 @@ export default function StartTestModal({ onClose, onSuccess }: StartTestModalPro
                   className={styles.input}
                   min={limits.min}
                   max={limits.max}
-                  value={questionCount}
-                  onChange={(e) => setQuestionCount(Number(e.target.value))}
+                  value={questionCount === 0 ? "" : questionCount}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setQuestionCount(val === "" ? 0 : Number(val));
+                  }}
+                  onBlur={() => {
+                    if (questionCount < limits.min) setQuestionCount(limits.min);
+                    if (questionCount > limits.max) setQuestionCount(limits.max);
+                  }}
                   disabled={submitting}
                 />
                 <span className={styles.helpText}>
@@ -321,7 +424,10 @@ export default function StartTestModal({ onClose, onSuccess }: StartTestModalPro
           </div>
 
           {loading ? (
-            <div>Loading enrollments...</div>
+            <div className={styles.loadingContainer}>
+              <div className={styles.spinner} />
+              <span className={styles.loadingText}>Loading enrollments...</span>
+            </div>
           ) : (
             <>
               <MultiSelect

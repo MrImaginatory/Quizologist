@@ -48,7 +48,7 @@ Start a new test session with multiple faculty/subject/topic selections.
 |-------|------|----------|-------|
 | duration_minutes | number | Yes | One of: 15, 20, 25, 30, 40, 45 |
 | question_limit | number | Yes | Must be within min/max for selected duration |
-| selections | array | Yes | 1-50 selections, each with faculty_id required |
+| selections | array | Yes | 1-200 selections, each with faculty_id required |
 | selections[].faculty_id | string | Yes | UUID, must have enrollment |
 | selections[].subject_id | string | No | UUID, must have enrollment |
 | selections[].topic_id | string | No | UUID, must have enrollment |
@@ -303,6 +303,128 @@ Get all tests for a student (admin/teacher only).
 **Query Params:** `page`, `limit`
 
 **200 OK:** Same structure as /history
+
+---
+
+### GET /student/:studentId/results
+
+Get completed test results with full question breakdown for a specific student. Students can only view their own results; admin and teacher can view any student's results.
+
+**Path Params:** `studentId` — UUID
+
+**Query Params:**
+
+| Param | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| page | number | No | 1 | Page number |
+| limit | number | No | 10 | Items per page (max 100) |
+
+**200 OK:**
+```json
+{
+  "success": true,
+  "message": "Student results retrieved successfully",
+  "data": {
+    "results": [
+      {
+        "id": "uuid",
+        "test_id": "john_doe_mon_20260708_143000",
+        "student_id": "uuid",
+        "status": "completed",
+        "totalQuestions": 25,
+        "attempted": 22,
+        "skipped": 3,
+        "correct": 18,
+        "incorrect": 4,
+        "score": 72.00,
+        "startedAt": "2026-07-08T14:30:00.000Z",
+        "completedAt": "2026-07-08T15:00:00.000Z",
+        "questions": [
+          {
+            "index": 0,
+            "question": "What is binary search?",
+            "choices": ["O(n)", "O(log n)", "O(n^2)", "O(1)"],
+            "selectedAnswer": "O(log n)",
+            "correctAnswer": "O(log n)",
+            "isCorrect": true,
+            "explanation": "Binary search halves the search space each step.",
+            "videoUrl": "https://youtube.com/watch?v=example",
+            "timeTaken": 45,
+            "topicName": "binary trees",
+            "subjectName": "data structures",
+            "facultyName": "computer science"
+          }
+        ]
+      }
+    ],
+    "pagination": {
+      "total": 10,
+      "page": 1,
+      "limit": 10,
+      "totalPages": 1
+    }
+  }
+}
+```
+
+**403 Forbidden:**
+```json
+{
+  "success": false,
+  "message": "You can only view your own results",
+  "data": null
+}
+```
+
+---
+
+### GET /student/:studentId/summary
+
+Get a lightweight summary of completed test results for table display. No question-level data — just scores, stats, and scope info. Students can only view their own summary; admin and teacher can view any.
+
+**Path Params:** `studentId` — UUID
+
+**Query Params:**
+
+| Param | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| page | number | No | 1 | Page number |
+| limit | number | No | 10 | Items per page (max 100) |
+
+**200 OK:**
+```json
+{
+  "success": true,
+  "message": "Student result summary retrieved successfully",
+  "data": {
+    "results": [
+      {
+        "id": "uuid",
+        "testId": "john_doe_mon_20260708_143000",
+        "score": 72.00,
+        "accuracy": 72,
+        "totalQuestions": 25,
+        "attempted": 22,
+        "correct": 18,
+        "incorrect": 4,
+        "skipped": 3,
+        "durationMinutes": 30,
+        "disconnects": 1,
+        "faculties": ["computer science"],
+        "subjects": ["data structures", "algorithms"],
+        "startedAt": "2026-07-08T14:30:00.000Z",
+        "completedAt": "2026-07-08T15:00:00.000Z"
+      }
+    ],
+    "pagination": {
+      "total": 10,
+      "page": 1,
+      "limit": 10,
+      "totalPages": 1
+    }
+  }
+}
+```
 
 ---
 

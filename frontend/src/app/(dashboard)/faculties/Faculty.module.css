@@ -387,3 +387,9 @@
   opacity: 0.7;
   cursor: not-allowed;
 }
+
+@media (max-width: 768px) {
+  .container {
+    max-width: 100%;
+  }
+}

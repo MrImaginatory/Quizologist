@@ -128,6 +128,18 @@
   cursor: not-allowed;
 }
 
+/* Remove number input spin buttons */
+.input[type="number"]::-webkit-inner-spin-button,
+.input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+.input[type="number"] {
+  -moz-appearance: textfield; /* Firefox */
+  appearance: textfield;
+}
+
 .enrollmentList {
   display: flex;
   flex-direction: column;
@@ -225,6 +237,33 @@
   background: rgba(239, 68, 68, 0.1);
   padding: 0.75rem;
   border-radius: 6px;
+}
+
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2.5rem 1rem;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border-primary);
+  border-top-color: var(--color-primary-600);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loadingText {
+  font-size: 0.875rem;
+  color: var(--text-muted);
 }
 
 @media (max-width: 768px) {

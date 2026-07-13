@@ -124,7 +124,7 @@
 .submitBtn {
   padding: 0.5rem 1.5rem;
   background: var(--color-primary);
-  color: white;
+  color: var(--color-primary-50);
   border: none;
   border-radius: 6px;
   font-size: 0.875rem;

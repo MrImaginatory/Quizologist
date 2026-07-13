@@ -178,6 +178,15 @@
   background-color: var(--bg-tertiary, #f3f4f6);
 }
 
+.logoutButton {
+  color: var(--color-error, #ef4444);
+}
+
+.logoutButton:hover {
+  background-color: var(--color-error-light, #fee2e2);
+  color: var(--color-error-dark, #b91c1c);
+}
+
 .themeToggleIcon {
   display: flex;
   align-items: center;

@@ -26,7 +26,39 @@ export default function MultiSelect({
   placeholder = "Select options...",
 }: MultiSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState<"bottom" | "top">("bottom");
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const calculatePosition = () => {
+    if (!containerRef.current) return;
+    
+    // Find the nearest scrollable parent
+    let scrollParent: HTMLElement | null = containerRef.current.parentElement;
+    while (scrollParent && scrollParent !== document.body) {
+      const style = window.getComputedStyle(scrollParent);
+      if (style.overflowY === 'auto' || style.overflowY === 'scroll' || style.overflow === 'auto' || style.overflow === 'scroll') {
+        break;
+      }
+      scrollParent = scrollParent.parentElement;
+    }
+
+    const rect = containerRef.current.getBoundingClientRect();
+    let spaceBelow = window.innerHeight - rect.bottom;
+    let spaceAbove = rect.top;
+
+    if (scrollParent && scrollParent !== document.body) {
+      const parentRect = scrollParent.getBoundingClientRect();
+      spaceBelow = parentRect.bottom - rect.bottom;
+      spaceAbove = rect.top - parentRect.top;
+    }
+
+    // If there is less than 220px below and more space above, open upwards
+    if (spaceBelow < 220 && spaceAbove > spaceBelow) {
+      setDropdownPosition("top");
+    } else {
+      setDropdownPosition("bottom");
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -35,8 +67,28 @@ export default function MultiSelect({
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    
+    // Recalculate if window resizes while open
+    const handleResize = () => {
+      if (isOpen) calculatePosition();
+    };
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("scroll", handleResize, true);
+    
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("scroll", handleResize, true);
+    };
+  }, [isOpen]);
+
+  const handleToggle = () => {
+    if (disabled) return;
+    if (!isOpen) {
+      calculatePosition();
+    }
+    setIsOpen(!isOpen);
+  };
 
   const toggleOption = (id: string) => {
     const newSet = new Set(selectedIds);
@@ -83,7 +135,7 @@ export default function MultiSelect({
       <label className={styles.label}>{label}</label>
       <div 
         className={`${styles.trigger} ${disabled ? styles.disabled : ""} ${isOpen ? styles.open : ""}`}
-        onClick={() => !disabled && setIsOpen(!isOpen)}
+        onClick={handleToggle}
       >
         <span className={selectedIds.size === 0 ? styles.placeholder : styles.selectedText}>
           {getDisplayText()}
@@ -94,7 +146,7 @@ export default function MultiSelect({
       </div>
 
       {isOpen && !disabled && (
-        <div className={styles.dropdown}>
+        <div className={`${styles.dropdown} ${styles[dropdownPosition]}`}>
           {options.length === 0 ? (
             <div className={styles.empty}>No options available</div>
           ) : (

@@ -1,509 +1,494 @@
-# Quizologist - Architecture Documentation
+# QuizNew Architecture
 
-> Auto-generated architecture overview based on codebase analysis.
+> Generated from GitNexus knowledge graph (2,737 nodes, 5,211 edges, 96 clusters, 139 execution flows) and all 8 service API.md files.
 
 ## Overview
 
-Quizologist is a quiz/examination platform with a microservices backend and a Next.js frontend. Students enroll in academic content organized as **Faculty > Subject > Topic**, take randomized timed MCQ tests via real-time WebSocket sessions, and receive scored results with explanations.
+QuizNew is an educational quiz platform built as a **microservices architecture** with 8 backend services, a Next.js 16 frontend, and a single shared PostgreSQL database. All HTTP traffic flows through an API Gateway that handles authentication and role-based access control. Real-time test-taking uses Socket.IO with a direct connection to the Test Service.
 
-Three user roles: **admin** (full control), **teacher** (content management), **student** (enrollment + test-taking).
-
-### Technology Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Frontend | Next.js 16, React 19, TypeScript, CSS Modules, Framer Motion |
-| API Gateway | Node.js, Express, custom proxy middleware |
-| Backend Services | Node.js, Express, Sequelize ORM, Zod validation |
-| Real-time | Socket.IO (WebSocket) |
-| Database | PostgreSQL (single shared instance) |
-| Auth | JWT (RS256), bcrypt password hashing |
-
-### Port Assignments
-
-| Service | Port |
-|---------|------|
-| API Gateway | 3000 |
-| User Service | 3001 |
-| Content Service | 3002 |
-| Question Service | 3003 |
-| Student Service | 3004 |
-| Test Service | 3005 |
-
----
+**Tech Stack:**
+- **Backend:** Node.js, Express 5, Sequelize v6, PostgreSQL
+- **Frontend:** Next.js 16, React 19, CSS Modules, TypeScript
+- **Real-time:** Socket.IO (direct to Test Service)
+- **Auth:** JWT (7-day expiry)
+- **Package manager:** pnpm
+- **Validation:** Zod
 
 ## Architecture Diagram
 
 ```mermaid
 graph TB
-    subgraph Client["Client Layer"]
-        FE["Next.js Frontend<br/>:3006"]
-        Splash["Splash Screen<br/>(SVG Animation)"]
+    subgraph "Client Layer"
+        FE["Next.js 16 Frontend<br/>React 19 + CSS Modules"]
+        SocketIO["Socket.IO Client"]
     end
 
-    subgraph Gateway["API Gateway :3000"]
-        GW["Gateway Server"]
-        JWT["JWT Verification"]
-        RBAC["Role-Based Access Control"]
-        Proxy["Proxy Middleware<br/>(fetch-based)"]
+    subgraph "Gateway Layer - Port 3000"
+        GW["API Gateway<br/>JWT Auth + RBAC + Proxy"]
     end
 
-    subgraph Backend["Backend Microservices"]
+    subgraph "Service Layer"
         US["User Service<br/>:3001"]
         CS["Content Service<br/>:3002"]
         QS["Question Service<br/>:3003"]
         SS["Student Service<br/>:3004"]
         TS["Test Service<br/>:3005"]
+        TchS["Teacher Service<br/>:3006"]
+        DS["Dashboard Service<br/>:3007"]
     end
 
-    subgraph Database["PostgreSQL"]
-        DB["quizologist_database<br/>(shared instance)"]
+    subgraph "Data Layer"
+        DB[("PostgreSQL<br/>quizologist_database")]
     end
 
-    subgraph Realtime["Real-time Layer"]
-        WS["Socket.IO Server<br/>(port 3005)"]
-    end
+    FE -->|"HTTP (all REST)"| GW
+    SocketIO -->|"WebSocket (direct)"| TS
 
-    subgraph FrontendUI["Frontend UI Components"]
-        Sidebar["Sidebar Navigation<br/>(Collapsible)"]
-        MobileNav["Mobile Bottom Nav<br/>(Responsive)"]
-        Dashboard["Dashboard<br/>(KPI Cards)"]
-        Auth["Auth Pages<br/>(Sign In/Up)"]
-    end
-
-    subgraph Users["User Roles"]
-        Admin["Admin"]
-        Teacher["Teacher"]
-        Student["Student"]
-    end
-
-    FE --> Splash
-    FE --> Sidebar
-    FE --> MobileNav
-    FE --> Dashboard
-    FE --> Auth
-
-    FE -->|HTTP API| GW
-    GW --> JWT --> RBAC --> Proxy
-    Proxy -->|fetch + headers| US
-    Proxy -->|fetch + headers| CS
-    Proxy -->|fetch + headers| QS
-    Proxy -->|fetch + headers| SS
-    Proxy -->|fetch + headers| TS
+    GW -->|"/api/user/*"| US
+    GW -->|"/api/content/*"| CS
+    GW -->|"/api/question/*"| QS
+    GW -->|"/api/enrollment/*"| SS
+    GW -->|"/api/student/*"| SS
+    GW -->|"/api/test/*"| TS
+    GW -->|"/api/teacher/*"| TchS
+    GW -->|"/api/dashboard/*"| DS
 
     US --> DB
     CS --> DB
     QS --> DB
     SS --> DB
     TS --> DB
-
-    WS -.->|direct connect<br/>(bypasses gateway)| Student
-    WS --> TS
-
-    Admin --> FE
-    Teacher --> FE
-    Student --> FE
+    TchS --> DB
+    DS --> DB
 ```
 
----
+## Functional Areas
 
-## Frontend Architecture
+### 1. API Gateway (`backend/apiGateway/` — Port 3000)
 
-### Component Structure
+Single entry point for all HTTP requests. Handles:
 
-```
-frontend/src/
-├── app/
-│   ├── (auth)/                    # Auth route group
-│   │   ├── layout.tsx            # AuthLayout wrapper
-│   │   ├── signin/page.tsx       # Login form
-│   │   └── signup/page.tsx       # Registration form
-│   ├── (dashboard)/              # Dashboard route group
-│   │   ├── layout.tsx            # DashboardLayout with sidebar
-│   │   └── dashboard/page.tsx    # Main dashboard page
-│   ├── globals.css               # CSS variables, reset, utilities
-│   ├── layout.tsx                # Root layout with splash screen
-│   └── page.tsx                  # Root redirect to /signin
-├── components/
-│   ├── auth/                     # Auth components
-│   │   ├── AuthLayout.tsx        # Split-screen auth layout
-│   │   ├── BrandPanel.tsx        # Left panel with branding
-│   │   ├── Button.tsx            # Reusable button (4 variants)
-│   │   ├── FormError.tsx         # Error message display
-│   │   ├── Input.tsx             # Form input with validation
-│   │   ├── LoadingSpinner.tsx    # Loading indicator
-│   │   ├── RadioGroup.tsx        # Role selection radios
-│   │   └── ThemeToggle.tsx       # Dark/light mode toggle
-│   ├── dashboard/                # Dashboard components
-│   │   ├── KpiCards.tsx          # 5 KPI cards with animated counters
-│   │   └── MobileNav.tsx         # Mobile bottom navigation
-│   ├── loading/
-│   │   └── LoadingScreen.tsx     # Loading screen with spinner
-│   ├── sidebar/
-│   │   └── Sidebar.tsx           # Collapsible sidebar navigation
-│   └── splash/
-│       └── SplashScreen.tsx      # Splash screen with SVG animation
-├── lib/
-│   ├── api.ts                    # API client (singleton)
-│   └── auth.ts                   # Token/user management
-└── types/
-    └── index.ts                  # TypeScript interfaces
-```
+- **JWT Authentication:** Validates Bearer tokens, extracts `userId`, `email`, `role` into headers
+- **RBAC:** Method-based access control. Separate route entries per HTTP method (POST/PUT/DELETE vs GET) enforce write vs read permissions per role
+- **Proxy:** Forwards requests to downstream services via `fetch()`, passes user info as `x-user-id`, `x-user-email`, `x-user-role` headers
 
-### Key Features Implemented
+**Role Permissions:**
 
-#### 1. Splash Screen
-- Animated SVG logo with stroke-dashoffset draw animation
-- Title fade-in and spinner
-- 2.5 second display before transitioning to app
-- Uses `NEXT_PUBLIC_SVG_PATH` env variable for SVG path data
-
-#### 2. Collapsible Sidebar
-- Expands to 260px, collapses to 72px
-- Framer Motion animations for smooth transitions
-- Row layout when expanded, column layout when collapsed
-- Role-based navigation (admin: 8 items, teacher: 6, student: 4)
-- Active state highlighting with primary color
-- User section with avatar, name, role, and logout button
-- Persisted collapse state in localStorage
-
-#### 3. Responsive Design
-- Desktop: Sidebar navigation (>768px)
-- Mobile: Bottom navigation bar (≤768px)
-- Mobile "More" menu with additional nav items and theme toggle
-- KPI cards responsive grid: 5 cols → 3 → 2 → 1
-
-#### 4. Dashboard KPI Cards
-- 5 cards: Tests Submitted, Total Questions, Total Topics, Topics Covered, Active Students
-- Animated counters starting from 0
-- Uniform indigo color scheme
-- Staggered entrance animations with Framer Motion
-- Hover lift effect
-
-#### 5. Theme System
-- CSS variables for light/dark modes
-- Manual toggle via ThemeToggle button
-- Theme persisted in localStorage
-- Global styles with design tokens
-
-### Design System
-
-| Token | Value | Usage |
-|-------|-------|-------|
-| Primary | `#6366F1` (Indigo 500) | Buttons, links, active states |
-| Background | `#F9FAFB` (Gray 50) | Page background |
-| Card BG | `#FFFFFF` | Card surfaces |
-| Border | `#E5E7EB` (Gray 200) | Dividers, card borders |
-| Text Primary | `#111827` (Gray 900) | Headings |
-| Text Secondary | `#6B7280` (Gray 500) | Body text |
-
-### Animation Guidelines
-
-| Element | Duration | Easing |
-|---------|----------|--------|
-| Sidebar expand/collapse | 300ms | cubic-bezier(0.4, 0, 0.2, 1) |
-| KPI card entrance | 500ms | Staggered 100ms delay |
-| Nav label fade | 200ms | ease-in-out |
-| Button hover | 150ms | ease-in-out |
-| Splash SVG draw | 1.5s | cubic-bezier(0.47, 0, 0.745, 0.715) |
-
----
-
-## Backend Architecture
-
-### 1. API Gateway (`backend/apiGateway/`)
-
-Pure routing layer with **no database**. Handles:
-
-- **JWT Verification** - Validates tokens on authenticated routes
-- **Role-Based Access Control** - Enforces `admin`, `teacher`, `student` role restrictions per route
-- **Request Proxying** - Forwards requests to downstream services via `fetch()`, injecting identity headers (`x-user-id`, `x-user-email`, `x-user-role`)
-- **Route Table** - Flat array of route objects with path, target URL, auth requirements, allowed roles, and HTTP methods
+| Role | Access |
+|------|--------|
+| Admin | Full access to all endpoints |
+| Teacher | Read content, CRUD questions, view students |
+| Student | Read content, read questions, enrollments, take tests |
 
 **Key files:**
-- `src/config/routes.ts` - Route definitions and matching logic
-- `src/middlewares/proxy.middleware.ts` - Request forwarding
-- `src/middlewares/rbac.middleware.ts` - Role enforcement
+- `src/config/routes.ts` — Route-to-service mapping with RBAC rules
+- `src/middlewares/auth.middleware.ts` — JWT validation
+- `src/middlewares/rbac.middleware.ts` — Role-based access control
+- `src/middlewares/proxy.middleware.ts` — Service proxying
 
----
+### 2. User Service (`backend/userService/` — Port 3001)
 
-### 2. User Service (`backend/userService/`)
+Manages user registration, authentication, and user CRUD.
 
-Handles authentication and user management. **Only service that generates JWT tokens.**
+**Endpoints:** `POST /signup`, `POST /login`, `GET /`, `GET /role/:role`, `GET /:id`
 
-- **Authentication** - Signup with soft-delete restoration, login with bcrypt password verification
-- **User Management** - CRUD operations, role-based filtering, paginated listing
-- **Seeding** - Auto-creates default admin account (`admin@quizologist.com`)
+**Key patterns:**
+- All string fields stored in lowercase (except password)
+- Soft-delete restore: on signup with deleted email, restore account
+- JWT with 7-day expiry
 
-**Key files:**
-- `src/modules/user/user.model.ts` - User model (soft deletes, lowercased fields)
-- `src/utils/jwtToken.ts` - JWT generation
-- `src/config/seed.ts` - Default admin seeding
+### 3. Content Service (`backend/contentService/` — Port 3002)
 
----
+Manages the academic content hierarchy: Faculty → Subject → Topic.
 
-### 3. Content Service (`backend/contentService/`)
+**Endpoints:**
+- `/api/content/faculty` — CRUD (admin only for write)
+- `/api/content/subject` — CRUD (all roles for read)
+- `/api/content/topic` — CRUD (all roles for read)
 
-Manages the academic hierarchy:
+**Key patterns:**
+- Deletion protection: count dependent children before soft-delete
+- Nested includes: queries return associated record names (not just IDs)
 
-- **Faculty** (e.g., "Computer Science") -> contains Subjects
-- **Subject** (e.g., "Data Structures") -> contains Topics
-- **Topic** (e.g., "Binary Trees") -> referenced by Questions
+### 4. Question Service (`backend/questionService/` — Port 3003)
 
-Features cascading delete protection (can't delete Faculty with Subjects, etc.) and unique names within parent scope.
+Manages question bank with MCQ and descriptive question types.
 
-**Key files:**
-- `src/config/associations.ts` - Faculty hasMany Subject, Subject hasMany Topic
-- `src/modules/*/` - MVC pattern: model, controller, service, routes, Zod validation
+**Endpoints:** `POST /`, `GET /`, `GET /search?q=`, `GET /filter`, `GET /topic/:topicId`, `GET /:id`, `PUT /:id`, `DELETE /:id`
 
----
+**Key patterns:**
+- Foreign key validation: `topic_id`, `subject_id`, `faculty_id` must reference active records
+- Unique constraint: same question text cannot repeat within same topic
+- Difficulty levels: `beginner`, `normal`, `mid`, `hard`, `expert`
+- `questionAddedBy` auto-populated from gateway user header
 
-### 4. Question Service (`backend/questionService/`)
+### 5. Student Service (`backend/studentService/` — Port 3004)
 
-Owns the `questions` table with full CRUD plus search.
+Manages student enrollments and student listing.
 
-- **Question Types** - MCQ (with JSONB choices) and descriptive
-- **Difficulty Levels** - beginner, normal, mid, hard, expert
-- **Search** - PostgreSQL ILIKE for case-insensitive partial matching
-- **Associations** - Includes Faculty/Subject/Topic via read-only model stubs for denormalized responses
+**Endpoints:**
+- `POST /` — Batch enrollment (1-50 items per request)
+- `GET /` — Own enrollments (student)
+- `GET /student/:studentId` — Student enrollments (admin/teacher)
+- `GET /list` — All students with enrollment-based filtering (admin)
+- `GET /:studentId/enrollments` — Student detail enrollments (admin)
+- `DELETE /:id` — Unenroll
 
-**Key files:**
-- `src/modules/question/question.model.ts` - Question model with JSONB choices
-- `src/modules/question/question.controller.ts` - Search and CRUD logic
+**Key patterns:**
+- Batch enrollment with `created[]` and `skipped[]` arrays
+- Composite unique index on (student_id, faculty_id, subject_id, topic_id)
+- Topic enrollment: enrolling at subject level grants access to ALL topics under it
 
----
+### 6. Teacher Service (`backend/teacherService/` — Port 3006)
 
-### 5. Student Service (`backend/studentService/`)
+Manages teacher-faculty-subject assignments.
 
-Manages enrollments linking students to content.
+**Endpoints:**
+- `GET /list` — Teachers with assignment counts (admin)
+- `POST /assign/faculty` — Assign faculty to teacher (admin)
+- `POST /assign/subject` — Assign subject to teacher (admin)
+- `DELETE /:id` — Remove assignment (admin)
+- `GET /` — All assignments with filters (admin)
+- `GET /teacher/:teacherId` — Assignments for specific teacher (admin/teacher)
 
-- **Batch Enrollment** - POST accepts array of enrollment items, validates hierarchy consistency, skips duplicates
-- **Scope Levels** - Faculty-level, subject-level, or topic-level enrollment
-- **Composite Unique Index** - Prevents duplicate student+faculty+subject+topic combinations
+**Key patterns:**
+- `teacher_assignments` table: teacher_id (required), faculty_id (required), subject_id (nullable = faculty-only)
+- Topics NOT assigned separately — all topics under a subject automatically available
+- Raw SQL for aggregation queries (facultyCount, subjectCount, totalAssignments)
 
-**Key files:**
-- `src/modules/enrollment/enrollment.model.ts` - Enrollment model
-- `src/modules/enrollment/enrollment.controller.ts` - Batch enrollment logic
+### 7. Test Service (`backend/testService/` — Port 3005)
 
----
-
-### 6. Test Service (`backend/testService/`)
-
-The most complex service - combines REST endpoints with Socket.IO for real-time quiz sessions.
+Manages test sessions, real-time test-taking via Socket.IO, and grading.
 
 **REST Endpoints:**
-- Start test (guards: no active test, 5-min cooldown, 24h stale auto-abandon)
-- Submit test (grades answers, computes score)
-- Test history and performance aggregates
-- Admin/teacher: view any student's performance
+- `POST /start` — Start test with multi-selection
+- `POST /submit/:testId` — Submit and grade
+- `POST /abandon/:testId` — Abandon test
+- `GET /result/:testId` — Full result with answers
+- `GET /history` — Own test history (student)
+- `GET /student/:studentId` — Student tests (admin/teacher)
+- `GET /student/:studentId/performance` — Performance summary
+- `GET /detail/:testId` — Full test detail (admin/teacher)
+- `GET /all` — All tests with filters (admin)
 
 **Socket.IO Events:**
-- `join_test` - Resume from saved position on reconnect
-- `answer` / `skip` - Record responses with time tracking
-- `heartbeat` - 30-second keep-alive (sessions abandoned after 60s silence)
-- `submit_test` - Grade and finalize
+- Client → Server: `join_test`, `answer`, `skip`, `submit_test`, `heartbeat`
+- Server → Client: `test_joined`, `answer_recorded`, `time_update`, `test_submitted`, `error`
 
-**Key files:**
-- `src/socket/sessionManager.ts` - Active connection tracking, heartbeat monitoring
-- `src/socket/socketHandlers.ts` - WebSocket event handlers
-- `src/modules/test/` - REST endpoint logic
+**Key patterns:**
+- Multi-selection: students select multiple faculties/subjects/topics
+- Duration-to-question-limit mapping (15min→15-30, up to 45min→40-120)
+- Server-side timer: `ends_at = started_at + duration_minutes`, auto-submit on expiry
+- Answer stubs: pre-created with `selected_answer: null` for all questions
+- Test ID format: `{firstName}_{lastName}_{dayAbbrev}_{YYYYMMDD}_{HHmmss}`
+- Disconnect recovery: increment `disconnect_count`, save `last_question_index`, resume on rejoin
+- Heartbeat: 30s interval, 60s timeout
 
----
+### 8. Dashboard Service (`backend/dashboardService/` — Port 3007)
 
-### 7. API Collections (`api_collections/`)
+Provides role-based KPI statistics and student analytics.
 
-OpenAPI 3.1.0 specifications for the API surface:
+**Endpoints:**
+- `GET /stats` — Role-based KPI cards (admin: 7 cards, teacher: 4 cards, student: 2 cards)
+- `GET /student/topic-performance` — Topic-wise scores (student only)
+- `GET /student/subject-performance` — Subject-wise scores
+- `GET /student/difficulty-breakdown` — Performance by difficulty
+- `GET /student/time-analysis` — Average time per question
+- `GET /student/performance-trends` — Test score trends over time
+- `GET /student/strengths-weaknesses` — Topic rankings with thresholds (≥80% strong, 50-79% moderate, <50% weak)
 
-| Spec | Coverage |
-|------|----------|
-| `UserService.openapi.json` | Signup, login, user CRUD |
-| `ContentService.openapi.json` | Faculty, Subject, Topic CRUD |
-| `QuestionService.openapi.json` | Question CRUD, search, topic filtering |
+**Key patterns:**
+- Read-only Sequelize models for TestSession, TestAnswer, Question, Topic, Subject, Faculty
+- `timestamps: false` and `paranoid: false` on read-only models
+- Minimum 3 attempts required for strength/weakness rankings
 
-**Note:** Student (enrollment) and Test service endpoints are not yet documented in OpenAPI specs.
+## Data Model
 
----
+```mermaid
+erDiagram
+    users {
+        uuid id PK
+        varchar fname
+        varchar lname
+        varchar email UK
+        varchar mobilenumber
+        varchar password
+        varchar role
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt
+    }
+
+    faculties {
+        uuid id PK
+        varchar name
+        text description
+        timestamp deletedAt
+    }
+
+    subjects {
+        uuid id PK
+        varchar name
+        text description
+        uuid faculty_id FK
+        timestamp deletedAt
+    }
+
+    topics {
+        uuid id PK
+        varchar name
+        text description
+        uuid subject_id FK
+        timestamp deletedAt
+    }
+
+    questions {
+        uuid id PK
+        varchar type
+        text question
+        jsonb choices
+        text correctAnswer
+        text explanation
+        varchar videoUrl
+        varchar difficulty
+        uuid topic_id FK
+        uuid subject_id FK
+        uuid faculty_id FK
+        uuid questionAddedBy FK
+        timestamp deletedAt
+    }
+
+    enrollments {
+        uuid id PK
+        uuid student_id FK
+        uuid faculty_id FK
+        uuid subject_id FK
+        uuid topic_id FK
+        timestamp deletedAt
+    }
+
+    teacher_assignments {
+        uuid id PK
+        uuid teacher_id FK
+        uuid faculty_id FK
+        uuid subject_id FK
+        timestamp deletedAt
+    }
+
+    test_sessions {
+        uuid id PK
+        varchar test_id
+        uuid student_id FK
+        varchar status
+        integer duration_minutes
+        integer question_limit
+        timestamp ends_at
+        timestamp startedAt
+        timestamp completedAt
+        integer disconnect_count
+        integer last_question_index
+        timestamp deletedAt
+    }
+
+    test_selections {
+        uuid id PK
+        uuid test_session_id FK
+        uuid faculty_id FK
+        uuid subject_id FK
+        uuid topic_id FK
+        timestamp deletedAt
+    }
+
+    test_answers {
+        uuid id PK
+        uuid test_session_id FK
+        uuid question_id FK
+        integer question_index
+        varchar selected_answer
+        integer time_taken
+        timestamp deletedAt
+    }
+
+    users ||--o{ enrollments : "student"
+    users ||--o{ teacher_assignments : "teacher"
+    users ||--o{ questions : "added_by"
+    users ||--o{ test_sessions : "student"
+
+    faculties ||--o{ subjects : "has"
+    subjects ||--o{ topics : "has"
+    topics ||--o{ questions : "has"
+    subjects ||--o{ questions : "has"
+    faculties ||--o{ questions : "has"
+
+    faculties ||--o{ enrollments : "enrolled"
+    subjects ||--o{ enrollments : "enrolled"
+    topics ||--o{ enrollments : "enrolled"
+
+    faculties ||--o{ teacher_assignments : "assigned"
+    subjects ||--o{ teacher_assignments : "assigned"
+
+    test_sessions ||--o{ test_answers : "has"
+    test_sessions ||--o{ test_selections : "has"
+    questions ||--o{ test_answers : "answered"
+```
 
 ## Key Execution Flows
 
-### 1. App Initialization
+### Flow 1: Student Starts a Test
 
-```
-1. Root Layout mounts
-2. SplashScreen renders with SVG animation (2.5s)
-3. SVG draws with stroke-dashoffset animation
-4. Title fades in, spinner appears
-5. SplashScreen completes, sets splashComplete=true
-6. Actual app content renders
-7. DashboardLayout checks authentication
-8. If not authenticated -> redirect to /signin
-9. If authenticated -> render Sidebar + main content
-```
+```mermaid
+sequenceDiagram
+    participant S as Student
+    participant FE as Frontend
+    participant GW as Gateway
+    participant TS as Test Service
+    participant QS as Question Service
+    participant DB as Database
 
-### 2. User Signup & Login
-
-```
-Client -> Gateway (POST /api/auth/signup)
-  -> Verify no auth required
-  -> Proxy to User Service :3001
-  -> Check for soft-deleted user with same email
-  -> Hash password, create/restore user
-  -> Generate JWT
-  -> Return token + user object
-
-Client -> Gateway (POST /api/auth/login)
-  -> Proxy to User Service :3001
-  -> Verify password with bcrypt
-  -> Generate JWT
-  -> Return token + user object
-  -> Store token + user in localStorage
-  -> Redirect to /dashboard
+    S->>FE: Click "Start New Test"
+    FE->>GW: POST /api/test/start
+    GW->>GW: Validate JWT + RBAC
+    GW->>TS: POST /start (x-user-* headers)
+    TS->>DB: Check enrollment exists
+    TS->>DB: Fetch questions via UNION query
+    TS->>DB: Create test_session + answer stubs
+    TS->>DB: Create test_selections
+    TS-->>GW: 201 Created (questions + timer)
+    GW-->>FE: Response
+    FE->>FE: Open LiveTestClient
+    FE->>TS: Socket.IO connect (JWT in auth)
+    FE->>TS: join_test { testId }
+    TS->>TS: Validate + check auto-submit
+    TS-->>FE: test_joined { currentIndex, timeRemaining }
 ```
 
-### 3. Dashboard Rendering
+### Flow 2: Real-time Answer Submission
 
-```
-1. DashboardLayout mounts
-2. Check isAuthenticated() from localStorage
-3. If not authenticated -> redirect to /signin
-4. Load sidebar collapsed state from localStorage
-5. Render Sidebar with role-based nav items
-6. Render main content area with margin-left animation
-7. KpiCards animate in with staggered counters
-8. MobileNav renders on screens ≤768px
-```
+```mermaid
+sequenceDiagram
+    participant S as Student
+    participant FE as Frontend
+    participant TS as Test Service
+    participant DB as Database
 
-### 4. Content Management (Admin/Teacher)
-
-```
-Admin -> Gateway (POST /api/faculty) -> Content Service
-Admin -> Gateway (POST /api/subject) -> Content Service
-Admin -> Gateway (POST /api/topic) -> Content Service
-
-All operations validate:
-  - Faculty exists before creating Subject
-  - Subject exists before creating Topic
-  - No cascading deletes (Faculty -> Subject -> Topic)
+    S->>FE: Select answer + click Next
+    FE->>TS: Socket: answer { testId, questionIndex, answer, timeTaken }
+    TS->>TS: Check ends_at (auto-submit if expired)
+    TS->>DB: UPDATE test_answers SET selected_answer
+    TS-->>FE: answer_recorded { success, timeRemaining }
+    FE->>FE: Advance to next question
 ```
 
-### 5. Question Creation
+### Flow 3: Test Submission and Grading
 
-```
-Teacher -> Gateway (POST /api/question)
-  -> Verify role = admin|teacher
-  -> Proxy to Question Service :3003
-  -> Validate topic_id exists (via read-only Topic model)
-  -> Store MCQ choices as JSONB array
-  -> Record questionAddedBy (teacher's user ID)
-```
+```mermaid
+sequenceDiagram
+    participant S as Student
+    participant FE as Frontend
+    participant TS as Test Service
+    participant DB as Database
 
-### 6. Student Enrollment
-
-```
-Student -> Gateway (POST /api/enrollment)
-  -> Verify role = student
-  -> Extract student_id from x-user-id header
-  -> Proxy to Student Service :3004
-  -> Batch validate enrollment items:
-     - Faculty/Subject/Topic hierarchy consistency
-     - Skip duplicates (composite unique index)
-  -> Return created + skipped counts
+    S->>FE: Click "Submit Test"
+    FE->>TS: Socket: submit_test { testId }
+    TS->>DB: Lock test_session row
+    TS->>DB: Fetch all test_answers
+    TS->>DB: Fetch correct answers from questions
+    TS->>TS: Grade: compare selected vs correct
+    TS->>TS: Calculate score, correct, incorrect, skipped
+    TS->>DB: UPDATE test_session (status=completed, scores)
+    TS-->>FE: test_submitted { result, score }
+    FE->>FE: Show results page
 ```
 
-### 7. Quiz Session (Real-time)
+### Flow 4: Batch Enrollment
 
-```
-Student -> Gateway (POST /api/test/start)
-  -> Verify enrollment matches requested scope
-  -> Auto-abandon stale tests (>24h)
-  -> Check 5-min cooldown
-  -> Fetch questions (random order, stripped of answers)
-  -> Create test session + pre-populate answer stubs
-  -> Return session ID + questions
+```mermaid
+sequenceDiagram
+    participant S as Student
+    participant FE as Frontend
+    participant GW as Gateway
+    participant SS as Student Service
+    participant CS as Content Service
+    participant DB as Database
 
-Student -> Socket.IO :3005 (direct, bypasses gateway)
-  -> Authenticate via JWT on handshake
-  -> join_test: resume from saved position
-  -> answer/skip: record response with timestamp
-  -> heartbeat: 30s keep-alive
-  -> submit_test: grade all answers, compute score
-
-Student -> Gateway (GET /api/test/:id/result)
-  -> Return full breakdown with explanations + video URLs
-```
-
-### 8. Admin Performance Review
-
-```
-Admin -> Gateway (GET /api/test/student/:id/performance)
-  -> Verify role = admin|teacher
-  -> Return aggregates: avg/highest/lowest score, total correct/incorrect
-
-Admin -> Gateway (GET /api/test/student/:id/history)
-  -> Return paginated test history with scores
+    S->>FE: Select faculties/subjects/topics
+    FE->>GW: POST /api/enrollment { enrollments: [...] }
+    GW->>GW: Validate JWT + RBAC (student only)
+    GW->>SS: POST / (x-user-id header)
+    loop For each enrollment item
+        SS->>CS: GET /faculty/:id (validate exists)
+        SS->>CS: GET /subject/:id (validate belongs to faculty)
+        SS->>CS: GET /topic/:id (validate belongs to subject)
+        SS->>DB: Check duplicate
+        alt Not duplicate
+            SS->>DB: INSERT enrollment
+        else Duplicate
+            SS->>SS: Add to skipped[]
+        end
+    end
+    SS-->>GW: 201 { created[], skipped[] }
+    GW-->>FE: Response
 ```
 
----
+### Flow 5: Dashboard KPI Stats
 
-## Cross-Cutting Concerns
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant FE as Frontend
+    participant GW as Gateway
+    participant DS as Dashboard Service
+    participant DB as Database
 
-### Database Strategy
+    U->>FE: Load dashboard
+    FE->>GW: GET /api/dashboard/stats
+    GW->>GW: Validate JWT + extract role
+    GW->>DS: GET /stats (x-user-role header)
+    alt Admin
+        DS->>DB: COUNT tests, questions, topics, students, subjects, teachers
+    else Teacher
+        DS->>DB: COUNT questions added, students in faculties, tests in faculties
+    else Student
+        DS->>DB: COUNT questions in enrolled faculties, tests submitted
+    end
+    DS-->>GW: Role-specific KPI data
+    GW-->>FE: Response
+    FE->>FE: Render KPI cards with animated counters
+```
 
-All six services share a single PostgreSQL database (`quizologist_database`). Each service owns its tables but reads from others via Sequelize model stubs (read-only). This avoids HTTP calls between services but couples them at the database level.
+## API Route Summary
 
-### Authentication Flow
+| Service | Base Path | Key Endpoints | Auth |
+|---------|-----------|---------------|------|
+| Gateway | `/` | `/health`, `/status`, `/api` | None |
+| User | `/api/user` | `/signup`, `/login`, `/`, `/role/:role`, `/:id` | Public / Admin |
+| Content | `/api/content` | `/faculty/*`, `/subject/*`, `/topic/*` | Admin write / All read |
+| Question | `/api/question` | `/`, `/search`, `/filter`, `/topic/:topicId` | Method-based RBAC |
+| Enrollment | `/api/enrollment` | `/`, `/student/:studentId`, `/:id` | Student / Admin |
+| Student | `/api/student` | `/list`, `/:studentId/enrollments` | Admin |
+| Teacher | `/api/teacher` | `/list`, `/assign/faculty`, `/assign/subject`, `/teacher/:teacherId` | Admin / Teacher |
+| Test | `/api/test` | `/start`, `/submit/:testId`, `/abandon/:testId`, `/history`, `/all`, `/result/:testId` | Student / Admin |
+| Dashboard | `/api/dashboard` | `/stats`, `/student/topic-performance`, `/student/subject-performance`, etc. | All authenticated |
 
-1. JWT is generated by the User Service
-2. JWT is verified by the API Gateway on every authenticated request
-3. Gateway injects user identity as HTTP headers (`x-user-id`, `x-user-email`, `x-user-role`)
-4. Downstream services trust these headers without re-verifying
-5. Socket.IO authenticates independently via JWT on WebSocket handshake
+## Service Communication Patterns
 
-### Soft Deletes
+1. **Gateway → Services:** HTTP proxy with `fetch()`, passes `x-user-*` headers
+2. **Frontend → Services (REST):** Always through Gateway
+3. **Frontend → Test Service (WebSocket):** Direct Socket.IO connection (bypasses Gateway)
+4. **Service → Service:** Content Service provides FK validation for Student, Teacher, and Test Services via HTTP
+5. **All services → Database:** Direct Sequelize ORM connections to shared `quizologist_database`
 
-Every Sequelize model uses `paranoid: true`, marking records with `deleted_at` rather than physical deletion. The User Service has special restore logic for soft-deleted users during signup.
+## Shared Database Tables
 
-### Data Validation
-
-All services use Zod schemas for request validation. Validation runs at the service level (after gateway proxy), not at the gateway itself.
-
-### Responsive Design
-
-- **Desktop (>768px):** Collapsible sidebar navigation
-- **Mobile (≤768px):** Bottom navigation bar with "More" menu
-- **Breakpoint:** 768px consistent between JS and CSS
-
-### State Management
-
-- **Auth state:** localStorage (`quizologist_token`, `quizologist_user`)
-- **Theme state:** localStorage (`quizologist-theme`)
-- **Sidebar state:** localStorage (`quizologist-sidebar-collapsed`)
-
----
-
-## Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `NEXT_PUBLIC_BACKEND_URL` | API Gateway URL | `http://localhost:3000` |
-| `NEXT_PUBLIC_TITLE` | App title | `Quizologist` |
-| `NEXT_PUBLIC_LOGO` | Logo SVG path | `/Quizologist.svg` |
-| `NEXT_PUBLIC_SVG_PATH` | SVG path data for animation | (long path string) |
-
----
-
-## Observations & Considerations
-
-| Aspect | Status |
-|--------|--------|
-| Backend services | Fully implemented |
-| Frontend auth | Fully implemented |
-| Frontend dashboard | Implemented (KPI cards, sidebar, mobile nav) |
-| Splash screen | Implemented with SVG animation |
-| OpenAPI specs | Partial (3/5 services) |
-| Docker/CI/CD | Not configured |
-| WebSocket auth | Bypasses gateway (direct to :3005) |
-| Service isolation | Shared DB, not fully isolated |
-| API versioning | None (all routes under `/api/`) |
-| Rate limiting | Not implemented |
-| Logging/monitoring | Not implemented |
+| Table | Owner Service | Used By |
+|-------|---------------|---------|
+| `users` | User Service | All services (read via raw SQL) |
+| `faculties` | Content Service | Content, Student, Teacher, Test, Dashboard |
+| `subjects` | Content Service | Content, Student, Teacher, Test, Dashboard |
+| `topics` | Content Service | Content, Student, Test, Dashboard |
+| `questions` | Question Service | Test, Dashboard |
+| `enrollments` | Student Service | Student, Test |
+| `teacher_assignments` | Teacher Service | Teacher, Question (seed) |
+| `test_sessions` | Test Service | Test, Dashboard |
+| `test_selections` | Test Service | Test |
+| `test_answers` | Test Service | Test, Dashboard |

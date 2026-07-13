@@ -91,14 +91,16 @@
 
 @media (max-width: 768px) {
   .container {
-    max-width: 100%;
+    max-width: 100% !important;
     padding: 1rem;
   }
+
   .header {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
   }
+
   .startBtn {
     width: 100%;
     justify-content: center;

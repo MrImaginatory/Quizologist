@@ -31,7 +31,7 @@ export const startTestSchema = z.object({
   selections: z
     .array(selectionSchema)
     .min(1, "At least one selection is required")
-    .max(50, "Maximum 50 selections allowed"),
+    .max(200, "Maximum 200 selections allowed"),
 });
 
 export const testIdParamSchema = z.object({

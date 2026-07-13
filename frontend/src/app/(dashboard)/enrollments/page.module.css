@@ -75,11 +75,13 @@
     max-width: 100%;
     padding: 1rem;
   }
+
   .header {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
   }
+
   .addBtn {
     width: 100%;
     justify-content: center;
@@ -89,5 +91,11 @@
 @media (max-width: 480px) {
   .grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    max-width: 100%;
   }
 }

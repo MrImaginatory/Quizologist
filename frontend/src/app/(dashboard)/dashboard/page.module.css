@@ -48,4 +48,14 @@
   .title {
     font-size: var(--text-2xl, 24px);
   }
+
+  .container {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    max-width: 100%;
+  }
 }

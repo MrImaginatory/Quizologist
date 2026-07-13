@@ -522,6 +522,162 @@ Remove an enrollment. **Student only.**
 
 ---
 
+## Test Endpoints
+
+### POST /api/test/start
+
+Start a new test session. **Student only.**
+
+**Body:**
+```json
+{
+  "duration_minutes": 30,
+  "question_limit": 45,
+  "selections": [
+    { "faculty_id": "uuid", "subject_id": "uuid", "topic_id": "uuid" }
+  ]
+}
+```
+
+**201 Created:** Returns test session with questions.
+
+---
+
+### POST /api/test/submit/:testId
+
+Submit and grade a test. **Student only.**
+
+---
+
+### POST /api/test/abandon/:testId
+
+Abandon an ongoing test. **Student only.**
+
+---
+
+### GET /api/test/history
+
+Get own test history. **Student only.**
+
+**Query Params:** `page`, `limit`
+
+---
+
+### GET /api/test/result/:testId
+
+Get full result with question breakdown for a specific test. **Student only.**
+
+---
+
+### GET /api/test/:testId
+
+Get test session details. **Student only.**
+
+---
+
+### GET /api/test/student/:studentId
+
+Get all tests for a student. **Admin / Teacher only.**
+
+**Query Params:** `page`, `limit`
+
+---
+
+### GET /api/test/student/:studentId/results
+
+Get completed test results with full question breakdown. Students can only view their own; admin and teacher can view any.
+
+**Path Params:** `studentId` — UUID
+
+**Query Params:** `page`, `limit`
+
+**200 OK:**
+```json
+{
+  "success": true,
+  "data": {
+    "results": [
+      {
+        "id": "uuid",
+        "test_id": "john_doe_mon_20260708_143000",
+        "status": "completed",
+        "score": 72.00,
+        "totalQuestions": 25,
+        "attempted": 22,
+        "correct": 18,
+        "incorrect": 4,
+        "skipped": 3,
+        "startedAt": "...",
+        "completedAt": "...",
+        "questions": [...]
+      }
+    ],
+    "pagination": { "total": 10, "page": 1, "limit": 10, "totalPages": 1 }
+  }
+}
+```
+
+---
+
+### GET /api/test/student/:studentId/summary
+
+Lightweight summary for table display — no question data, just scores and stats. Students can only view their own; admin and teacher can view any.
+
+**Path Params:** `studentId` — UUID
+
+**Query Params:** `page`, `limit`
+
+**200 OK:**
+```json
+{
+  "success": true,
+  "data": {
+    "results": [
+      {
+        "id": "uuid",
+        "testId": "john_doe_mon_20260708_143000",
+        "score": 72.00,
+        "accuracy": 72,
+        "totalQuestions": 25,
+        "attempted": 22,
+        "correct": 18,
+        "incorrect": 4,
+        "skipped": 3,
+        "durationMinutes": 30,
+        "disconnects": 1,
+        "faculties": ["computer science"],
+        "subjects": ["data structures"],
+        "startedAt": "...",
+        "completedAt": "..."
+      }
+    ],
+    "pagination": { "total": 10, "page": 1, "limit": 10, "totalPages": 1 }
+  }
+}
+```
+
+---
+
+### GET /api/test/student/:studentId/performance
+
+Get student performance summary. **Admin / Teacher only.**
+
+---
+
+### GET /api/test/detail/:testId
+
+Get full test detail with answers. **Admin / Teacher only.**
+
+---
+
+### GET /api/test/all
+
+Get all tests with filters. **Admin only.**
+
+**Query Params:** `page`, `limit`, `status`, `subjectId`, `dateFrom`, `dateTo`
+
+---
+
 ## Student Management (Admin Only)
 
 ### GET /api/student/list

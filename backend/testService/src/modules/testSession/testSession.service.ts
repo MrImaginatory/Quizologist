@@ -25,6 +25,12 @@ const TIMESTAMP_EXCLUDE = {
 const FACULTY_INCLUDE = { model: Faculty, as: "faculty", attributes: ["id", "name"] };
 const SUBJECT_INCLUDE = { model: Subject, as: "subject", attributes: ["id", "name"] };
 const TOPIC_INCLUDE = { model: Topic, as: "topic", attributes: ["id", "name"] };
+const SELECTION_INCLUDE = {
+  model: TestSelection,
+  as: "selections",
+  attributes: ["faculty_id", "subject_id", "topic_id"],
+  include: [FACULTY_INCLUDE, SUBJECT_INCLUDE, TOPIC_INCLUDE],
+};
 
 function generateTestId(firstName: string, lastName: string): string {
   const now = new Date();
@@ -33,6 +39,22 @@ function generateTestId(firstName: string, lastName: string): string {
   const date = now.toISOString().slice(0, 10).replace(/-/g, "");
   const time = now.toTimeString().slice(0, 8).replace(/:/g, "");
   return `${firstName.toLowerCase()}_${lastName.toLowerCase()}_${day}_${date}_${time}`;
+}
+
+function flattenSelections(session: any) {
+  const plain = session.toJSON ? session.toJSON() : session;
+  const selections = plain.selections || [];
+  if (selections.length > 0) {
+    plain.faculty = selections[0].faculty || null;
+    plain.subject = selections[0].subject || null;
+    plain.topic = selections[0].topic || null;
+  } else {
+    plain.faculty = null;
+    plain.subject = null;
+    plain.topic = null;
+  }
+  delete plain.selections;
+  return plain;
 }
 
 function stripQuestionForTest(q: any) {
@@ -204,14 +226,14 @@ export class TestSessionService {
     const session = await TestSession.findOne({
       where: { id: data.testId, student_id: studentId },
       attributes: TIMESTAMP_EXCLUDE,
-      include: [FACULTY_INCLUDE, SUBJECT_INCLUDE, TOPIC_INCLUDE],
+      include: [SELECTION_INCLUDE],
     });
 
     if (!session) {
       throw ApiError.notFound(RESPONSE_MESSAGES.ERROR.TEST_NOT_FOUND);
     }
 
-    return session.toJSON();
+    return flattenSelections(session);
   }
 
   static async getHistory(studentId: string, data: PaginationInput) {
@@ -221,14 +243,14 @@ export class TestSessionService {
     const { rows, count } = await TestSession.findAndCountAll({
       where: { student_id: studentId },
       attributes: TIMESTAMP_EXCLUDE,
-      include: [FACULTY_INCLUDE, SUBJECT_INCLUDE, TOPIC_INCLUDE],
+      include: [SELECTION_INCLUDE],
       limit,
       offset,
       order: [["started_at", "DESC"]],
     });
 
     return {
-      tests: rows.map((t) => t.toJSON()),
+      tests: rows.map((t) => flattenSelections(t)),
       pagination: {
         total: count,
         page,
@@ -245,14 +267,14 @@ export class TestSessionService {
     const { rows, count } = await TestSession.findAndCountAll({
       where: { student_id: data.studentId },
       attributes: TIMESTAMP_EXCLUDE,
-      include: [FACULTY_INCLUDE, SUBJECT_INCLUDE, TOPIC_INCLUDE],
+      include: [SELECTION_INCLUDE],
       limit,
       offset,
       order: [["started_at", "DESC"]],
     });
 
     return {
-      tests: rows.map((t) => t.toJSON()),
+      tests: rows.map((t) => flattenSelections(t)),
       pagination: {
         total: count,
         page,
@@ -278,14 +300,14 @@ export class TestSessionService {
     const { rows, count } = await TestSession.findAndCountAll({
       where: whereClause,
       attributes: TIMESTAMP_EXCLUDE,
-      include: [FACULTY_INCLUDE, SUBJECT_INCLUDE, TOPIC_INCLUDE],
+      include: [SELECTION_INCLUDE],
       limit,
       offset,
       order: [["started_at", "DESC"]],
     });
 
     return {
-      tests: rows.map((t) => t.toJSON()),
+      tests: rows.map((t) => flattenSelections(t)),
       pagination: {
         total: count,
         page,
@@ -394,6 +416,193 @@ export class TestSessionService {
       totalCorrect,
       totalIncorrect,
       totalSkipped,
+    };
+  }
+
+  static async getStudentResults(
+    studentId: string,
+    requesterId: string,
+    requesterRole: string,
+    query: PaginationInput
+  ) {
+    // Students can only view their own results; admin/teacher can view any
+    if (requesterRole === "student" && requesterId !== studentId) {
+      throw ApiError.forbidden("You can only view your own results");
+    }
+
+    const { page, limit } = query;
+    const offset = (page - 1) * limit;
+
+    const { rows, count } = await TestSession.findAndCountAll({
+      where: {
+        student_id: studentId,
+        status: "completed",
+      },
+      attributes: [
+        "id",
+        "test_id",
+        "student_id",
+        "status",
+        "total_questions",
+        "attempted",
+        "skipped",
+        "correct",
+        "incorrect",
+        "score",
+        "started_at",
+        "completed_at",
+      ],
+      include: [SELECTION_INCLUDE],
+      limit,
+      offset,
+      order: [["completed_at", "DESC"]],
+    });
+
+    const results = await Promise.all(
+      rows.map(async (session) => {
+        const answers = await TestAnswer.findAll({
+          where: { test_session_id: session.id },
+          order: [["createdAt", "ASC"]],
+        });
+
+        const questionsData = await Promise.all(
+          answers.map(async (answer, index) => {
+            const question = await Question.findByPk(answer.question_id, {
+              include: [
+                { model: Topic, as: "topic", attributes: ["id", "name"] },
+                { model: Subject, as: "subject", attributes: ["id", "name"] },
+                { model: Faculty, as: "faculty", attributes: ["id", "name"] },
+              ],
+            });
+
+            const q = question?.toJSON() as any;
+
+            return {
+              index,
+              question: q?.question || "",
+              choices: q?.choices || [],
+              selectedAnswer: answer.selected_answer,
+              correctAnswer: q?.correctAnswer || "",
+              isCorrect: answer.is_correct,
+              explanation: q?.explanation || null,
+              videoUrl: q?.videoUrl || null,
+              timeTaken: answer.time_taken,
+              topicName: q?.topic?.name || null,
+              subjectName: q?.subject?.name || null,
+              facultyName: q?.faculty?.name || null,
+            };
+          })
+        );
+
+        return {
+          id: session.id,
+          test_id: session.test_id,
+          student_id: session.student_id,
+          status: session.status,
+          totalQuestions: session.total_questions,
+          attempted: session.attempted,
+          skipped: session.skipped,
+          correct: session.correct,
+          incorrect: session.incorrect,
+          score: parseFloat(session.score as any),
+          startedAt: session.started_at,
+          completedAt: session.completed_at,
+          questions: questionsData,
+        };
+      })
+    );
+
+    return {
+      results,
+      pagination: {
+        total: count,
+        page,
+        limit,
+        totalPages: Math.ceil(count / limit),
+      },
+    };
+  }
+
+  static async getStudentResultSummary(
+    studentId: string,
+    requesterId: string,
+    requesterRole: string,
+    query: PaginationInput
+  ) {
+    if (requesterRole === "student" && requesterId !== studentId) {
+      throw ApiError.forbidden("You can only view your own results");
+    }
+
+    const { page, limit } = query;
+    const offset = (page - 1) * limit;
+
+    const { rows, count } = await TestSession.findAndCountAll({
+      where: {
+        student_id: studentId,
+        status: "completed",
+      },
+      attributes: [
+        "id",
+        "test_id",
+        "total_questions",
+        "attempted",
+        "skipped",
+        "correct",
+        "incorrect",
+        "score",
+        "duration_minutes",
+        "disconnect_count",
+        "started_at",
+        "completed_at",
+      ],
+      include: [
+        {
+          model: TestSelection,
+          as: "selections",
+          attributes: ["faculty_id", "subject_id", "topic_id"],
+          include: [FACULTY_INCLUDE, SUBJECT_INCLUDE, TOPIC_INCLUDE],
+        },
+      ],
+      limit,
+      offset,
+      order: [["completed_at", "DESC"]],
+    });
+
+    const summary = rows.map((session) => {
+      const plain = session.toJSON() as any;
+      const selections = plain.selections || [];
+      const faculties = [...new Set(selections.map((s: any) => s.faculty?.name).filter(Boolean))];
+      const subjects = [...new Set(selections.map((s: any) => s.subject?.name).filter(Boolean))];
+
+      return {
+        id: plain.id,
+        testId: plain.test_id,
+        score: parseFloat(plain.score),
+        totalQuestions: plain.total_questions,
+        attempted: plain.attempted,
+        correct: plain.correct,
+        incorrect: plain.incorrect,
+        skipped: plain.skipped,
+        accuracy: plain.total_questions > 0
+          ? Math.round((plain.correct / plain.total_questions) * 100)
+          : 0,
+        durationMinutes: plain.duration_minutes,
+        disconnects: plain.disconnect_count,
+        faculties,
+        subjects,
+        startedAt: plain.started_at,
+        completedAt: plain.completed_at,
+      };
+    });
+
+    return {
+      results: summary,
+      pagination: {
+        total: count,
+        page,
+        limit,
+        totalPages: Math.ceil(count / limit),
+      },
     };
   }
 

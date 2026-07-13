@@ -163,4 +163,46 @@ export class TestSessionController {
       next(error);
     }
   }
+
+  static async getStudentResults(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const params = getTestsByStudentSchema.parse(req.params);
+      const query = paginationSchema.parse(req.query);
+      const result = await TestSessionService.getStudentResults(
+        params.studentId,
+        req.user!.userId,
+        req.user!.role,
+        query
+      );
+
+      return ApiResponse.success(
+        res,
+        "Student results retrieved successfully",
+        result
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getStudentResultSummary(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const params = getTestsByStudentSchema.parse(req.params);
+      const query = paginationSchema.parse(req.query);
+      const result = await TestSessionService.getStudentResultSummary(
+        params.studentId,
+        req.user!.userId,
+        req.user!.role,
+        query
+      );
+
+      return ApiResponse.success(
+        res,
+        "Student result summary retrieved successfully",
+        result
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
 }

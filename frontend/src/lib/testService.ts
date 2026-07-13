@@ -53,6 +53,28 @@ class TestService {
     });
     return response.json();
   }
+
+  async getStudentResults(studentId: string, page = 1, limit = 10) {
+    const response = await fetch(
+      `${BACKEND_URL}/api/test/student/${studentId}/results?page=${page}&limit=${limit}`,
+      {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+      }
+    );
+    return response.json();
+  }
+
+  async getStudentResultSummary(studentId: string, page = 1, limit = 10) {
+    const response = await fetch(
+      `${BACKEND_URL}/api/test/student/${studentId}/summary?page=${page}&limit=${limit}`,
+      {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+      }
+    );
+    return response.json();
+  }
 }
 
 export const testService = new TestService();

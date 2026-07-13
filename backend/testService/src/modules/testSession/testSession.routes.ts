@@ -8,6 +8,8 @@ router.post("/submit/:testId", TestSessionController.submit);
 router.post("/abandon/:testId", TestSessionController.abandon);
 router.get("/history", TestSessionController.getHistory);
 router.get("/student/:studentId", TestSessionController.getByStudentId);
+router.get("/student/:studentId/results", TestSessionController.getStudentResults);
+router.get("/student/:studentId/summary", TestSessionController.getStudentResultSummary);
 router.get("/student/:studentId/performance", TestSessionController.getStudentPerformance);
 router.get("/detail/:testId", TestSessionController.getTestDetailForAdmin);
 router.get("/all", TestSessionController.getAll);

@@ -179,12 +179,12 @@ export const routes: RouteConfig[] = [
     roles: ["student"],
     methods: ["GET"],
   },
-  // Get student performance — admin and teacher
+  // Get student performance, results, summary — admin, teacher; student (own data via service check)
   {
     path: "/test/student",
     target: `${env.TEST_SERVICE_URL}/api/test/student`,
     auth: true,
-    roles: ["admin", "teacher"],
+    roles: ["student", "admin", "teacher"],
     methods: ["GET"],
   },
   // Get test detail for admin — admin and teacher

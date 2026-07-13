@@ -24,14 +24,32 @@ export default function LiveTestClient({ testId }: LiveTestClientProps) {
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [skipped, setSkipped] = useState<Set<number>>(new Set());
+  const [isGridExpanded, setIsGridExpanded] = useState(false);
   
   const [socket, setSocket] = useState<Socket | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
+  const gridRef = useRef<HTMLDivElement>(null);
   const timeTakenRef = useRef<number>(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const heartbeatRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    // Scroll active item into view on mobile
+    if (gridRef.current && window.innerWidth <= 768) {
+      const activeBtn = gridRef.current.querySelector(`.${styles.gridBtnActive}`) as HTMLButtonElement;
+      if (activeBtn) {
+        const containerWidth = gridRef.current.clientWidth;
+        const btnLeft = activeBtn.offsetLeft;
+        const btnWidth = activeBtn.clientWidth;
+        gridRef.current.scrollTo({
+          left: btnLeft - containerWidth / 2 + btnWidth / 2 - 16, // -16 for padding
+          behavior: 'smooth'
+        });
+      }
+    }
+  }, [currentIndex]);
 
   // Initialize test data from localStorage
   useEffect(() => {
@@ -347,13 +365,9 @@ export default function LiveTestClient({ testId }: LiveTestClientProps) {
         <div className={styles.headerLeft}>
           <h1 className={styles.title}>Live Test</h1>
           
-          <div className={styles.statusIndicator}>
-            <div className={`${styles.statusDot} ${styles[`status${connectionStatus}`]}`}></div>
-            <span>{connectionStatus === "connected" ? "Connected" : connectionStatus === "reconnecting" ? "Reconnecting..." : "Connecting..."}</span>
-          </div>
-          
           {timeRemaining !== null && (
             <div className={`${styles.timer} ${isTimeCritical ? styles.timerWarning : ''}`}>
+              <div className={`${styles.statusDot} ${styles[`status${connectionStatus}`]}`} title={connectionStatus === "connected" ? "Connected" : connectionStatus === "reconnecting" ? "Reconnecting..." : "Connecting..."}></div>
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10"></circle>
                 <polyline points="12 6 12 12 16 14"></polyline>
@@ -372,48 +386,67 @@ export default function LiveTestClient({ testId }: LiveTestClientProps) {
       </header>
 
       <div className={styles.content}>
-        <aside className={styles.sidebar}>
-          <h2 className={styles.sidebarTitle}>
-            Questions
-            <span>{Object.keys(answers).length} / {testData.questions.length}</span>
-          </h2>
-          
-          <div className={styles.grid}>
-            {testData.questions.map((_: any, idx: number) => {
-              let btnClass = styles.gridBtn;
-              if (idx === currentIndex) btnClass += ` ${styles.gridBtnActive}`;
-              else if (answers[idx]) btnClass += ` ${styles.gridBtnAttempted}`;
-              else if (skipped.has(idx)) btnClass += ` ${styles.gridBtnSkipped}`;
-
-              return (
-                <button 
-                  key={idx} 
-                  className={btnClass}
-                  onClick={() => jumpToQuestion(idx)}
-                >
-                  {idx + 1}
-                </button>
-              );
-            })}
+        <aside className={`${styles.sidebar} ${isGridExpanded ? styles.sidebarExpanded : ''}`}>
+          <div 
+            className={styles.sidebarHeader}
+            onClick={() => setIsGridExpanded(!isGridExpanded)}
+          >
+            <h2 className={styles.sidebarTitle}>
+              Questions <span>{Object.keys(answers).length} / {testData.questions.length}</span>
+            </h2>
+            <button className={styles.collapseBtn} type="button" aria-label="Toggle Question Grid">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points={isGridExpanded ? "18 15 12 9 6 15" : "6 9 12 15 18 9"} />
+              </svg>
+            </button>
           </div>
+          
+          <div className={`${styles.gridContainer} ${isGridExpanded ? styles.gridExpanded : ''}`}>
+            <div className={styles.grid} ref={gridRef}>
+              {testData.questions.map((_: any, idx: number) => {
+                let btnClass = styles.gridBtn;
+                if (idx === currentIndex) btnClass += ` ${styles.gridBtnActive}`;
+                else if (answers[idx]) btnClass += ` ${styles.gridBtnAttempted}`;
+                else if (skipped.has(idx)) btnClass += ` ${styles.gridBtnSkipped}`;
 
-          <div className={styles.legend}>
-            <div className={styles.legendItem}>
-              <div className={styles.legendDot} style={{ backgroundColor: '#10B981' }}></div>
-              <span>Attempted</span>
+                return (
+                  <button 
+                    key={idx} 
+                    className={btnClass}
+                    onClick={() => jumpToQuestion(idx)}
+                  >
+                    {idx + 1}
+                  </button>
+                );
+              })}
             </div>
-            <div className={styles.legendItem}>
-              <div className={styles.legendDot} style={{ backgroundColor: '#F59E0B' }}></div>
-              <span>Skipped</span>
+
+            <div className={styles.legend}>
+              <div className={styles.legendItem}>
+                <div className={styles.legendDot} style={{ backgroundColor: '#10B981' }}></div>
+                <span>Attempted</span>
+              </div>
+              <div className={styles.legendItem}>
+                <div className={styles.legendDot} style={{ backgroundColor: '#F59E0B' }}></div>
+                <span>Skipped</span>
+              </div>
+              <div className={styles.legendItem}>
+                <div className={styles.legendDot} style={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-primary)' }}></div>
+                <span>Not Visited</span>
+              </div>
+              <div className={styles.legendItem}>
+                <div className={styles.legendDot} style={{ backgroundColor: 'transparent', border: '2px solid var(--color-primary)' }}></div>
+                <span>Current</span>
+              </div>
             </div>
-            <div className={styles.legendItem}>
-              <div className={styles.legendDot} style={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-primary)' }}></div>
-              <span>Not Visited</span>
-            </div>
-            <div className={styles.legendItem}>
-              <div className={styles.legendDot} style={{ backgroundColor: 'transparent', border: '2px solid var(--color-primary)' }}></div>
-              <span>Current</span>
-            </div>
+
+            <button 
+              className={styles.abandonBtn} 
+              onClick={handleCancelTest}
+              disabled={Object.keys(answers).length === 0}
+            >
+              Abandon Test
+            </button>
           </div>
         </aside>
 
@@ -422,8 +455,8 @@ export default function LiveTestClient({ testId }: LiveTestClientProps) {
             <div className={styles.questionMeta}>
               <span className={styles.questionNumber}>Question {currentIndex + 1} of {testData.questions.length}</span>
               <div className={styles.questionTags}>
-                <span className={styles.tag}>{capitalize(currentQ.subjectName)}</span>
-                <span className={styles.tag}>{capitalize(currentQ.topicName || currentQ.difficulty)}</span>
+                <span className={styles.tag} title={currentQ.subjectName}>{capitalize(currentQ.subjectName)}</span>
+                <span className={styles.tag} title={currentQ.topicName || currentQ.difficulty}>{capitalize(currentQ.topicName || currentQ.difficulty)}</span>
               </div>
             </div>
             
@@ -457,22 +490,23 @@ export default function LiveTestClient({ testId }: LiveTestClientProps) {
                 Previous
               </button>
               
-              <button 
-                className={`${styles.navBtn} ${styles.skipBtn}`}
-                onClick={handleSkip}
-                disabled={isLastQuestion}
-              >
-                Skip
-              </button>
-
-              {answers[currentIndex] && (
+              <div className={styles.secondaryActions}>
                 <button 
-                  className={styles.navBtn}
+                  className={`${styles.navBtn} ${styles.skipBtn}`}
+                  onClick={handleSkip}
+                  disabled={isLastQuestion}
+                >
+                  Skip
+                </button>
+
+                <button 
+                  className={`${styles.navBtn} ${styles.clearBtn}`}
                   onClick={handleClearResponse}
+                  disabled={!answers[currentIndex]}
                 >
                   Clear
                 </button>
-              )}
+              </div>
               
               <button 
                 className={`${styles.navBtn} ${styles.primaryBtn}`}
