@@ -470,19 +470,26 @@
 }
 
 @media (max-width: 768px) {
+  .container {
+    max-width: 100%;
+    padding: 1rem;
+  }
+
   .header {
     flex-direction: column;
     gap: 16px;
   }
 
-  .table {
-    display: block;
-    overflow-x: auto;
+  .headerInfo h1 {
+    font-size: 1.375rem;
   }
-}
 
-@media (max-width: 768px) {
-  .container {
-    max-width: 100%;
+  .headerRight {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .emailCell {
+    max-width: 140px;
   }
 }

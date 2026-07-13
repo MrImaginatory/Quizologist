@@ -39,3 +39,9 @@
     padding-bottom: 80px;
   }
 }
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .main {
+    padding-bottom: 80px;
+  }
+}

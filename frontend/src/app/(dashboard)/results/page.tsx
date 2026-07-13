@@ -91,7 +91,7 @@ export default function ResultsPage() {
       >
         {results.map((result) => (
           <tr key={result.id}>
-            <td>
+            <td style={{ whiteSpace: 'nowrap' }}>
               <div className={styles.scopeCell}>
                 <span className={styles.scopeValue}>
                   {result.startedAt ? formatDate(result.startedAt) : "N/A"}

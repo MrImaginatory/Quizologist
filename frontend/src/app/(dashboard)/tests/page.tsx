@@ -107,7 +107,7 @@ export default function MyTestsPage() {
       >
         {tests.map((test) => (
           <tr key={test.id}>
-            <td>{new Date(test.started_at || test.created_at || test.startedAt || test.createdAt).toLocaleString(undefined, {
+            <td style={{ whiteSpace: 'nowrap' }}>{new Date(test.started_at || test.created_at || test.startedAt || test.createdAt).toLocaleString(undefined, {
               year: 'numeric',
               month: 'short',
               day: 'numeric',
@@ -128,22 +128,23 @@ export default function MyTestsPage() {
             </td>
             <td>
               {test.status === "in_progress" && (
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button 
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'nowrap' }}>
+                  <button
                     onClick={() => router.push(`/live-test/${test.test_id}`)}
-                    style={{ 
-                      padding: '0.25rem 0.5rem', 
-                      backgroundColor: 'var(--color-primary-600)', 
-                      color: 'var(--color-primary-50)', 
-                      border: 'none', 
-                      borderRadius: '4px', 
+                    style={{
+                      padding: '0.25rem 0.5rem',
+                      backgroundColor: 'var(--color-primary-600)',
+                      color: 'var(--color-primary-50)',
+                      border: 'none',
+                      borderRadius: '4px',
                       cursor: 'pointer',
-                      fontSize: '0.875rem'
+                      fontSize: '0.875rem',
+                      whiteSpace: 'nowrap'
                     }}
                   >
                     Resume
                   </button>
-                  <button 
+                  <button
                     onClick={async () => {
                       if (window.confirm("Are you sure you want to abandon this test? This action cannot be undone.")) {
                         try {
@@ -154,14 +155,15 @@ export default function MyTestsPage() {
                         }
                       }
                     }}
-                    style={{ 
-                      padding: '0.25rem 0.5rem', 
-                      backgroundColor: 'transparent', 
-                      color: 'var(--color-danger)', 
-                      border: '1px solid var(--color-danger)', 
-                      borderRadius: '4px', 
+                    style={{
+                      padding: '0.25rem 0.5rem',
+                      backgroundColor: 'transparent',
+                      color: 'var(--color-danger)',
+                      border: '1px solid var(--color-danger)',
+                      borderRadius: '4px',
                       cursor: 'pointer',
-                      fontSize: '0.75rem'
+                      fontSize: '0.75rem',
+                      whiteSpace: 'nowrap'
                     }}
                   >
                     Abandon
@@ -169,16 +171,17 @@ export default function MyTestsPage() {
                 </div>
               )}
               {test.status === "completed" && (
-                <button 
+                <button
                   onClick={() => router.push(`/tests/results/${test.test_id}`)}
-                  style={{ 
-                    padding: '0.25rem 0.5rem', 
-                    backgroundColor: 'transparent', 
-                    color: 'var(--color-primary-600)', 
-                    border: '1px solid var(--color-primary-600)', 
-                    borderRadius: '4px', 
+                  style={{
+                    padding: '0.25rem 0.5rem',
+                    backgroundColor: 'transparent',
+                    color: 'var(--color-primary-600)',
+                    border: '1px solid var(--color-primary-600)',
+                    borderRadius: '4px',
                     cursor: 'pointer',
-                    fontSize: '0.875rem'
+                    fontSize: '0.875rem',
+                    whiteSpace: 'nowrap'
                   }}
                 >
                   View

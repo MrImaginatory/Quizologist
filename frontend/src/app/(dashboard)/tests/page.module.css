@@ -101,8 +101,20 @@
     gap: 1rem;
   }
 
+  .title {
+    font-size: 1.5rem;
+  }
+
   .startBtn {
     width: 100%;
     justify-content: center;
+  }
+
+  .mobileTableWrapper {
+    margin-left: -1rem;
+    margin-right: -1rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 0;
   }
 }
