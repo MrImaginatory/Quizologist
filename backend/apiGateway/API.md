@@ -397,24 +397,11 @@ Create a question. The `questionAddedBy` field is auto-populated from the JWT.
 }
 ```
 
-**Body (Descriptive):**
-```json
-{
-  "type": "descriptive",
-  "question": "Explain the working of a binary search tree.",
-  "correctAnswer": "A BST is a binary tree where left child < parent < right child.",
-  "explanation": "BST allows efficient lookup, insertion, and deletion.",
-  "topic_id": "c3d4e5f6-...",
-  "subject_id": "b2c3d4e5-...",
-  "course_id": "a1b2c3d4-..."
-}
-```
-
 | Field | Type | Required | Rules |
 |-------|------|----------|-------|
 | type | string | Yes | `"mcq"` or `"descriptive"` |
 | question | string | Yes | Non-empty |
-| choices | string[] | Conditional | Required for MCQ, 2-5 items. Must be null/absent for descriptive. |
+| choices | string[] | Conditional | Required for MCQ, 2-5 items |
 | correctAnswer | string | Yes | Must match one of the choices (MCQ) |
 | explanation | string | No | Optional |
 | videoUrl | string | No | Valid URL |
@@ -422,26 +409,7 @@ Create a question. The `questionAddedBy` field is auto-populated from the JWT.
 | subject_id | string | Yes | Valid UUID |
 | course_id | string | Yes | Valid UUID |
 
-**201 Created:**
-```json
-{
-  "success": true,
-  "message": "Question created successfully",
-  "data": {
-    "id": "d4e5f6a7-...",
-    "type": "mcq",
-    "question": "What is the time complexity of binary search?",
-    "choices": ["O(n)", "O(log n)", "O(n^2)", "O(1)"],
-    "correctAnswer": "O(log n)",
-    "explanation": "Binary search halves the search space each step.",
-    "videoUrl": "https://youtube.com/watch?v=example",
-    "topic_id": "c3d4e5f6-...",
-    "subject_id": "b2c3d4e5-...",
-    "course_id": "a1b2c3d4-...",
-    "questionAddedBy": "14312853-..."
-  }
-}
-```
+**201 Created:** Returns the created question object.
 
 ---
 
@@ -449,38 +417,7 @@ Create a question. The `questionAddedBy` field is auto-populated from the JWT.
 
 Get all questions with pagination.
 
-**Query Params:** `page` (default 1), `limit` (default 10)
-
-**200 OK:**
-```json
-{
-  "success": true,
-  "message": "Questions retrieved successfully",
-  "data": {
-    "questions": [
-      {
-        "id": "d4e5f6a7-...",
-        "type": "mcq",
-        "question": "What is the time complexity of binary search?",
-        "choices": ["O(n)", "O(log n)", "O(n^2)", "O(1)"],
-        "correctAnswer": "O(log n)",
-        "explanation": "Binary search halves the search space each step.",
-        "videoUrl": "https://youtube.com/watch?v=example",
-        "topic_id": "c3d4e5f6-...",
-        "subject_id": "b2c3d4e5-...",
-        "course_id": "a1b2c3d4-...",
-        "questionAddedBy": "14312853-..."
-      }
-    ],
-    "pagination": {
-      "total": 50,
-      "page": 1,
-      "limit": 10,
-      "totalPages": 5
-    }
-  }
-}
-```
+**Query Params:** `page` (default 1), `limit` (default 10, max 100)
 
 ---
 
@@ -490,7 +427,21 @@ Search questions by text (case-insensitive).
 
 **Query Params:** `q` (required), `page`, `limit`
 
-**Example:** `GET /api/question/search?q=binary&page=1&limit=10`
+---
+
+### GET /api/question/filter
+
+Filter questions by course, subject, and/or topic.
+
+**Query Params:**
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| course_id | string | No | Filter by course UUID |
+| subject_id | string | No | Filter by subject UUID |
+| topic_id | string | No | Filter by topic UUID |
+| page | number | No | Page number (default 1) |
+| limit | number | No | Items per page (default 10) |
 
 ---
 
@@ -502,6 +453,71 @@ Get all questions under a specific topic.
 
 ---
 
+### GET /api/question/import-template
+
+Download an Excel template with pre-filled course/subject/topic names. **Admin + Teacher only.**
+
+**Response:** Binary Excel file (`.xlsx`)
+
+**Template columns:**
+```
+Course Name | Subject Name | Topic Name | Question | Option 1 | Option 2 | Option 3 | Option 4 | Option 5 | Correct Answer | Explanation | Video URL | Question Added By
+```
+
+---
+
+### POST /api/question/bulk
+
+Bulk import questions from an array. Each question is validated independently — valid ones are inserted, invalid ones are skipped with error reasons. **Admin + Teacher only.**
+
+**Body:**
+```json
+{
+  "questions": [
+    {
+      "type": "mcq",
+      "question": "What is binary search?",
+      "choices": ["O(n)", "O(log n)", "O(n^2)", "O(1)"],
+      "correctAnswer": "O(log n)",
+      "topic_id": "uuid",
+      "subject_id": "uuid",
+      "course_id": "uuid"
+    }
+  ]
+}
+```
+
+| Field | Type | Required | Rules |
+|-------|------|----------|-------|
+| questions | array | Yes | 1-500 items |
+| questions[].type | string | Yes | Must be `"mcq"` |
+| questions[].question | string | Yes | Non-empty |
+| questions[].choices | string[] | Yes | 2-5 non-empty strings |
+| questions[].correctAnswer | string | Yes | Must match one of the choices |
+| questions[].topic_id | string | Yes | UUID |
+| questions[].subject_id | string | Yes | UUID |
+| questions[].course_id | string | Yes | UUID |
+| questions[].questionAddedBy | string | No | UUID — defaults to requesting user |
+
+**200 OK:**
+```json
+{
+  "success": true,
+  "message": "Import complete: 47 imported, 3 failed",
+  "data": {
+    "totalRows": 50,
+    "imported": 47,
+    "failed": 3,
+    "errors": [
+      { "row": 5, "reason": "A question with this text already exists for this topic" },
+      { "row": 12, "reason": "Correct answer does not match any provided option" }
+    ]
+  }
+}
+```
+
+---
+
 ### GET /api/question/:id
 
 Get a single question by UUID.
@@ -510,7 +526,7 @@ Get a single question by UUID.
 
 ### PUT /api/question/:id
 
-Update a question.
+Update a question. Send only the fields to change.
 
 **Body (any subset):**
 ```json
@@ -521,21 +537,7 @@ Update a question.
 }
 ```
 
-**200 OK:**
-```json
-{
-  "success": true,
-  "message": "Question updated successfully",
-  "data": {
-    "id": "d4e5f6a7-...",
-    "type": "mcq",
-    "question": "Updated question text",
-    "choices": ["A", "B", "C", "D"],
-    "correctAnswer": "B",
-    ...
-  }
-}
-```
+**200 OK:** Returns the updated question object.
 
 ---
 
@@ -548,9 +550,7 @@ Soft delete a question.
 {
   "success": true,
   "message": "Question deleted successfully",
-  "data": {
-    "message": "Question deleted successfully"
-  }
+  "data": { "message": "Question deleted successfully" }
 }
 ```
 

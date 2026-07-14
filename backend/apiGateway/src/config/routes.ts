@@ -70,6 +70,22 @@ export const routes: RouteConfig[] = [
   },
 
   // ==================== Question Service ====================
+  // Import endpoints — admin and teacher only (must come before /question)
+  {
+    path: "/question/import-template",
+    target: `${env.QUESTION_SERVICE_URL}/api/question/import-template`,
+    auth: true,
+    roles: ["admin", "teacher"],
+    methods: ["GET"],
+  },
+  {
+    path: "/question/bulk",
+    target: `${env.QUESTION_SERVICE_URL}/api/question/bulk`,
+    auth: true,
+    roles: ["admin", "teacher"],
+    methods: ["POST"],
+  },
+
   // Write operations — admin and teacher only
   {
     path: "/question",

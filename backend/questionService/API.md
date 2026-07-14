@@ -6,7 +6,7 @@ Base URL: `http://localhost:3003/api/question`
 
 ---
 
-## POST /
+## POST / — Create Question
 
 Create a new question. The `questionAddedBy` field is auto-populated from the `x-user-id` header.
 
@@ -26,20 +26,6 @@ x-user-id: <uuid>
   "explanation": "Binary search halves the search space each step.",
   "videoUrl": "https://youtube.com/watch?v=example",
   "difficulty": "normal",
-  "topic_id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
-  "subject_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
-  "course_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-}
-```
-
-**Body (Descriptive):**
-```json
-{
-  "type": "descriptive",
-  "question": "Explain the working of a binary search tree.",
-  "correctAnswer": "A BST is a binary tree where left child < parent < right child.",
-  "explanation": "BST allows efficient lookup, insertion, and deletion.",
-  "difficulty": "mid",
   "topic_id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
   "subject_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
   "course_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
@@ -81,15 +67,6 @@ x-user-id: <uuid>
 }
 ```
 
-**400 Bad Request — FK not found:**
-```json
-{
-  "success": false,
-  "message": "Topic not found or has been deleted",
-  "data": null
-}
-```
-
 **409 Conflict — Duplicate question:**
 ```json
 {
@@ -101,11 +78,16 @@ x-user-id: <uuid>
 
 ---
 
-## GET /
+## GET / — Get All Questions
 
 Get all questions with pagination.
 
-**Query Params:** `page` (default 1), `limit` (default 10, max 100)
+**Query Params:**
+
+| Param | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| page | number | No | 1 | Page number |
+| limit | number | No | 10 | Items per page (max 100) |
 
 **200 OK:**
 ```json
@@ -141,11 +123,17 @@ Get all questions with pagination.
 
 ---
 
-## GET /search?q=
+## GET /search — Search Questions
 
-Search questions by text (case-insensitive PostgreSQL ILIKE).
+Search questions by text (case-insensitive).
 
-**Query Params:** `q` (required), `page`, `limit`
+**Query Params:**
+
+| Param | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| q | string | Yes | — | Search query |
+| page | number | No | 1 | Page number |
+| limit | number | No | 10 | Items per page |
 
 **Example:** `GET /api/question/search?q=binary&page=1&limit=10`
 
@@ -153,9 +141,31 @@ Search questions by text (case-insensitive PostgreSQL ILIKE).
 
 ---
 
-## GET /topic/:topicId
+## GET /filter — Filter Questions
+
+Filter questions by course, subject, and/or topic.
+
+**Query Params:**
+
+| Param | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| course_id | string | No | — | Filter by course UUID |
+| subject_id | string | No | — | Filter by subject UUID |
+| topic_id | string | No | — | Filter by topic UUID |
+| page | number | No | 1 | Page number |
+| limit | number | No | 10 | Items per page |
+
+**Example:** `GET /api/question/filter?course_id=abc-123&subject_id=def-456&page=1&limit=20`
+
+**200 OK:** Same structure as GET /
+
+---
+
+## GET /topic/:topicId — Get Questions by Topic
 
 Get all questions under a specific topic.
+
+**Path Params:** `topicId` — UUID of the topic
 
 **Query Params:** `page`, `limit`
 
@@ -163,7 +173,90 @@ Get all questions under a specific topic.
 
 ---
 
-## GET /:id
+## GET /import-template — Download Import Template
+
+Download an Excel template with pre-filled course/subject/topic names.
+
+**Response:** Binary Excel file (`.xlsx`)
+
+**Headers:**
+```
+Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+Content-Disposition: attachment; filename=question_import_template.xlsx
+```
+
+**Template columns:**
+```
+Course Name | Subject Name | Topic Name | Question | Option 1 | Option 2 | Option 3 | Option 4 | Option 5 | Correct Answer | Explanation | Video URL | Question Added By
+```
+
+---
+
+## POST /bulk — Bulk Import Questions
+
+Import multiple questions from an array. Each question is validated independently — valid ones are inserted, invalid ones are skipped with error reasons.
+
+**Headers:**
+```
+Content-Type: application/json
+x-user-id: <uuid>
+```
+
+**Body:**
+```json
+{
+  "questions": [
+    {
+      "type": "mcq",
+      "question": "What is binary search?",
+      "choices": ["O(n)", "O(log n)", "O(n^2)", "O(1)"],
+      "correctAnswer": "O(log n)",
+      "explanation": "Halves search space each step.",
+      "videoUrl": "https://youtube.com/watch?v=example",
+      "topic_id": "uuid",
+      "subject_id": "uuid",
+      "course_id": "uuid",
+      "questionAddedBy": "uuid"
+    }
+  ]
+}
+```
+
+| Field | Type | Required | Rules |
+|-------|------|----------|-------|
+| questions | array | Yes | 1-500 items |
+| questions[].type | string | Yes | Must be `"mcq"` |
+| questions[].question | string | Yes | Non-empty |
+| questions[].choices | string[] | Yes | 2-5 non-empty strings |
+| questions[].correctAnswer | string | Yes | Must match one of the choices |
+| questions[].explanation | string | No | — |
+| questions[].videoUrl | string | No | Valid URL |
+| questions[].topic_id | string | Yes | UUID |
+| questions[].subject_id | string | Yes | UUID |
+| questions[].course_id | string | Yes | UUID |
+| questions[].questionAddedBy | string | No | UUID — defaults to requesting user if omitted |
+
+**200 OK:**
+```json
+{
+  "success": true,
+  "message": "Import complete: 47 imported, 3 failed",
+  "data": {
+    "totalRows": 50,
+    "imported": 47,
+    "failed": 3,
+    "errors": [
+      { "row": 5, "reason": "A question with this text already exists for this topic" },
+      { "row": 12, "reason": "Correct answer does not match any provided option" },
+      { "row": 31, "reason": "At least 2 valid options are required" }
+    ]
+  }
+}
+```
+
+---
+
+## GET /:id — Get Question by ID
 
 Get a single question by UUID.
 
@@ -178,13 +271,13 @@ Get a single question by UUID.
     "question": "What is the time complexity of binary search?",
     "choices": ["O(n)", "O(log n)", "O(n^2)", "O(1)"],
     "correctAnswer": "O(log n)",
-    "explanation": "Binary search halves the search space each step.",
-    "videoUrl": "https://youtube.com/watch?v=example",
+    "explanation": "...",
+    "videoUrl": "...",
     "difficulty": "normal",
-    "topic_id": "c3d4e5f6-...",
-    "subject_id": "b2c3d4e5-...",
-    "course_id": "a1b2c3d4-...",
-    "questionAddedBy": "14312853-..."
+    "topic_id": "...",
+    "subject_id": "...",
+    "course_id": "...",
+    "questionAddedBy": "..."
   }
 }
 ```
@@ -200,7 +293,7 @@ Get a single question by UUID.
 
 ---
 
-## PUT /:id
+## PUT /:id — Update Question
 
 Update a question. Send only the fields to change.
 
@@ -214,35 +307,7 @@ Update a question. Send only the fields to change.
 }
 ```
 
-**200 OK:**
-```json
-{
-  "success": true,
-  "message": "Question updated successfully",
-  "data": {
-    "id": "d4e5f6a7-...",
-    "type": "mcq",
-    "question": "Updated question text",
-    "choices": ["A", "B", "C", "D"],
-    "correctAnswer": "B",
-    "difficulty": "hard",
-    "explanation": "...",
-    "topic_id": "...",
-    "subject_id": "...",
-    "course_id": "...",
-    "questionAddedBy": "..."
-  }
-}
-```
-
-**400 Bad Request — FK validation:**
-```json
-{
-  "success": false,
-  "message": "Subject not found or has been deleted",
-  "data": null
-}
-```
+**200 OK:** Returns the updated question object.
 
 **409 Conflict — Duplicate question text:**
 ```json
@@ -255,7 +320,7 @@ Update a question. Send only the fields to change.
 
 ---
 
-## DELETE /:id
+## DELETE /:id — Delete Question
 
 Soft delete a question.
 
@@ -281,15 +346,16 @@ Soft delete a question.
 
 ---
 
-## Validation Rules Summary
+## Validation Rules
 
 | Rule | Description |
 |------|-------------|
-| FK must exist | `topic_id`, `subject_id`, `course_id` must reference active (non-deleted) records |
-| Unique question | Same question text cannot be repeated within the same topic |
-| MCQ choices | 2-5 choices required, `correctAnswer` must match one of them |
+| FK must exist | `topic_id`, `subject_id`, `course_id` must reference active records |
+| Unique question | Same question text cannot repeat within the same topic |
+| MCQ choices | 2-5 choices required, `correctAnswer` must match one |
 | Descriptive | No `choices` field allowed |
 | Difficulty | One of `beginner`, `normal`, `mid`, `hard`, `expert` (default: `normal`) |
+| Bulk max | 500 questions per import |
 
 ---
 

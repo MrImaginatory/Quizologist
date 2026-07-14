@@ -1,7 +1,11 @@
 import { Router } from "express";
 import { QuestionController } from "./question.controller";
+import questionImportRoutes from "./questionImport.routes";
 
 const router = Router();
+
+// Import routes (must come before /:id)
+router.use(questionImportRoutes);
 
 router.post("/", QuestionController.create);
 router.get("/", QuestionController.getAll);
