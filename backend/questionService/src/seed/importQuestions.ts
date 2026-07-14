@@ -18,7 +18,8 @@ interface QuestionData {
   difficulty: string;
   topic_id: string;
   subject_id: string;
-  course_id: string;
+  course_id?: string;
+  faculty_id?: string;
 }
 
 async function importQuestions() {
@@ -28,7 +29,8 @@ async function importQuestions() {
 
   const jsonPath = path.join(__dirname, "../../../../Data/Questions.json");
   const rawData = fs.readFileSync(jsonPath, "utf-8");
-  const questions: QuestionData[] = JSON.parse(rawData);
+  const cleanedData = rawData.replace(/^\uFEFF/, '');
+  const questions: QuestionData[] = JSON.parse(cleanedData);
 
   console.log(`Loaded ${questions.length} questions from JSON\n`);
 
@@ -72,12 +74,18 @@ async function importQuestions() {
   let warnings: string[] = [];
 
   for (const q of questions) {
-    const courseId = courseMap.get(q.course_id.toLowerCase());
+    const courseIdRaw = q.course_id || q.faculty_id;
+    if (!courseIdRaw) {
+      warnings.push(`Course ID missing for question: ${q.question.substring(0, 30)}...`);
+      skipped++;
+      continue;
+    }
+    const courseId = courseMap.get(courseIdRaw.toLowerCase());
     const subjectId = subjectMap.get(q.subject_id.toLowerCase());
     const topicId = topicMap.get(q.topic_id.toLowerCase());
 
     if (!courseId) {
-      warnings.push(`Course "${q.course_id}" not found`);
+      warnings.push(`Course "${courseIdRaw}" not found`);
       skipped++;
       continue;
     }

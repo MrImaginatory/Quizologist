@@ -23,7 +23,8 @@ async function importData() {
 
   const jsonPath = path.join(__dirname, "../../../../Data/CourseData.json");
   const rawData = fs.readFileSync(jsonPath, "utf-8");
-  const courses: CourseData[] = JSON.parse(rawData);
+  const cleanedData = rawData.replace(/^\uFEFF/, '');
+  const courses: CourseData[] = JSON.parse(cleanedData);
 
   let totalCourses = 0;
   let totalSubjects = 0;
