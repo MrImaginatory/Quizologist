@@ -4,14 +4,14 @@ import { sequelize } from "../../config/database";
 class Subject extends Model {
   declare id: string;
   declare name: string;
-  declare faculty_id: string;
+  declare course_id: string;
 }
 
 Subject.init(
   {
     id: { type: DataTypes.UUID, primaryKey: true },
     name: { type: DataTypes.STRING(100) },
-    faculty_id: { type: DataTypes.UUID },
+    course_id: { type: DataTypes.UUID },
   },
   {
     sequelize,

@@ -5,10 +5,10 @@ import { ApiResponse } from "../../utils/ApiResponse";
 export class StudentController {
   static async getStudentsWithFilters(req: Request, res: Response, next: NextFunction) {
     try {
-      const { faculty_id, subject_id, topic_id, page = "1", limit = "10" } = req.query;
+      const { course_id, subject_id, topic_id, page = "1", limit = "10" } = req.query;
 
       const result = await StudentService.getStudentsWithFilters({
-        faculty_id: faculty_id as string | undefined,
+        course_id: course_id as string | undefined,
         subject_id: subject_id as string | undefined,
         topic_id: topic_id as string | undefined,
         page: parseInt(page as string, 10),

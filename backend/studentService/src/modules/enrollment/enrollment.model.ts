@@ -4,7 +4,7 @@ import { sequelize } from "../../config/database";
 interface EnrollmentAttributes {
   id: string;
   student_id: string;
-  faculty_id: string;
+  course_id: string;
   subject_id: string | null;
   topic_id: string | null;
   createdAt?: Date;
@@ -23,7 +23,7 @@ class Enrollment
 {
   declare id: string;
   declare student_id: string;
-  declare faculty_id: string;
+  declare course_id: string;
   declare subject_id: string | null;
   declare topic_id: string | null;
   declare createdAt: Date;
@@ -42,11 +42,11 @@ Enrollment.init(
       type: DataTypes.UUID,
       allowNull: false,
     },
-    faculty_id: {
+    course_id: {
       type: DataTypes.UUID,
       allowNull: false,
       references: {
-        model: "faculties",
+        model: "courses",
         key: "id",
       },
     },
@@ -77,7 +77,7 @@ Enrollment.init(
     indexes: [
       {
         unique: true,
-        fields: ["student_id", "faculty_id", "subject_id", "topic_id"],
+        fields: ["student_id", "course_id", "subject_id", "topic_id"],
         where: {
           deleted_at: null,
         },

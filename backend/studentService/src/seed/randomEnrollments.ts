@@ -2,7 +2,7 @@ import { connectDatabase } from "../config/database";
 import "../config/associations";
 import Student from "../modules/student/student.model";
 import Enrollment from "../modules/enrollment/enrollment.model";
-import Faculty from "../modules/faculty/faculty.model";
+import Course from "../modules/course/course.model";
 import Subject from "../modules/subject/subject.model";
 import Topic from "../modules/topic/topic.model";
 
@@ -18,19 +18,19 @@ async function seedEnrollments() {
   await connectDatabase();
 
   const students = await Student.findAll({ where: { role: "student" } });
-  const faculties = await Faculty.findAll();
+  const courses = await Course.findAll();
   const subjects = await Subject.findAll();
   const topics = await Topic.findAll();
 
-  console.log(`Found: ${students.length} students, ${faculties.length} faculties, ${subjects.length} subjects, ${topics.length} topics\n`);
+  console.log(`Found: ${students.length} students, ${courses.length} courses, ${subjects.length} subjects, ${topics.length} topics\n`);
 
   if (students.length === 0) {
     console.log("No students found. Please add students first.");
     process.exit(0);
   }
 
-  if (faculties.length === 0) {
-    console.log("No faculties found. Please run the content seed first.");
+  if (courses.length === 0) {
+    console.log("No courses found. Please run the content seed first.");
     process.exit(0);
   }
 
@@ -38,22 +38,22 @@ async function seedEnrollments() {
   let skippedEnrollments = 0;
 
   for (const student of students) {
-    const numFaculties = Math.min(
+    const numCourses = Math.min(
       Math.floor(Math.random() * 3) + 1,
-      faculties.length
+      courses.length
     );
-    const selectedFaculties = getRandomItems(faculties, 1, numFaculties);
+    const selectedCourses = getRandomItems(courses, 1, numCourses);
 
-    for (const faculty of selectedFaculties) {
-      const facultySubjects = subjects.filter(
-        (s) => s.faculty_id === faculty.id
+    for (const course of selectedCourses) {
+      const courseSubjects = subjects.filter(
+        (s) => s.course_id === course.id
       );
 
-      if (facultySubjects.length === 0) {
+      if (courseSubjects.length === 0) {
         const existing = await Enrollment.findOne({
           where: {
             student_id: student.id,
-            faculty_id: faculty.id,
+            course_id: course.id,
             subject_id: null,
             topic_id: null,
           },
@@ -62,7 +62,7 @@ async function seedEnrollments() {
         if (!existing) {
           await Enrollment.create({
             student_id: student.id,
-            faculty_id: faculty.id,
+            course_id: course.id,
           });
           totalEnrollments++;
         } else {
@@ -73,9 +73,9 @@ async function seedEnrollments() {
 
       const numSubjects = Math.min(
         Math.floor(Math.random() * 3) + 1,
-        facultySubjects.length
+        courseSubjects.length
       );
-      const selectedSubjects = getRandomItems(facultySubjects, 1, numSubjects);
+      const selectedSubjects = getRandomItems(courseSubjects, 1, numSubjects);
 
       for (const subject of selectedSubjects) {
         const subjectTopics = topics.filter(
@@ -86,7 +86,7 @@ async function seedEnrollments() {
           const existing = await Enrollment.findOne({
             where: {
               student_id: student.id,
-              faculty_id: faculty.id,
+              course_id: course.id,
               subject_id: subject.id,
               topic_id: null,
             },
@@ -95,7 +95,7 @@ async function seedEnrollments() {
           if (!existing) {
             await Enrollment.create({
               student_id: student.id,
-              faculty_id: faculty.id,
+              course_id: course.id,
               subject_id: subject.id,
             });
             totalEnrollments++;
@@ -115,7 +115,7 @@ async function seedEnrollments() {
           const existing = await Enrollment.findOne({
             where: {
               student_id: student.id,
-              faculty_id: faculty.id,
+              course_id: course.id,
               subject_id: subject.id,
               topic_id: topic.id,
             },
@@ -124,7 +124,7 @@ async function seedEnrollments() {
           if (!existing) {
             await Enrollment.create({
               student_id: student.id,
-              faculty_id: faculty.id,
+              course_id: course.id,
               subject_id: subject.id,
               topic_id: topic.id,
             });

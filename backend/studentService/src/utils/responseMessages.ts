@@ -8,10 +8,10 @@ export const RESPONSE_MESSAGES = {
   ERROR: {
     ENROLLMENT_NOT_FOUND: "Enrollment not found",
     ENROLLMENT_EXISTS: "Already enrolled in this combination",
-    FACULTY_NOT_FOUND: "Faculty not found or has been deleted",
+    COURSE_NOT_FOUND: "Course not found or has been deleted",
     SUBJECT_NOT_FOUND: "Subject not found or has been deleted",
     TOPIC_NOT_FOUND: "Topic not found or has been deleted",
-    SUBJECT_FACULTY_MISMATCH: "Subject does not belong to the specified faculty",
+    SUBJECT_COURSE_MISMATCH: "Subject does not belong to the specified course",
     TOPIC_SUBJECT_MISMATCH: "Topic does not belong to the specified subject",
     VALIDATION_ERROR: "Validation failed",
     INTERNAL_ERROR: "Internal server error",

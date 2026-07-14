@@ -22,13 +22,13 @@ Authorization: Bearer <jwt_token>
 
 | Param | Type | Required | Description |
 |-------|------|----------|-------------|
-| faculty_id | string | No | Filter by enrolled faculty UUID |
+| course_id | string | No | Filter by enrolled course UUID |
 | subject_id | string | No | Filter by enrolled subject UUID |
 | topic_id | string | No | Filter by enrolled topic UUID |
 | page | number | No | Page number (default: 1) |
 | limit | number | No | Items per page (default: 10, max: 100) |
 
-**Example:** `GET /api/student/list?faculty_id=abc-123&page=1&limit=20`
+**Example:** `GET /api/student/list?course_id=abc-123&page=1&limit=20`
 
 **200 OK:**
 ```json
@@ -107,7 +107,7 @@ Get all enrollments for a specific student. **Admin only.**
       {
         "id": "d4e5f6a7-...",
         "student_id": "a1b2c3d4-...",
-        "faculty": { "id": "b2c3d4e5-...", "name": "computer science" },
+        "course": { "id": "b2c3d4e5-...", "name": "computer science" },
         "subject": { "id": "c3d4e5f6-...", "name": "data structures" },
         "topic": { "id": "d4e5f6a7-...", "name": "binary trees" }
       }
@@ -139,7 +139,7 @@ Get all enrollments for a specific student. **Admin only.**
 
 ## POST /
 
-Batch enroll in multiple faculties, subjects, and topics in a single request.
+Batch enroll in multiple courses, subjects, and topics in a single request.
 
 **Headers:**
 ```
@@ -151,10 +151,10 @@ x-user-id: <uuid>
 ```json
 {
   "enrollments": [
-    { "faculty_id": "a1b2c3d4-..." },
-    { "faculty_id": "a1b2c3d4-...", "subject_id": "b2c3d4e5-..." },
-    { "faculty_id": "a1b2c3d4-...", "subject_id": "b2c3d4e5-...", "topic_id": "c3d4e5f6-..." },
-    { "faculty_id": "d4e5f6a7-...", "subject_id": "e5f6a7b8-...", "topic_id": "f6a7b8c9-..." }
+    { "course_id": "a1b2c3d4-..." },
+    { "course_id": "a1b2c3d4-...", "subject_id": "b2c3d4e5-..." },
+    { "course_id": "a1b2c3d4-...", "subject_id": "b2c3d4e5-...", "topic_id": "c3d4e5f6-..." },
+    { "course_id": "d4e5f6a7-...", "subject_id": "e5f6a7b8-...", "topic_id": "f6a7b8c9-..." }
   ]
 }
 ```
@@ -162,8 +162,8 @@ x-user-id: <uuid>
 | Field | Type | Required | Rules |
 |-------|------|----------|-------|
 | enrollments | array | Yes | 1-50 items per request |
-| enrollments[].faculty_id | string | Yes | UUID, must exist |
-| enrollments[].subject_id | string | No | UUID, must belong to the faculty |
+| enrollments[].course_id | string | Yes | UUID, must exist |
+| enrollments[].subject_id | string | No | UUID, must belong to the course |
 | enrollments[].topic_id | string | No | UUID, must belong to the subject. Requires subject_id. |
 
 **201 Created:**
@@ -176,14 +176,14 @@ x-user-id: <uuid>
       {
         "id": "d4e5f6a7-...",
         "student_id": "14312853-...",
-        "faculty": { "id": "a1b2c3d4-...", "name": "computer science" },
+        "course": { "id": "a1b2c3d4-...", "name": "computer science" },
         "subject": { "id": "b2c3d4e5-...", "name": "data structures" },
         "topic": { "id": "c3d4e5f6-...", "name": "binary trees" }
       }
     ],
     "skipped": [
       {
-        "enrollment": { "faculty_id": "a1b2c3d4-...", "subject_id": "b2c3d4e5-..." },
+        "enrollment": { "course_id": "a1b2c3d4-...", "subject_id": "b2c3d4e5-" },
         "reason": "Already enrolled"
       }
     ],
@@ -197,7 +197,7 @@ x-user-id: <uuid>
 ```json
 {
   "success": false,
-  "message": "Subject does not belong to the specified faculty",
+  "message": "Subject does not belong to the specified course",
   "data": null
 }
 ```
@@ -220,7 +220,7 @@ List own enrollments (student only).
       {
         "id": "d4e5f6a7-...",
         "student_id": "14312853-...",
-        "faculty": { "id": "a1b2c3d4-...", "name": "computer science" },
+        "course": { "id": "a1b2c3d4-...", "name": "computer science" },
         "subject": { "id": "b2c3d4e5-...", "name": "data structures" },
         "topic": { "id": "c3d4e5f6-...", "name": "binary trees" }
       }
@@ -296,11 +296,11 @@ Unenroll (soft delete).
 
 | Rule | Description |
 |------|-------------|
-| Faculty required | Every enrollment item must have a `faculty_id` |
-| Subject ownership | `subject_id` must belong to the given `faculty_id` |
+| Course required | Every enrollment item must have a `course_id` |
+| Subject ownership | `subject_id` must belong to the given `course_id` |
 | Topic ownership | `topic_id` must belong to the given `subject_id` |
 | Topic needs subject | `subject_id` is required when `topic_id` is provided |
-| No duplicates | Same student + faculty + subject + topic combo is skipped |
+| No duplicates | Same student + course + subject + topic combo is skipped |
 | Batch size | 1-50 enrollments per request |
 
 ---
@@ -309,10 +309,10 @@ Unenroll (soft delete).
 
 | Status | Message |
 |--------|---------|
-| 400 | Faculty not found or has been deleted |
+| 400 | Course not found or has been deleted |
 | 400 | Subject not found or has been deleted |
 | 400 | Topic not found or has been deleted |
-| 400 | Subject does not belong to the specified faculty |
+| 400 | Subject does not belong to the specified course |
 | 400 | Topic does not belong to the specified subject |
 | 400 | subject_id is required when topic_id is provided |
 | 400 | At least one enrollment is required |

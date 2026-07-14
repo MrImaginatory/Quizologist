@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const enrollmentItemSchema = z.object({
-  faculty_id: z.string().uuid("Invalid faculty ID format"),
+  course_id: z.string().uuid("Invalid course ID format"),
   subject_id: z.string().uuid("Invalid subject ID format").optional(),
   topic_id: z.string().uuid("Invalid topic ID format").optional(),
 });

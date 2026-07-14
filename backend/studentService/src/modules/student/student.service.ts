@@ -1,13 +1,13 @@
 import { Op, fn, col, literal } from "sequelize";
 import Student from "./student.model";
 import Enrollment from "../enrollment/enrollment.model";
-import Faculty from "../faculty/faculty.model";
+import Course from "../course/course.model";
 import Subject from "../subject/subject.model";
 import Topic from "../topic/topic.model";
 import { ApiError } from "../../utils/ApiError";
 
 interface GetStudentsWithFiltersInput {
-  faculty_id?: string;
+  course_id?: string;
   subject_id?: string;
   topic_id?: string;
   page: number;
@@ -16,7 +16,7 @@ interface GetStudentsWithFiltersInput {
 
 export class StudentService {
   static async getStudentsWithFilters(data: GetStudentsWithFiltersInput) {
-    const { faculty_id, subject_id, topic_id, page, limit } = data;
+    const { course_id, subject_id, topic_id, page, limit } = data;
     const offset = (page - 1) * limit;
 
     const whereConditions: any = {
@@ -32,11 +32,11 @@ export class StudentService {
       },
     ];
 
-    if (faculty_id) {
+    if (course_id) {
       includeOptions[0].required = true;
       includeOptions[0].where = {
         ...includeOptions[0].where,
-        faculty_id,
+        course_id,
       };
 
       if (subject_id) {
@@ -99,7 +99,7 @@ export class StudentService {
     const { rows: enrollments, count: total } = await Enrollment.findAndCountAll({
       where: { student_id: studentId },
       include: [
-        { model: Faculty, as: "faculty", attributes: ["id", "name"] },
+        { model: Course, as: "course", attributes: ["id", "name"] },
         { model: Subject, as: "subject", attributes: ["id", "name"] },
         { model: Topic, as: "topic", attributes: ["id", "name"] },
       ],

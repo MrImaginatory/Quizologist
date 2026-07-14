@@ -1,7 +1,7 @@
 import { ApiError } from "../../utils/ApiError";
 import { RESPONSE_MESSAGES } from "../../utils/responseMessages";
 import Enrollment from "./enrollment.model";
-import Faculty from "../faculty/faculty.model";
+import Course from "../course/course.model";
 import Subject from "../subject/subject.model";
 import Topic from "../topic/topic.model";
 import {
@@ -12,24 +12,24 @@ import {
 } from "./enrollment.validation";
 
 const TIMESTAMP_EXCLUDE = {
-  exclude: ["faculty_id", "subject_id", "topic_id", "createdAt", "updatedAt", "deletedAt"],
+  exclude: ["course_id", "subject_id", "topic_id", "createdAt", "updatedAt", "deletedAt"],
 };
 
-const FACULTY_INCLUDE = { model: Faculty, as: "faculty", attributes: ["id", "name"] };
+const COURSE_INCLUDE = { model: Course, as: "course", attributes: ["id", "name"] };
 const SUBJECT_INCLUDE = { model: Subject, as: "subject", attributes: ["id", "name"] };
 const TOPIC_INCLUDE = { model: Topic, as: "topic", attributes: ["id", "name"] };
-const ALL_INCLUDES = [FACULTY_INCLUDE, SUBJECT_INCLUDE, TOPIC_INCLUDE];
+const ALL_INCLUDES = [COURSE_INCLUDE, SUBJECT_INCLUDE, TOPIC_INCLUDE];
 
 async function validateEnrollmentItem(data: EnrollmentItemInput) {
-  const faculty = await Faculty.findByPk(data.faculty_id);
-  if (!faculty) throw ApiError.badRequest(RESPONSE_MESSAGES.ERROR.FACULTY_NOT_FOUND);
+  const course = await Course.findByPk(data.course_id);
+  if (!course) throw ApiError.badRequest(RESPONSE_MESSAGES.ERROR.COURSE_NOT_FOUND);
 
   if (data.subject_id) {
     const subject = await Subject.findByPk(data.subject_id);
     if (!subject) throw ApiError.badRequest(RESPONSE_MESSAGES.ERROR.SUBJECT_NOT_FOUND);
 
-    if (subject.faculty_id !== data.faculty_id) {
-      throw ApiError.badRequest(RESPONSE_MESSAGES.ERROR.SUBJECT_FACULTY_MISMATCH);
+    if (subject.course_id !== data.course_id) {
+      throw ApiError.badRequest(RESPONSE_MESSAGES.ERROR.SUBJECT_COURSE_MISMATCH);
     }
   }
 
@@ -51,7 +51,7 @@ async function checkDuplicate(studentId: string, data: EnrollmentItemInput) {
   const existing = await Enrollment.findOne({
     where: {
       student_id: studentId,
-      faculty_id: data.faculty_id,
+      course_id: data.course_id,
       subject_id: data.subject_id || null,
       topic_id: data.topic_id || null,
     },
@@ -77,7 +77,7 @@ export class EnrollmentService {
 
       const enrollment = await Enrollment.create({
         student_id: studentId,
-        faculty_id: item.faculty_id,
+        course_id: item.course_id,
         subject_id: item.subject_id || null,
         topic_id: item.topic_id || null,
       });
