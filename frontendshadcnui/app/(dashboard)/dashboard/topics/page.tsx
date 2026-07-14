@@ -53,9 +53,9 @@ export default function TopicsPage() {
         {capitalize(t.subject?.name || "")}
       </Badge>
     )},
-    { key: "faculty", header: "Faculty", render: (t: Topic) => (
+    { key: "course", header: "Course", render: (t: Topic) => (
       <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
-        {capitalize(t.subject?.faculty?.name || "")}
+        {capitalize(t.subject?.course?.name || "")}
       </Badge>
     )},
     {

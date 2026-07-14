@@ -16,13 +16,13 @@ import { Loader2 } from "lucide-react";
 
 const MAX_DESCRIPTION_LENGTH = 1024;
 
-interface AddFacultyDialogProps {
+interface AddCourseDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
 }
 
-export function AddFacultyDialog({ open, onOpenChange, onSuccess }: AddFacultyDialogProps) {
+export function AddCourseDialog({ open, onOpenChange, onSuccess }: AddCourseDialogProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -34,14 +34,14 @@ export function AddFacultyDialog({ open, onOpenChange, onSuccess }: AddFacultyDi
     setError("");
 
     try {
-      // TODO: Call API to create faculty
+      // TODO: Call API to create course
       await new Promise((resolve) => setTimeout(resolve, 1000));
       setName("");
       setDescription("");
       onOpenChange(false);
       onSuccess?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create faculty");
+      setError(err instanceof Error ? err.message : "Failed to create course");
     } finally {
       setIsLoading(false);
     }
@@ -51,9 +51,9 @@ export function AddFacultyDialog({ open, onOpenChange, onSuccess }: AddFacultyDi
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add Faculty</DialogTitle>
+          <DialogTitle>Add Course</DialogTitle>
           <DialogDescription>
-            Create a new faculty. Click save when you're done.
+            Create a new course. Click save when you're done.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>

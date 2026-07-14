@@ -128,12 +128,13 @@ export interface DashboardStatsResponse {
     studentsCount?: number;
     totalSubjects?: number;
     totalTeachers?: number;
+    totalCourses?: number;
     // Teacher
     questionsAdded?: number;
-    studentsInFaculties?: number;
-    questionsInFaculties?: number;
+    studentsInCourses?: number;
+    questionsInCourses?: number;
     // Student
-    questionsInEnrolledFaculties?: number;
+    questionsInEnrolledCourses?: number;
   };
 }
 
@@ -146,17 +147,17 @@ export const dashboardApi = {
     apiRequest(API_ROUTES.DASHBOARD.TEACHER_ANALYTICS(teacherId), { token }),
 };
 
-export interface Faculty {
+export interface Course {
   id: string;
   name: string;
   description: string | null;
 }
 
-export interface FacultiesResponse {
+export interface CoursesResponse {
   success: boolean;
   message: string;
   data: {
-    faculties: Faculty[];
+    courses: Course[];
     pagination: Pagination;
   };
 }
@@ -165,8 +166,8 @@ export interface Subject {
   id: string;
   name: string;
   description: string | null;
-  faculty_id: string;
-  faculty: {
+  course_id: string;
+  course: {
     id: string;
     name: string;
   };
@@ -189,7 +190,7 @@ export interface Topic {
   subject: {
     id: string;
     name: string;
-    faculty: {
+    course: {
       id: string;
       name: string;
     };
@@ -205,20 +206,20 @@ export interface TopicsResponse {
   };
 }
 
-export const facultiesApi = {
+export const coursesApi = {
   getAll: (page = 1, limit = 10, token?: string) =>
-    apiRequest<FacultiesResponse>(`${API_ROUTES.FACULTIES.BASE}?page=${page}&limit=${limit}`, { token }),
+    apiRequest<CoursesResponse>(`${API_ROUTES.COURSES.BASE}?page=${page}&limit=${limit}`, { token }),
   getById: (id: string, token?: string) =>
-    apiRequest(API_ROUTES.FACULTIES.BY_ID(id), { token }),
+    apiRequest(API_ROUTES.COURSES.BY_ID(id), { token }),
   delete: (id: string, token?: string) =>
-    apiRequest(API_ROUTES.FACULTIES.BY_ID(id), { method: "DELETE", token }),
+    apiRequest(API_ROUTES.COURSES.BY_ID(id), { method: "DELETE", token }),
 };
 
 export const subjectsApi = {
   getAll: (page = 1, limit = 10, token?: string) =>
     apiRequest<SubjectsResponse>(`${API_ROUTES.SUBJECTS.BASE}?page=${page}&limit=${limit}`, { token }),
-  getByFaculty: (facultyId: string, page = 1, limit = 10, token?: string) =>
-    apiRequest<SubjectsResponse>(`${API_ROUTES.SUBJECTS.BY_FACULTY(facultyId)}?page=${page}&limit=${limit}`, { token }),
+  getByCourse: (courseId: string, page = 1, limit = 10, token?: string) =>
+    apiRequest<SubjectsResponse>(`${API_ROUTES.SUBJECTS.BY_COURSE(courseId)}?page=${page}&limit=${limit}`, { token }),
   delete: (id: string, token?: string) =>
     apiRequest(API_ROUTES.SUBJECTS.BY_ID(id), { method: "DELETE", token }),
 };

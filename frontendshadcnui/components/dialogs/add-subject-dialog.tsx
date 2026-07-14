@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
-import { useFaculties } from "@/hooks/use-faculties";
+import { useCourses } from "@/hooks/use-courses";
 import { capitalize } from "@/lib/utils";
 
 const MAX_DESCRIPTION_LENGTH = 1024;
@@ -34,12 +34,12 @@ interface AddSubjectDialogProps {
 export function AddSubjectDialog({ open, onOpenChange, onSuccess }: AddSubjectDialogProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [facultyId, setFacultyId] = useState("");
+  const [courseId, setCourseId] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const { faculties, isLoading: isLoadingFaculties } = useFaculties({ limit: 100 });
+  const { courses, isLoading: isLoadingCourses } = useCourses({ limit: 100 });
 
-  const selectedFaculty = faculties.find((f) => f.id === facultyId);
+  const selectedCourse = courses.find((c) => c.id === courseId);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +51,7 @@ export function AddSubjectDialog({ open, onOpenChange, onSuccess }: AddSubjectDi
       await new Promise((resolve) => setTimeout(resolve, 1000));
       setName("");
       setDescription("");
-      setFacultyId("");
+      setCourseId("");
       onOpenChange(false);
       onSuccess?.();
     } catch (err) {
@@ -67,7 +67,7 @@ export function AddSubjectDialog({ open, onOpenChange, onSuccess }: AddSubjectDi
         <DialogHeader>
           <DialogTitle>Add Subject</DialogTitle>
           <DialogDescription>
-            Create a new subject under a faculty. Click save when you're done.
+            Create a new subject under a course. Click save when you're done.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
@@ -76,17 +76,17 @@ export function AddSubjectDialog({ open, onOpenChange, onSuccess }: AddSubjectDi
               <p className="text-sm text-destructive">{error}</p>
             )}
             <div className="grid gap-2">
-              <Label htmlFor="faculty">Faculty *</Label>
-              <Select value={facultyId} onValueChange={(value) => { if (value) setFacultyId(value); }} required>
+              <Label htmlFor="course">Course *</Label>
+              <Select value={courseId} onValueChange={(value) => { if (value) setCourseId(value); }} required>
                 <SelectTrigger className="w-full">
                   <SelectValue>
-                    {selectedFaculty ? capitalize(selectedFaculty.name) : isLoadingFaculties ? "Loading..." : "Select faculty"}
+                    {selectedCourse ? capitalize(selectedCourse.name) : isLoadingCourses ? "Loading..." : "Select course"}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {faculties.map((faculty) => (
-                    <SelectItem key={faculty.id} value={faculty.id}>
-                      {capitalize(faculty.name)}
+                  {courses.map((course) => (
+                    <SelectItem key={course.id} value={course.id}>
+                      {capitalize(course.name)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -125,7 +125,7 @@ export function AddSubjectDialog({ open, onOpenChange, onSuccess }: AddSubjectDi
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading || !facultyId}>
+            <Button type="submit" disabled={isLoading || !courseId}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save
             </Button>

@@ -63,10 +63,10 @@ const adminNav: NavItem[] = [
     ],
   },
   {
-    title: "Faculties",
+    title: "Courses",
     icon: GraduationCap,
     children: [
-      { title: "Faculties", icon: GraduationCap, href: "/dashboard/faculties" },
+      { title: "Courses", icon: GraduationCap, href: "/dashboard/courses" },
       { title: "Subjects", icon: BookOpen, href: "/dashboard/subjects" },
       { title: "Topics", icon: Bookmark, href: "/dashboard/topics" },
     ],

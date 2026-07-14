@@ -8,13 +8,13 @@ A modern, responsive quiz management platform built with Next.js, shadcn/ui, and
 
 #### 2.1 Admin Dashboard
 - **User Management**: View, create, edit, delete users; assign roles
-- **Faculty/Subject/Topic Management**: Full CRUD for content hierarchy
+- **Course/Subject/Topic Management**: Full CRUD for content hierarchy
 - **Question Bank**: Manage MCQ and descriptive questions
 - **System Overview**: KPIs showing total users, tests, questions, active sessions
 - **Reports**: Export user/test data, view analytics
 
 #### 2.2 Teacher Dashboard
-- **Faculty Assignment**: View assigned faculties and subjects
+- **Course Assignment**: View assigned courses and subjects
 - **Test Creation**: Create tests with duration (15-45 min), question count ranges
 - **Question Selection**: Pick questions from assigned subjects/topics
 - **Live Test Monitoring**: Real-time view of student progress via Socket.IO
@@ -35,7 +35,7 @@ The frontend communicates with 8 microservices via an API Gateway (port 3000):
 | Service | Port | Key Endpoints |
 |---------|------|---------------|
 | User Service | 3001 | `/api/users/*`, `/api/auth/*` |
-| Content Service | 3002 | `/api/faculties/*`, `/api/subjects/*`, `/api/topics/*` |
+| Content Service | 3002 | `/api/courses/*`, `/api/subjects/*`, `/api/topics/*` |
 | Question Service | 3003 | `/api/questions/*` |
 | Student Service | 3004 | `/api/students/*`, `/api/enrollments/*` |
 | Test Service | 3005 | `/api/tests/*`, Socket.IO for real-time |

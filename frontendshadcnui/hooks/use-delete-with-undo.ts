@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 interface PendingDeletion {
   id: string;
-  type: "faculty" | "subject" | "topic";
+  type: "course" | "subject" | "topic";
   timestamp: number;
   name: string;
 }
@@ -34,7 +34,7 @@ function removePendingDeletion(id: string) {
 }
 
 interface UseDeleteWithUndoOptions {
-  type: "faculty" | "subject" | "topic";
+  type: "course" | "subject" | "topic";
   onDelete: (id: string) => Promise<void>;
   onSuccess?: () => void;
 }

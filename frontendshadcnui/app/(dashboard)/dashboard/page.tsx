@@ -77,7 +77,7 @@ export default function DashboardPage() {
           badgeColor: "bg-teal-400/10",
           change: "Available",
           changeIcon: "solar:library-line-duotone",
-          period: "Across Faculties",
+          period: "Across Courses",
         },
         {
           title: "Tests Submitted",
@@ -103,13 +103,13 @@ export default function DashboardPage() {
           period: "By You",
         },
         {
-          title: "Students in Faculties",
-          value: stats.studentsInFaculties?.toString() || "0",
+          title: "Students in Courses",
+          value: stats.studentsInCourses?.toString() || "0",
           icon: "solar:users-group-two-rounded-line-duotone",
           badgeColor: "bg-blue-400/10",
           change: "Enrolled",
           changeIcon: "solar:check-circle-line-duotone",
-          period: "Your Faculties",
+          period: "Your Courses",
         },
         {
           title: "Tests Submitted",
@@ -121,13 +121,13 @@ export default function DashboardPage() {
           period: "By Students",
         },
         {
-          title: "Questions in Faculties",
-          value: stats.questionsInFaculties?.toString() || "0",
+          title: "Questions in Courses",
+          value: stats.questionsInCourses?.toString() || "0",
           icon: "solar:book-open-line-duotone",
           badgeColor: "bg-orange-400/10",
           change: "Available",
           changeIcon: "solar:library-line-duotone",
-          period: "Your Faculties",
+          period: "Your Courses",
         },
       ];
     }
@@ -136,12 +136,12 @@ export default function DashboardPage() {
     return [
       {
         title: "Available Questions",
-        value: stats.questionsInEnrolledFaculties?.toString() || "0",
+        value: stats.questionsInEnrolledCourses?.toString() || "0",
         icon: "solar:question-circle-line-duotone",
         badgeColor: "bg-teal-400/10",
         change: "In Library",
         changeIcon: "solar:book-open-line-duotone",
-        period: "Enrolled Faculties",
+          period: "Enrolled Courses",
       },
       {
         title: "Tests Submitted",

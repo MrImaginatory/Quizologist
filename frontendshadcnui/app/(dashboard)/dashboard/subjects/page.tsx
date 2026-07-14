@@ -48,9 +48,9 @@ export default function SubjectsPage() {
     { key: "sno", header: "#", render: (_s: Subject, index: number) => index + 1 },
     { key: "name", header: "Name", render: (s: Subject) => capitalize(s.name) },
     { key: "description", header: "Description", render: (s: Subject) => s.description || "-" },
-    { key: "faculty", header: "Faculty", render: (s: Subject) => (
+    { key: "course", header: "Course", render: (s: Subject) => (
       <Badge variant="outline" className="bg-purple-500/10 text-purple-500 border-purple-500/20">
-        {capitalize(s.faculty?.name || "")}
+        {capitalize(s.course?.name || "")}
       </Badge>
     )},
     {
@@ -79,7 +79,7 @@ export default function SubjectsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Subjects</h1>
-          <p className="text-muted-foreground">Manage all subjects across faculties</p>
+          <p className="text-muted-foreground">Manage all subjects across courses</p>
         </div>
         <Button onClick={() => setShowAddDialog(true)}>
           <Plus className="mr-2 h-4 w-4" />

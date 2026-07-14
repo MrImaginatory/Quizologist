@@ -2,39 +2,39 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
-import { facultiesApi, Faculty } from "@/lib/api";
+import { coursesApi, Course } from "@/lib/api";
 
-interface UseFacultiesOptions {
+interface UseCoursesOptions {
   page?: number;
   limit?: number;
 }
 
-export function useFaculties({ page = 1, limit = 10 }: UseFacultiesOptions = {}) {
+export function useCourses({ page = 1, limit = 10 }: UseCoursesOptions = {}) {
   const { token } = useAuth();
-  const [faculties, setFaculties] = useState<Faculty[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const fetchFaculties = async () => {
+    const fetchCourses = async () => {
       setIsLoading(true);
       setError("");
       try {
-        const response = await facultiesApi.getAll(page, limit, token || undefined);
-        setFaculties(response.data.faculties);
+        const response = await coursesApi.getAll(page, limit, token || undefined);
+        setCourses(response.data.courses);
         setTotal(response.data.pagination.total);
         setTotalPages(response.data.pagination.totalPages);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch faculties");
+        setError(err instanceof Error ? err.message : "Failed to fetch courses");
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchFaculties();
+    fetchCourses();
   }, [page, limit, token]);
 
-  return { faculties, total, totalPages, isLoading, error };
+  return { courses, total, totalPages, isLoading, error };
 }

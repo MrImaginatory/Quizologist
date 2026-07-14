@@ -17,24 +17,24 @@ export const API_ROUTES = {
     BY_ROLE: (role: string) => `${BASE_URL}/api/user/role/${role}`,
   },
 
-  // Faculties
-  FACULTIES: {
-    BASE: `${BASE_URL}/api/content/faculty`,
-    BY_ID: (id: string) => `${BASE_URL}/api/faculty/${id}`,
+  // Courses
+  COURSES: {
+    BASE: `${BASE_URL}/api/content/course`,
+    BY_ID: (id: string) => `${BASE_URL}/api/content/course/${id}`,
   },
 
   // Subjects
   SUBJECTS: {
     BASE: `${BASE_URL}/api/content/subject`,
-    BY_ID: (id: string) => `${BASE_URL}/api/subject/${id}`,
-    BY_FACULTY: (facultyId: string) => `${BASE_URL}/api/subject/faculty/${facultyId}`,
+    BY_ID: (id: string) => `${BASE_URL}/api/content/subject/${id}`,
+    BY_COURSE: (courseId: string) => `${BASE_URL}/api/content/subject/course/${courseId}`,
   },
 
   // Topics
   TOPICS: {
     BASE: `${BASE_URL}/api/content/topic`,
-    BY_ID: (id: string) => `${BASE_URL}/api/topic/${id}`,
-    BY_SUBJECT: (subjectId: string) => `${BASE_URL}/api/topic/subject/${subjectId}`,
+    BY_ID: (id: string) => `${BASE_URL}/api/content/topic/${id}`,
+    BY_SUBJECT: (subjectId: string) => `${BASE_URL}/api/content/topic/subject/${subjectId}`,
   },
 
   // Questions
