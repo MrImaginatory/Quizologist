@@ -4,7 +4,7 @@ import { sequelize } from "../../config/database";
 interface TeacherAssignmentAttributes {
   id: string;
   teacher_id: string;
-  faculty_id: string;
+  course_id: string;
   subject_id: string | null;
   createdAt?: Date;
   updatedAt?: Date;
@@ -22,7 +22,7 @@ class TeacherAssignment
 {
   declare id: string;
   declare teacher_id: string;
-  declare faculty_id: string;
+  declare course_id: string;
   declare subject_id: string | null;
   declare createdAt: Date;
   declare updatedAt: Date;
@@ -44,11 +44,11 @@ TeacherAssignment.init(
         key: "id",
       },
     },
-    faculty_id: {
+    course_id: {
       type: DataTypes.UUID,
       allowNull: false,
       references: {
-        model: "faculties",
+        model: "courses",
         key: "id",
       },
     },
@@ -71,7 +71,7 @@ TeacherAssignment.init(
     indexes: [
       {
         unique: true,
-        fields: ["teacher_id", "faculty_id", "subject_id"],
+        fields: ["teacher_id", "course_id", "subject_id"],
         where: {
           deleted_at: null,
         },

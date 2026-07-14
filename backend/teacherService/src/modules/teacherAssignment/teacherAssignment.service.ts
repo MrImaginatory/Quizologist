@@ -1,24 +1,24 @@
 import { fn, col } from "sequelize";
 import TeacherAssignment from "./teacherAssignment.model";
 import Teacher from "../teacher/teacher.model";
-import Faculty from "../faculty/faculty.model";
+import Course from "../course/course.model";
 import Subject from "../subject/subject.model";
 import { ApiError } from "../../utils/ApiError";
 
-interface AssignFacultyInput {
+interface AssignCourseInput {
   teacher_id: string;
-  faculty_id: string;
+  course_id: string;
 }
 
 interface AssignSubjectInput {
   teacher_id: string;
-  faculty_id: string;
+  course_id: string;
   subject_id: string;
 }
 
 interface GetAssignmentsInput {
   teacher_id?: string;
-  faculty_id?: string;
+  course_id?: string;
   page: number;
   limit: number;
 }
@@ -52,10 +52,10 @@ export class TeacherAssignmentService {
 
     const teacherIds = teachers.map((t: any) => t.id);
 
-    const facultyCounts = await TeacherAssignment.findAll({
+    const courseCounts = await TeacherAssignment.findAll({
       attributes: [
         "teacher_id",
-        [fn("COUNT", fn("DISTINCT", col("faculty_id"))), "facultyCount"],
+        [fn("COUNT", fn("DISTINCT", col("course_id"))), "courseCount"],
       ],
       where: { teacher_id: teacherIds },
       group: ["teacher_id"],
@@ -72,11 +72,11 @@ export class TeacherAssignmentService {
       raw: true,
     });
 
-    const facultyMap = new Map<string, number>();
+    const courseMap = new Map<string, number>();
     const subjectMap = new Map<string, number>();
 
-    for (const fc of facultyCounts as any[]) {
-      facultyMap.set(fc.teacher_id, parseInt(fc.facultyCount, 10));
+    for (const cc of courseCounts as any[]) {
+      courseMap.set(cc.teacher_id, parseInt(cc.courseCount, 10));
     }
 
     for (const sc of subjectCounts as any[]) {
@@ -90,7 +90,7 @@ export class TeacherAssignmentService {
       email: t.email,
       mobileNumber: t.mobileNumber,
       createdAt: t.createdAt,
-      facultyCount: facultyMap.get(t.id) || 0,
+      courseCount: courseMap.get(t.id) || 0,
       subjectCount: subjectMap.get(t.id) || 0,
       totalAssignments: parseInt(t.dataValues.totalAssignments, 10) || 0,
     }));
@@ -107,8 +107,9 @@ export class TeacherAssignmentService {
       },
     };
   }
-  static async assignFaculty(data: AssignFacultyInput): Promise<any> {
-    const { teacher_id, faculty_id } = data;
+
+  static async assignCourse(data: AssignCourseInput): Promise<any> {
+    const { teacher_id, course_id } = data;
 
     const teacher = await Teacher.findOne({
       where: { id: teacher_id, role: "teacher" },
@@ -118,33 +119,33 @@ export class TeacherAssignmentService {
       throw ApiError.notFound("Teacher not found");
     }
 
-    const faculty = await Faculty.findByPk(faculty_id);
-    if (!faculty) {
-      throw ApiError.notFound("Faculty not found");
+    const course = await Course.findByPk(course_id);
+    if (!course) {
+      throw ApiError.notFound("Course not found");
     }
 
     const existing = await TeacherAssignment.findOne({
       where: {
         teacher_id,
-        faculty_id,
+        course_id,
         subject_id: null,
       },
     });
 
     if (existing) {
-      throw ApiError.conflict("Teacher is already assigned to this faculty");
+      throw ApiError.conflict("Teacher is already assigned to this course");
     }
 
     const assignment = await TeacherAssignment.create({
       teacher_id,
-      faculty_id,
+      course_id,
     });
 
     return assignment.toJSON();
   }
 
   static async assignSubject(data: AssignSubjectInput): Promise<any> {
-    const { teacher_id, faculty_id, subject_id } = data;
+    const { teacher_id, course_id, subject_id } = data;
 
     const teacher = await Teacher.findOne({
       where: { id: teacher_id, role: "teacher" },
@@ -154,9 +155,9 @@ export class TeacherAssignmentService {
       throw ApiError.notFound("Teacher not found");
     }
 
-    const faculty = await Faculty.findByPk(faculty_id);
-    if (!faculty) {
-      throw ApiError.notFound("Faculty not found");
+    const course = await Course.findByPk(course_id);
+    if (!course) {
+      throw ApiError.notFound("Course not found");
     }
 
     const subject = await Subject.findByPk(subject_id);
@@ -164,14 +165,14 @@ export class TeacherAssignmentService {
       throw ApiError.notFound("Subject not found");
     }
 
-    if (subject.faculty_id !== faculty_id) {
-      throw ApiError.badRequest("Subject does not belong to the specified faculty");
+    if (subject.course_id !== course_id) {
+      throw ApiError.badRequest("Subject does not belong to the specified course");
     }
 
     const existing = await TeacherAssignment.findOne({
       where: {
         teacher_id,
-        faculty_id,
+        course_id,
         subject_id,
       },
     });
@@ -182,7 +183,7 @@ export class TeacherAssignmentService {
 
     const assignment = await TeacherAssignment.create({
       teacher_id,
-      faculty_id,
+      course_id,
       subject_id,
     });
 
@@ -202,7 +203,7 @@ export class TeacherAssignmentService {
   }
 
   static async getAssignments(data: GetAssignmentsInput): Promise<any> {
-    const { teacher_id, faculty_id, page, limit } = data;
+    const { teacher_id, course_id, page, limit } = data;
     const offset = (page - 1) * limit;
 
     const whereConditions: any = {};
@@ -211,15 +212,15 @@ export class TeacherAssignmentService {
       whereConditions.teacher_id = teacher_id;
     }
 
-    if (faculty_id) {
-      whereConditions.faculty_id = faculty_id;
+    if (course_id) {
+      whereConditions.course_id = course_id;
     }
 
     const { rows: assignments, count: total } = await TeacherAssignment.findAndCountAll({
       where: whereConditions,
       include: [
         { model: Teacher, as: "teacher", attributes: ["id", "fname", "lname", "email"] },
-        { model: Faculty, as: "faculty", attributes: ["id", "name"] },
+        { model: Course, as: "course", attributes: ["id", "name"] },
         { model: Subject, as: "subject", attributes: ["id", "name"] },
       ],
       order: [["createdAt", "DESC"]],
@@ -251,41 +252,40 @@ export class TeacherAssignmentService {
     const assignments = await TeacherAssignment.findAll({
       where: { teacher_id: teacherId },
       include: [
-        { model: Faculty, as: "faculty", attributes: ["id", "name"] },
+        { model: Course, as: "course", attributes: ["id", "name"] },
         { model: Subject, as: "subject", attributes: ["id", "name"] },
       ],
       order: [["createdAt", "DESC"]],
     });
 
-    const facultyMap = new Map<string, { id: string; name: string; assignment_id?: string; subjects: { id: string; name: string; assignment_id: string }[] }>();
+    const courseMap = new Map<string, { id: string; name: string; assignment_id?: string; subjects: { id: string; name: string; assignment_id: string }[] }>();
 
     for (const assignment of assignments) {
       const a = assignment.toJSON() as any;
-      const facultyId = a.faculty.id;
+      const courseId = a.course.id;
 
-      if (!facultyMap.has(facultyId)) {
-        facultyMap.set(facultyId, {
-          id: a.faculty.id,
-          name: a.faculty.name,
+      if (!courseMap.has(courseId)) {
+        courseMap.set(courseId, {
+          id: a.course.id,
+          name: a.course.name,
           subjects: [],
         });
       }
 
       if (a.subject) {
-        facultyMap.get(facultyId)!.subjects.push({
+        courseMap.get(courseId)!.subjects.push({
           id: a.subject.id,
           name: a.subject.name,
           assignment_id: a.id,
         });
       } else {
-        // This assignment represents the faculty assignment itself
-        facultyMap.get(facultyId)!.assignment_id = a.id;
+        courseMap.get(courseId)!.assignment_id = a.id;
       }
     }
 
     return {
       teacher: teacher.toJSON(),
-      assignments: Array.from(facultyMap.values()),
+      assignments: Array.from(courseMap.values()),
     };
   }
 }

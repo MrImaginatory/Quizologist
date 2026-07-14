@@ -18,16 +18,17 @@ export class TeacherAssignmentController {
       next(error);
     }
   }
-  static async assignFaculty(req: AuthRequest, res: Response, next: NextFunction) {
-    try {
-      const { teacher_id, faculty_id } = req.body;
 
-      const result = await TeacherAssignmentService.assignFaculty({
+  static async assignCourse(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { teacher_id, course_id } = req.body;
+
+      const result = await TeacherAssignmentService.assignCourse({
         teacher_id,
-        faculty_id,
+        course_id,
       });
 
-      return ApiResponse.success(res, "Faculty assigned to teacher successfully", result, 201);
+      return ApiResponse.success(res, "Course assigned to teacher successfully", result, 201);
     } catch (error) {
       next(error);
     }
@@ -35,11 +36,11 @@ export class TeacherAssignmentController {
 
   static async assignSubject(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { teacher_id, faculty_id, subject_id } = req.body;
+      const { teacher_id, course_id, subject_id } = req.body;
 
       const result = await TeacherAssignmentService.assignSubject({
         teacher_id,
-        faculty_id,
+        course_id,
         subject_id,
       });
 
@@ -63,11 +64,11 @@ export class TeacherAssignmentController {
 
   static async getAssignments(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { teacher_id, faculty_id, page = "1", limit = "10" } = req.query;
+      const { teacher_id, course_id, page = "1", limit = "10" } = req.query;
 
       const result = await TeacherAssignmentService.getAssignments({
         teacher_id: teacher_id as string | undefined,
-        faculty_id: faculty_id as string | undefined,
+        course_id: course_id as string | undefined,
         page: parseInt(page as string, 10),
         limit: parseInt(limit as string, 10),
       });

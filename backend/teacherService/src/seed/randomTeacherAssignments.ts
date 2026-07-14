@@ -1,7 +1,7 @@
 import { connectDatabase } from "../config/database";
 import "../config/associations";
 import Teacher from "../modules/teacher/teacher.model";
-import Faculty from "../modules/faculty/faculty.model";
+import Course from "../modules/course/course.model";
 import Subject from "../modules/subject/subject.model";
 import TeacherAssignment from "../modules/teacherAssignment/teacherAssignment.model";
 
@@ -17,18 +17,18 @@ async function seedTeacherAssignments() {
   await connectDatabase();
 
   const teachers = await Teacher.findAll({ where: { role: "teacher" } });
-  const faculties = await Faculty.findAll();
+  const courses = await Course.findAll();
   const subjects = await Subject.findAll();
 
-  console.log(`Found: ${teachers.length} teachers, ${faculties.length} faculties, ${subjects.length} subjects\n`);
+  console.log(`Found: ${teachers.length} teachers, ${courses.length} courses, ${subjects.length} subjects\n`);
 
   if (teachers.length === 0) {
     console.log("No teachers found. Please add teachers first.");
     process.exit(0);
   }
 
-  if (faculties.length === 0) {
-    console.log("No faculties found. Please run the content seed first.");
+  if (courses.length === 0) {
+    console.log("No courses found. Please run the content seed first.");
     process.exit(0);
   }
 
@@ -36,46 +36,46 @@ async function seedTeacherAssignments() {
   let skippedAssignments = 0;
 
   for (const teacher of teachers) {
-    const numFaculties = Math.min(
+    const numCourses = Math.min(
       Math.floor(Math.random() * 2) + 1,
-      faculties.length
+      courses.length
     );
-    const selectedFaculties = getRandomItems(faculties, 1, numFaculties);
+    const selectedCourses = getRandomItems(courses, 1, numCourses);
 
-    for (const faculty of selectedFaculties) {
-      const existingFaculty = await TeacherAssignment.findOne({
+    for (const course of selectedCourses) {
+      const existingCourse = await TeacherAssignment.findOne({
         where: {
           teacher_id: teacher.id,
-          faculty_id: faculty.id,
+          course_id: course.id,
           subject_id: null,
         },
       });
 
-      if (!existingFaculty) {
+      if (!existingCourse) {
         await TeacherAssignment.create({
           teacher_id: teacher.id,
-          faculty_id: faculty.id,
+          course_id: course.id,
         });
         totalAssignments++;
-        console.log(`  [CREATED] Faculty "${faculty.name}" -> ${teacher.fname} ${teacher.lname}`);
+        console.log(`  [CREATED] Course "${course.name}" -> ${teacher.fname} ${teacher.lname}`);
       } else {
         skippedAssignments++;
       }
 
-      const facultySubjects = subjects.filter((s) => s.faculty_id === faculty.id);
+      const courseSubjects = subjects.filter((s) => s.course_id === course.id);
 
-      if (facultySubjects.length > 0) {
+      if (courseSubjects.length > 0) {
         const numSubjects = Math.min(
           Math.floor(Math.random() * 4) + 1,
-          facultySubjects.length
+          courseSubjects.length
         );
-        const selectedSubjects = getRandomItems(facultySubjects, 1, numSubjects);
+        const selectedSubjects = getRandomItems(courseSubjects, 1, numSubjects);
 
         for (const subject of selectedSubjects) {
           const existingSubject = await TeacherAssignment.findOne({
             where: {
               teacher_id: teacher.id,
-              faculty_id: faculty.id,
+              course_id: course.id,
               subject_id: subject.id,
             },
           });
@@ -83,7 +83,7 @@ async function seedTeacherAssignments() {
           if (!existingSubject) {
             await TeacherAssignment.create({
               teacher_id: teacher.id,
-              faculty_id: faculty.id,
+              course_id: course.id,
               subject_id: subject.id,
             });
             totalAssignments++;

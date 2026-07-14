@@ -41,7 +41,7 @@ Authorization: Bearer <jwt_token>
         "email": "john@example.com",
         "mobileNumber": "9876543210",
         "createdAt": "2026-07-06T13:34:50.631Z",
-        "facultyCount": 2,
+        "courseCount": 2,
         "subjectCount": 5,
         "totalAssignments": 7
       }
@@ -58,9 +58,9 @@ Authorization: Bearer <jwt_token>
 
 ---
 
-### POST /assign/faculty
+### POST /assign/course
 
-Assign a faculty to a teacher. **Admin only.**
+Assign a course to a teacher. **Admin only.**
 
 **Headers:**
 ```
@@ -72,24 +72,24 @@ Authorization: Bearer <jwt_token>
 ```json
 {
   "teacher_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-  "faculty_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901"
+  "course_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901"
 }
 ```
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | teacher_id | string | Yes | UUID of the teacher (must have role "teacher") |
-| faculty_id | string | Yes | UUID of the faculty to assign |
+| course_id | string | Yes | UUID of the course to assign |
 
 **201 Created:**
 ```json
 {
   "success": true,
-  "message": "Faculty assigned to teacher successfully",
+  "message": "Course assigned to teacher successfully",
   "data": {
     "id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
     "teacher_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-    "faculty_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+    "course_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
     "subject_id": null
   }
 }
@@ -108,7 +108,7 @@ Authorization: Bearer <jwt_token>
 ```json
 {
   "success": false,
-  "message": "Teacher is already assigned to this faculty",
+  "message": "Teacher is already assigned to this course",
   "data": null
 }
 ```
@@ -119,13 +119,13 @@ Authorization: Bearer <jwt_token>
 
 Assign a subject to a teacher. **Admin only.**
 
-The subject must belong to a faculty that is already assigned to the teacher.
+The subject must belong to a course that is already assigned to the teacher.
 
 **Body:**
 ```json
 {
   "teacher_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-  "faculty_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+  "course_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
   "subject_id": "c3d4e5f6-a7b8-9012-cdef-123456789012"
 }
 ```
@@ -133,8 +133,8 @@ The subject must belong to a faculty that is already assigned to the teacher.
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | teacher_id | string | Yes | UUID of the teacher |
-| faculty_id | string | Yes | UUID of the faculty |
-| subject_id | string | Yes | UUID of the subject (must belong to the faculty) |
+| course_id | string | Yes | UUID of the course |
+| subject_id | string | Yes | UUID of the subject (must belong to the course) |
 
 **201 Created:**
 ```json
@@ -144,7 +144,7 @@ The subject must belong to a faculty that is already assigned to the teacher.
   "data": {
     "id": "d4e5f6a7-b8c9-0123-def4-567890abcdef",
     "teacher_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-    "faculty_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+    "course_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
     "subject_id": "c3d4e5f6-a7b8-9012-cdef-123456789012"
   }
 }
@@ -154,7 +154,7 @@ The subject must belong to a faculty that is already assigned to the teacher.
 ```json
 {
   "success": false,
-  "message": "Subject does not belong to the specified faculty",
+  "message": "Subject does not belong to the specified course",
   "data": null
 }
 ```
@@ -189,7 +189,7 @@ Get all teacher assignments with filtering. **Admin only.**
 | Param | Type | Required | Description |
 |-------|------|----------|-------------|
 | teacher_id | string | No | Filter by teacher UUID |
-| faculty_id | string | No | Filter by faculty UUID |
+| course_id | string | No | Filter by course UUID |
 | page | number | No | Page number (default: 1) |
 | limit | number | No | Items per page (default: 10) |
 
@@ -205,7 +205,7 @@ Get all teacher assignments with filtering. **Admin only.**
       {
         "id": "c3d4e5f6-...",
         "teacher": { "id": "a1b2c3d4-...", "fname": "john", "lname": "doe", "email": "john@example.com" },
-        "faculty": { "id": "b2c3d4e5-...", "name": "computer science" },
+        "course": { "id": "b2c3d4e5-...", "name": "computer science" },
         "subject": { "id": "c3d4e5f6-...", "name": "data structures" }
       }
     ],
@@ -260,12 +260,12 @@ Get all assignments for a specific teacher. **Admin and Teacher.**
 
 | Status | Message |
 |--------|---------|
-| 400 | Subject does not belong to the specified faculty |
+| 400 | Subject does not belong to the specified course |
 | 403 | You do not have permission to perform this action |
 | 404 | Teacher not found |
-| 404 | Faculty not found |
+| 404 | Course not found |
 | 404 | Subject not found |
 | 404 | Assignment not found |
-| 409 | Teacher is already assigned to this faculty |
+| 409 | Teacher is already assigned to this course |
 | 409 | Teacher is already assigned to this subject |
 | 500 | Internal server error |
