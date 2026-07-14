@@ -66,7 +66,7 @@ class Question extends Model {
   declare id: string;
   declare topic_id: string;
   declare subject_id: string;
-  declare faculty_id: string;
+  declare course_id: string;
   declare difficulty: string;
 }
 
@@ -75,7 +75,7 @@ Question.init(
     id: { type: DataTypes.UUID, primaryKey: true },
     topic_id: { type: DataTypes.UUID },
     subject_id: { type: DataTypes.UUID },
-    faculty_id: { type: DataTypes.UUID },
+    course_id: { type: DataTypes.UUID },
     difficulty: { type: DataTypes.STRING },
   },
   { sequelize, tableName: "questions", timestamps: false, paranoid: false }
@@ -101,30 +101,30 @@ Topic.init(
 class Subject extends Model {
   declare id: string;
   declare name: string;
-  declare faculty_id: string;
+  declare course_id: string;
 }
 
 Subject.init(
   {
     id: { type: DataTypes.UUID, primaryKey: true },
     name: { type: DataTypes.STRING(100) },
-    faculty_id: { type: DataTypes.UUID },
+    course_id: { type: DataTypes.UUID },
   },
   { sequelize, tableName: "subjects", timestamps: false, paranoid: false }
 );
 
-// ============ Faculty ============
-class Faculty extends Model {
+// ============ Course ============
+class Course extends Model {
   declare id: string;
   declare name: string;
 }
 
-Faculty.init(
+Course.init(
   {
     id: { type: DataTypes.UUID, primaryKey: true },
     name: { type: DataTypes.STRING(100) },
   },
-  { sequelize, tableName: "faculties", timestamps: false, paranoid: false }
+  { sequelize, tableName: "courses", timestamps: false, paranoid: false }
 );
 
 // ============ Associations ============
@@ -135,9 +135,9 @@ TestSession.hasMany(TestAnswer, { foreignKey: "test_session_id" });
 
 Question.belongsTo(Topic, { foreignKey: "topic_id" });
 Question.belongsTo(Subject, { foreignKey: "subject_id" });
-Question.belongsTo(Faculty, { foreignKey: "faculty_id" });
+Question.belongsTo(Course, { foreignKey: "course_id" });
 
 Topic.belongsTo(Subject, { foreignKey: "subject_id" });
-Subject.belongsTo(Faculty, { foreignKey: "faculty_id" });
+Subject.belongsTo(Course, { foreignKey: "course_id" });
 
-export { TestSession, TestAnswer, Question, Topic, Subject, Faculty };
+export { TestSession, TestAnswer, Question, Topic, Subject, Course };

@@ -28,7 +28,7 @@ x-user-id: <uuid>
   "difficulty": "normal",
   "topic_id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
   "subject_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
-  "faculty_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+  "course_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
 }
 ```
 
@@ -42,7 +42,7 @@ x-user-id: <uuid>
   "difficulty": "mid",
   "topic_id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
   "subject_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
-  "faculty_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+  "course_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
 }
 ```
 
@@ -57,7 +57,7 @@ x-user-id: <uuid>
 | difficulty | string | No | `"beginner"`, `"normal"` (default), `"mid"`, `"hard"`, `"expert"` |
 | topic_id | string | Yes | UUID — must reference an existing, non-deleted topic |
 | subject_id | string | Yes | UUID — must reference an existing, non-deleted subject |
-| faculty_id | string | Yes | UUID — must reference an existing, non-deleted faculty |
+| course_id | string | Yes | UUID — must reference an existing, non-deleted course |
 
 **201 Created:**
 ```json
@@ -75,7 +75,7 @@ x-user-id: <uuid>
     "difficulty": "normal",
     "topic_id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
     "subject_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
-    "faculty_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "course_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     "questionAddedBy": "14312853-91cc-473b-9516-5265e7d6f4c7"
   }
 }
@@ -125,7 +125,7 @@ Get all questions with pagination.
         "difficulty": "normal",
         "topic_id": "c3d4e5f6-...",
         "subject_id": "b2c3d4e5-...",
-        "faculty_id": "a1b2c3d4-...",
+        "course_id": "a1b2c3d4-...",
         "questionAddedBy": "14312853-..."
       }
     ],
@@ -183,7 +183,7 @@ Get a single question by UUID.
     "difficulty": "normal",
     "topic_id": "c3d4e5f6-...",
     "subject_id": "b2c3d4e5-...",
-    "faculty_id": "a1b2c3d4-...",
+    "course_id": "a1b2c3d4-...",
     "questionAddedBy": "14312853-..."
   }
 }
@@ -229,7 +229,7 @@ Update a question. Send only the fields to change.
     "explanation": "...",
     "topic_id": "...",
     "subject_id": "...",
-    "faculty_id": "...",
+    "course_id": "...",
     "questionAddedBy": "..."
   }
 }
@@ -285,7 +285,7 @@ Soft delete a question.
 
 | Rule | Description |
 |------|-------------|
-| FK must exist | `topic_id`, `subject_id`, `faculty_id` must reference active (non-deleted) records |
+| FK must exist | `topic_id`, `subject_id`, `course_id` must reference active (non-deleted) records |
 | Unique question | Same question text cannot be repeated within the same topic |
 | MCQ choices | 2-5 choices required, `correctAnswer` must match one of them |
 | Descriptive | No `choices` field allowed |
@@ -299,7 +299,7 @@ Soft delete a question.
 |--------|---------|
 | 400 | Topic not found or has been deleted |
 | 400 | Subject not found or has been deleted |
-| 400 | Faculty not found or has been deleted |
+| 400 | Course not found or has been deleted |
 | 400 | MCQ must have 2-5 choices |
 | 400 | Correct answer must match one of the choices |
 | 404 | Question not found |

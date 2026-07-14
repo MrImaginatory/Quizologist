@@ -4,7 +4,7 @@ import { QueryTypes } from "sequelize";
 import { connectDatabase, sequelize } from "../config/database";
 import "../config/associations";
 import Question from "../modules/question/question.model";
-import Faculty from "../modules/faculty/faculty.model";
+import Course from "../modules/course/course.model";
 import Subject from "../modules/subject/subject.model";
 import Topic from "../modules/topic/topic.model";
 
@@ -18,7 +18,7 @@ interface QuestionData {
   difficulty: string;
   topic_id: string;
   subject_id: string;
-  faculty_id: string;
+  course_id: string;
 }
 
 async function importQuestions() {
@@ -33,12 +33,12 @@ async function importQuestions() {
   console.log(`Loaded ${questions.length} questions from JSON\n`);
 
   // Build lookup maps
-  const faculties = await Faculty.findAll();
+  const courses = await Course.findAll();
   const subjects = await Subject.findAll();
   const topics = await Topic.findAll();
 
-  const facultyMap = new Map<string, string>();
-  faculties.forEach((f) => facultyMap.set(f.name.toLowerCase(), f.id));
+  const courseMap = new Map<string, string>();
+  courses.forEach((c) => courseMap.set(c.name.toLowerCase(), c.id));
 
   const subjectMap = new Map<string, string>();
   subjects.forEach((s) => subjectMap.set(s.name.toLowerCase(), s.id));
@@ -48,22 +48,22 @@ async function importQuestions() {
 
   // Fetch teacher assignments via raw SQL
   const teacherAssignments = await sequelize.query(
-    `SELECT teacher_id, faculty_id, subject_id FROM teacher_assignments WHERE deleted_at IS NULL`,
+    `SELECT teacher_id, course_id, subject_id FROM teacher_assignments WHERE deleted_at IS NULL`,
     { type: QueryTypes.SELECT }
   ) as any[];
 
-  // Build teacher lookup: faculty_id + subject_id -> teacher_id
+  // Build teacher lookup: course_id + subject_id -> teacher_id
   const teacherLookup = new Map<string, string>();
-  const facultyTeacherMap = new Map<string, string>();
+  const courseTeacherMap = new Map<string, string>();
 
   teacherAssignments.forEach((ta: any) => {
-    const key = `${ta.faculty_id}|${ta.subject_id}`;
+    const key = `${ta.course_id}|${ta.subject_id}`;
     if (!teacherLookup.has(key)) {
       teacherLookup.set(key, ta.teacher_id);
     }
 
-    if (ta.subject_id === null && !facultyTeacherMap.has(ta.faculty_id)) {
-      facultyTeacherMap.set(ta.faculty_id, ta.teacher_id);
+    if (ta.subject_id === null && !courseTeacherMap.has(ta.course_id)) {
+      courseTeacherMap.set(ta.course_id, ta.teacher_id);
     }
   });
 
@@ -72,12 +72,12 @@ async function importQuestions() {
   let warnings: string[] = [];
 
   for (const q of questions) {
-    const facultyId = facultyMap.get(q.faculty_id.toLowerCase());
+    const courseId = courseMap.get(q.course_id.toLowerCase());
     const subjectId = subjectMap.get(q.subject_id.toLowerCase());
     const topicId = topicMap.get(q.topic_id.toLowerCase());
 
-    if (!facultyId) {
-      warnings.push(`Faculty "${q.faculty_id}" not found`);
+    if (!courseId) {
+      warnings.push(`Course "${q.course_id}" not found`);
       skipped++;
       continue;
     }
@@ -94,14 +94,14 @@ async function importQuestions() {
       continue;
     }
 
-    // Find teacher for this faculty+subject
+    // Find teacher for this course+subject
     let teacherId: string | null = null;
-    const exactKey = `${facultyId}|${subjectId}`;
+    const exactKey = `${courseId}|${subjectId}`;
 
     if (teacherLookup.has(exactKey)) {
       teacherId = teacherLookup.get(exactKey)!;
-    } else if (facultyTeacherMap.has(facultyId)) {
-      teacherId = facultyTeacherMap.get(facultyId)!;
+    } else if (courseTeacherMap.has(courseId)) {
+      teacherId = courseTeacherMap.get(courseId)!;
     }
 
     // Check for duplicate
@@ -125,7 +125,7 @@ async function importQuestions() {
         difficulty: (q.difficulty as any) || "normal",
         topic_id: topicId,
         subject_id: subjectId,
-        faculty_id: facultyId,
+        course_id: courseId,
         questionAddedBy: teacherId,
       });
       created++;

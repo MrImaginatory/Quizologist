@@ -34,18 +34,18 @@ export const routes: RouteConfig[] = [
   },
 
   // ==================== Content Service ====================
-  // Faculty — write operations admin only
+  // Course — write operations admin only
   {
-    path: "/content/faculty",
-    target: `${env.CONTENT_SERVICE_URL}/api/content/faculty`,
+    path: "/content/course",
+    target: `${env.CONTENT_SERVICE_URL}/api/content/course`,
     auth: true,
     roles: ["admin"],
     methods: ["POST", "PUT", "DELETE"],
   },
-  // Faculty — read operations all authenticated users
+  // Course — read operations all authenticated users
   {
-    path: "/content/faculty",
-    target: `${env.CONTENT_SERVICE_URL}/api/content/faculty`,
+    path: "/content/course",
+    target: `${env.CONTENT_SERVICE_URL}/api/content/course`,
     auth: true,
     roles: ["admin", "teacher", "student"],
     methods: ["GET"],
@@ -229,10 +229,10 @@ export const routes: RouteConfig[] = [
     roles: ["admin"],
     methods: ["GET"],
   },
-  // Assign faculty to teacher — admin only
+  // Assign course to teacher — admin only
   {
-    path: "/teacher/assign/faculty",
-    target: `${env.TEACHER_SERVICE_URL}/api/teacher/assign/faculty`,
+    path: "/teacher/assign/course",
+    target: `${env.TEACHER_SERVICE_URL}/api/teacher/assign/course`,
     auth: true,
     roles: ["admin"],
     methods: ["POST"],

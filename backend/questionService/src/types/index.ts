@@ -19,7 +19,7 @@ export interface QuestionAttributes {
   difficulty: DifficultyLevel;
   topic_id: string;
   subject_id: string;
-  faculty_id: string;
+  course_id: string;
   questionAddedBy: string | null;
   createdAt?: Date;
   updatedAt?: Date;

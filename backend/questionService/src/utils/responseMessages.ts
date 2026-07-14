@@ -17,7 +17,7 @@ export const RESPONSE_MESSAGES = {
     CORRECT_ANSWER_NOT_IN_CHOICES: "Correct answer must match one of the choices",
     TOPIC_NOT_FOUND: "Topic not found or has been deleted",
     SUBJECT_NOT_FOUND: "Subject not found or has been deleted",
-    FACULTY_NOT_FOUND: "Faculty not found or has been deleted",
+    COURSE_NOT_FOUND: "Course not found or has been deleted",
     VALIDATION_ERROR: "Validation failed",
     INTERNAL_ERROR: "Internal server error",
     FORBIDDEN: "You do not have permission to perform this action",

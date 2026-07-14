@@ -1,12 +1,12 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelize } from "../../config/database";
 
-class Faculty extends Model {
+class Course extends Model {
   declare id: string;
   declare name: string;
 }
 
-Faculty.init(
+Course.init(
   {
     id: {
       type: DataTypes.UUID,
@@ -18,12 +18,12 @@ Faculty.init(
   },
   {
     sequelize,
-    tableName: "faculties",
+    tableName: "courses",
     timestamps: true,
     paranoid: true,
     underscored: true,
-    modelName: "Faculty",
+    modelName: "Course",
   }
 );
 
-export default Faculty;
+export default Course;

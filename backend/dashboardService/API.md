@@ -42,9 +42,9 @@ Authorization: Bearer <jwt_token>
   "data": {
     "role": "teacher",
     "questionsAdded": 156,
-    "studentsInFaculties": 234,
+    "studentsInCourses": 234,
     "testsSubmitted": 567,
-    "questionsInFaculties": 892
+    "questionsInCourses": 892
   }
 }
 ```
@@ -56,7 +56,7 @@ Authorization: Bearer <jwt_token>
   "message": "Dashboard stats retrieved successfully",
   "data": {
     "role": "student",
-    "questionsInEnrolledFaculties": 450,
+    "questionsInEnrolledCourses": 450,
     "testsSubmitted": 12
   }
 }

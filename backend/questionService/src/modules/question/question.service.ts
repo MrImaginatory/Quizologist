@@ -4,7 +4,7 @@ import { RESPONSE_MESSAGES } from "../../utils/responseMessages";
 import Question from "./question.model";
 import Topic from "../topic/topic.model";
 import Subject from "../subject/subject.model";
-import Faculty from "../faculty/faculty.model";
+import Course from "../course/course.model";
 import {
   CreateQuestionInput,
   UpdateQuestionInput,
@@ -19,18 +19,18 @@ const TIMESTAMP_EXCLUDE = { exclude: ["createdAt", "updatedAt", "deletedAt"] };
 
 const TOPIC_INCLUDE = { model: Topic, as: "topic", attributes: ["id", "name"] };
 const SUBJECT_INCLUDE = { model: Subject, as: "subject", attributes: ["id", "name"] };
-const FACULTY_INCLUDE = { model: Faculty, as: "faculty", attributes: ["id", "name"] };
-const ALL_INCLUDES = [TOPIC_INCLUDE, SUBJECT_INCLUDE, FACULTY_INCLUDE];
+const COURSE_INCLUDE = { model: Course, as: "course", attributes: ["id", "name"] };
+const ALL_INCLUDES = [TOPIC_INCLUDE, SUBJECT_INCLUDE, COURSE_INCLUDE];
 
-async function validateForeignKeys(data: { topic_id: string; subject_id: string; faculty_id: string }) {
+async function validateForeignKeys(data: { topic_id: string; subject_id: string; course_id: string }) {
   const topic = await Topic.findByPk(data.topic_id);
   if (!topic) throw ApiError.badRequest(RESPONSE_MESSAGES.ERROR.TOPIC_NOT_FOUND);
 
   const subject = await Subject.findByPk(data.subject_id);
   if (!subject) throw ApiError.badRequest(RESPONSE_MESSAGES.ERROR.SUBJECT_NOT_FOUND);
 
-  const faculty = await Faculty.findByPk(data.faculty_id);
-  if (!faculty) throw ApiError.badRequest(RESPONSE_MESSAGES.ERROR.FACULTY_NOT_FOUND);
+  const course = await Course.findByPk(data.course_id);
+  if (!course) throw ApiError.badRequest(RESPONSE_MESSAGES.ERROR.COURSE_NOT_FOUND);
 }
 
 async function checkDuplicateQuestion(questionText: string, topicId: string) {
@@ -61,7 +61,7 @@ export class QuestionService {
       difficulty: data.difficulty,
       topic_id: data.topic_id,
       subject_id: data.subject_id,
-      faculty_id: data.faculty_id,
+      course_id: data.course_id,
       questionAddedBy: userId,
     });
 
@@ -160,11 +160,11 @@ export class QuestionService {
   }
 
   static async filter(data: FilterQuestionsInput) {
-    const { faculty_id, subject_id, topic_id, page, limit } = data;
+    const { course_id, subject_id, topic_id, page, limit } = data;
     const offset = (page - 1) * limit;
 
     const where: any = {};
-    if (faculty_id) where.faculty_id = faculty_id;
+    if (course_id) where.course_id = course_id;
     if (subject_id) where.subject_id = subject_id;
     if (topic_id) where.topic_id = topic_id;
 
@@ -195,11 +195,11 @@ export class QuestionService {
       throw ApiError.notFound(RESPONSE_MESSAGES.ERROR.QUESTION_NOT_FOUND);
     }
 
-    if (data.topic_id || data.subject_id || data.faculty_id) {
+    if (data.topic_id || data.subject_id || data.course_id) {
       await validateForeignKeys({
         topic_id: data.topic_id || question.topic_id,
         subject_id: data.subject_id || question.subject_id,
-        faculty_id: data.faculty_id || question.faculty_id,
+        course_id: data.course_id || question.course_id,
       });
     }
 
@@ -216,7 +216,7 @@ export class QuestionService {
     if (data.difficulty) question.set("difficulty", data.difficulty);
     if (data.topic_id) question.set("topic_id", data.topic_id);
     if (data.subject_id) question.set("subject_id", data.subject_id);
-    if (data.faculty_id) question.set("faculty_id", data.faculty_id);
+    if (data.course_id) question.set("course_id", data.course_id);
 
     await question.save();
 

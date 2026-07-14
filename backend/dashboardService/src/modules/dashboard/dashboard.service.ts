@@ -55,46 +55,46 @@ export class DashboardService {
       { type: QueryTypes.SELECT, replacements: { teacherId } }
     ) as any[];
 
-    const assignedFaculties = await sequelize.query(
-      `SELECT faculty_id FROM teacher_assignments WHERE teacher_id = :teacherId AND deleted_at IS NULL`,
+    const assignedCourses = await sequelize.query(
+      `SELECT course_id FROM teacher_assignments WHERE teacher_id = :teacherId AND deleted_at IS NULL`,
       { type: QueryTypes.SELECT, replacements: { teacherId } }
     ) as any[];
 
-    const facultyIds = Array.isArray(assignedFaculties)
-      ? assignedFaculties.map((f: any) => f.faculty_id)
+    const courseIds = Array.isArray(assignedCourses)
+      ? assignedCourses.map((c: any) => c.course_id)
       : [];
 
-    let studentsInFaculties = 0;
+    let studentsInCourses = 0;
     let testsSubmitted = 0;
-    let questionsInFaculties = 0;
+    let questionsInCourses = 0;
 
-    if (facultyIds.length > 0) {
-      const placeholders = facultyIds.map((_val: string, i: number) => `:facultyId${i}`).join(", ");
+    if (courseIds.length > 0) {
+      const placeholders = courseIds.map((_val: string, i: number) => `:courseId${i}`).join(", ");
 
       const [studentCount] = await sequelize.query(
         `SELECT COUNT(DISTINCT e.student_id) as count
          FROM enrollments e
-         WHERE e.faculty_id IN (${placeholders}) AND e.deleted_at IS NULL`,
+         WHERE e.course_id IN (${placeholders}) AND e.deleted_at IS NULL`,
         {
           type: QueryTypes.SELECT,
-          replacements: facultyIds.reduce((acc: Record<string, string>, id: string, i: number) => {
-            acc[`facultyId${i}`] = id;
+          replacements: courseIds.reduce((acc: Record<string, string>, id: string, i: number) => {
+            acc[`courseId${i}`] = id;
             return acc;
           }, {}),
         }
       ) as any[];
-      studentsInFaculties = parseInt(studentCount?.count || "0", 10);
+      studentsInCourses = parseInt(studentCount?.count || "0", 10);
 
       const [testCount] = await sequelize.query(
         `SELECT COUNT(*) as count
          FROM test_sessions ts
          JOIN enrollments e ON ts.student_id = e.student_id
-         WHERE e.faculty_id IN (${placeholders})
+         WHERE e.course_id IN (${placeholders})
          AND ts.status = 'completed' AND e.deleted_at IS NULL`,
         {
           type: QueryTypes.SELECT,
-          replacements: facultyIds.reduce((acc: Record<string, string>, id: string, i: number) => {
-            acc[`facultyId${i}`] = id;
+          replacements: courseIds.reduce((acc: Record<string, string>, id: string, i: number) => {
+            acc[`courseId${i}`] = id;
             return acc;
           }, {}),
         }
@@ -104,16 +104,16 @@ export class DashboardService {
       const [questionCount] = await sequelize.query(
         `SELECT COUNT(*) as count
          FROM questions
-         WHERE faculty_id IN (${placeholders}) AND deleted_at IS NULL`,
+         WHERE course_id IN (${placeholders}) AND deleted_at IS NULL`,
         {
           type: QueryTypes.SELECT,
-          replacements: facultyIds.reduce((acc: Record<string, string>, id: string, i: number) => {
-            acc[`facultyId${i}`] = id;
+          replacements: courseIds.reduce((acc: Record<string, string>, id: string, i: number) => {
+            acc[`courseId${i}`] = id;
             return acc;
           }, {}),
         }
       ) as any[];
-      questionsInFaculties = parseInt(questionCount?.count || "0", 10);
+      questionsInCourses = parseInt(questionCount?.count || "0", 10);
     }
 
     const questionsAddedCount = Array.isArray(questionsAddedResult) && questionsAddedResult.length > 0
@@ -122,40 +122,40 @@ export class DashboardService {
 
     return {
       questionsAdded: questionsAddedCount,
-      studentsInFaculties,
+      studentsInCourses,
       testsSubmitted,
-      questionsInFaculties,
+      questionsInCourses,
     };
   }
 
   static async getStudentStats(studentId: string) {
-    const enrolledFaculties = await sequelize.query(
-      `SELECT faculty_id FROM enrollments WHERE student_id = :studentId AND deleted_at IS NULL`,
+    const enrolledCourses = await sequelize.query(
+      `SELECT course_id FROM enrollments WHERE student_id = :studentId AND deleted_at IS NULL`,
       { type: QueryTypes.SELECT, replacements: { studentId } }
     ) as any[];
 
-    const facultyIds = Array.isArray(enrolledFaculties)
-      ? enrolledFaculties.map((f: any) => f.faculty_id)
+    const courseIds = Array.isArray(enrolledCourses)
+      ? enrolledCourses.map((c: any) => c.course_id)
       : [];
 
-    let questionsInEnrolledFaculties = 0;
+    let questionsInEnrolledCourses = 0;
 
-    if (facultyIds.length > 0) {
-      const placeholders = facultyIds.map((_val: string, i: number) => `:facultyId${i}`).join(", ");
+    if (courseIds.length > 0) {
+      const placeholders = courseIds.map((_val: string, i: number) => `:courseId${i}`).join(", ");
 
       const [questionCount] = await sequelize.query(
         `SELECT COUNT(*) as count
          FROM questions
-         WHERE faculty_id IN (${placeholders}) AND deleted_at IS NULL`,
+         WHERE course_id IN (${placeholders}) AND deleted_at IS NULL`,
         {
           type: QueryTypes.SELECT,
-          replacements: facultyIds.reduce((acc: Record<string, string>, id: string, i: number) => {
-            acc[`facultyId${i}`] = id;
+          replacements: courseIds.reduce((acc: Record<string, string>, id: string, i: number) => {
+            acc[`courseId${i}`] = id;
             return acc;
           }, {}),
         }
       ) as any[];
-      questionsInEnrolledFaculties = parseInt(questionCount?.count || "0", 10);
+      questionsInEnrolledCourses = parseInt(questionCount?.count || "0", 10);
     }
 
     const [testsSubmitted] = await sequelize.query(
@@ -164,7 +164,7 @@ export class DashboardService {
     ) as any[];
 
     return {
-      questionsInEnrolledFaculties,
+      questionsInEnrolledCourses,
       testsSubmitted: parseInt(testsSubmitted?.count || "0", 10),
     };
   }

@@ -18,7 +18,7 @@ export const createQuestionSchema = z
     difficulty: difficultyEnum.default("normal"),
     topic_id: z.string().uuid("Invalid topic ID format"),
     subject_id: z.string().uuid("Invalid subject ID format"),
-    faculty_id: z.string().uuid("Invalid faculty ID format"),
+    course_id: z.string().uuid("Invalid course ID format"),
   })
   .refine(
     (data) => {
@@ -63,7 +63,7 @@ export const updateQuestionSchema = z
     difficulty: difficultyEnum.optional(),
     topic_id: z.string().uuid().optional(),
     subject_id: z.string().uuid().optional(),
-    faculty_id: z.string().uuid().optional(),
+    course_id: z.string().uuid().optional(),
   })
   .refine(
     (data) => {
@@ -94,7 +94,7 @@ export const getQuestionsByTopicSchema = z.object({
 });
 
 export const filterQuestionsSchema = z.object({
-  faculty_id: z.string().uuid().optional(),
+  course_id: z.string().uuid().optional(),
   subject_id: z.string().uuid().optional(),
   topic_id: z.string().uuid().optional(),
   page: z.coerce.number().int().min(1).default(1),

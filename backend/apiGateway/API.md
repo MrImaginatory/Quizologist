@@ -22,8 +22,8 @@ Obtain a token via `/api/user/login` or `/api/user/signup`.
 
 | Role | Permissions |
 |------|-------------|
-| **Admin** | Full access to User management, Faculty, Subject, Topic, and Question endpoints |
-| **Teacher** | Read access to Subject, Topic, Faculty. Create/update/delete Questions. Read Questions. |
+| **Admin** | Full access to User management, Course, Subject, Topic, and Question endpoints |
+| **Teacher** | Read access to Subject, Topic, Course. Create/update/delete Questions. Read Questions. |
 | **Student** | Read access to Subject, Topic. Read Questions. |
 
 ---
@@ -133,17 +133,17 @@ Get user by ID. **Admin only.**
 
 ---
 
-## Faculty Endpoints (Admin Only)
+## Course Endpoints (Admin Only)
 
-All faculty endpoints require the `admin` role.
+All course endpoints require the `admin` role.
 
-### POST /api/content/faculty
+### POST /api/content/course
 
 **Body:**
 ```json
 {
   "name": "Computer Science",
-  "description": "Faculty of CS and Engineering"
+  "description": "Course of CS and Engineering"
 }
 ```
 
@@ -151,34 +151,34 @@ All faculty endpoints require the `admin` role.
 ```json
 {
   "success": true,
-  "message": "Faculty created successfully",
+  "message": "Course created successfully",
   "data": {
     "id": "a1b2c3d4-...",
     "name": "computer science",
-    "description": "Faculty of CS and Engineering"
+    "description": "Course of CS and Engineering"
   }
 }
 ```
 
 ---
 
-### GET /api/content/faculty
+### GET /api/content/course
 
 **Query Params:** `page`, `limit`
 
 ---
 
-### GET /api/content/faculty/:id
+### GET /api/content/course/:id
 
 ---
 
-### PUT /api/content/faculty/:id
+### PUT /api/content/course/:id
 
 **Body:** `{ "name": "Updated Name", "description": "Updated desc" }`
 
 ---
 
-### DELETE /api/content/faculty/:id
+### DELETE /api/content/course/:id
 
 ---
 
@@ -191,7 +191,7 @@ All faculty endpoints require the `admin` role.
 {
   "name": "Data Structures",
   "description": "Study of data structures",
-  "faculty_id": "a1b2c3d4-..."
+  "course_id": "a1b2c3d4-..."
 }
 ```
 
@@ -204,8 +204,8 @@ All faculty endpoints require the `admin` role.
     "id": "b2c3d4e5-...",
     "name": "data structures",
     "description": "Study of data structures",
-    "faculty_id": "a1b2c3d4-...",
-    "faculty": {
+    "course_id": "a1b2c3d4-...",
+    "course": {
       "id": "a1b2c3d4-...",
       "name": "computer science"
     }
@@ -221,9 +221,9 @@ All faculty endpoints require the `admin` role.
 
 ---
 
-### GET /api/content/subject/faculty/:facultyId
+### GET /api/content/subject/course/:courseId
 
-Get all subjects under a faculty.
+Get all subjects under a course.
 
 ---
 
@@ -233,7 +233,7 @@ Get all subjects under a faculty.
 
 ### PUT /api/content/subject/:id
 
-**Body:** `{ "name": "Updated Name", "faculty_id": "..." }`
+**Body:** `{ "name": "Updated Name", "course_id": "..." }`
 
 ---
 
@@ -267,7 +267,7 @@ Get all subjects under a faculty.
     "subject": {
       "id": "b2c3d4e5-...",
       "name": "data structures",
-      "faculty": {
+      "course": {
         "id": "a1b2c3d4-...",
         "name": "computer science"
       }
@@ -321,7 +321,7 @@ Create a question. The `questionAddedBy` field is auto-populated from the JWT.
   "videoUrl": "https://youtube.com/watch?v=example",
   "topic_id": "c3d4e5f6-...",
   "subject_id": "b2c3d4e5-...",
-  "faculty_id": "a1b2c3d4-..."
+  "course_id": "a1b2c3d4-..."
 }
 ```
 
@@ -334,7 +334,7 @@ Create a question. The `questionAddedBy` field is auto-populated from the JWT.
   "explanation": "BST allows efficient lookup, insertion, and deletion.",
   "topic_id": "c3d4e5f6-...",
   "subject_id": "b2c3d4e5-...",
-  "faculty_id": "a1b2c3d4-..."
+  "course_id": "a1b2c3d4-..."
 }
 ```
 
@@ -348,7 +348,7 @@ Create a question. The `questionAddedBy` field is auto-populated from the JWT.
 | videoUrl | string | No | Valid URL |
 | topic_id | string | Yes | Valid UUID |
 | subject_id | string | Yes | Valid UUID |
-| faculty_id | string | Yes | Valid UUID |
+| course_id | string | Yes | Valid UUID |
 
 **201 Created:**
 ```json
@@ -365,7 +365,7 @@ Create a question. The `questionAddedBy` field is auto-populated from the JWT.
     "videoUrl": "https://youtube.com/watch?v=example",
     "topic_id": "c3d4e5f6-...",
     "subject_id": "b2c3d4e5-...",
-    "faculty_id": "a1b2c3d4-...",
+    "course_id": "a1b2c3d4-...",
     "questionAddedBy": "14312853-..."
   }
 }
@@ -396,7 +396,7 @@ Get all questions with pagination.
         "videoUrl": "https://youtube.com/watch?v=example",
         "topic_id": "c3d4e5f6-...",
         "subject_id": "b2c3d4e5-...",
-        "faculty_id": "a1b2c3d4-...",
+        "course_id": "a1b2c3d4-...",
         "questionAddedBy": "14312853-..."
       }
     ],
@@ -488,14 +488,14 @@ Soft delete a question.
 
 ### POST /api/enrollment
 
-Enroll in faculties, subjects, and topics. **Student only.**
+Enroll in courses, subjects, and topics. **Student only.**
 
 **Body:**
 ```json
 {
   "enrollments": [
-    { "faculty_id": "a1b2c3d4-..." },
-    { "faculty_id": "a1b2c3d4-...", "subject_id": "b2c3d4e5-..." }
+    { "course_id": "a1b2c3d4-..." },
+    { "course_id": "a1b2c3d4-...", "subject_id": "b2c3d4e5-..." }
   ]
 }
 ```
@@ -534,7 +534,7 @@ Start a new test session. **Student only.**
   "duration_minutes": 30,
   "question_limit": 45,
   "selections": [
-    { "faculty_id": "uuid", "subject_id": "uuid", "topic_id": "uuid" }
+    { "course_id": "uuid", "subject_id": "uuid", "topic_id": "uuid" }
   ]
 }
 ```
@@ -645,7 +645,7 @@ Lightweight summary for table display — no question data, just scores and stat
         "skipped": 3,
         "durationMinutes": 30,
         "disconnects": 1,
-        "faculties": ["computer science"],
+        "courses": ["computer science"],
         "subjects": ["data structures"],
         "startedAt": "...",
         "completedAt": "..."
@@ -688,13 +688,13 @@ List all students with optional enrollment-based filtering. **Admin only.**
 
 | Param | Type | Description |
 |-------|------|-------------|
-| faculty_id | string | Filter by enrolled faculty UUID |
+| course_id | string | Filter by enrolled course UUID |
 | subject_id | string | Filter by enrolled subject UUID |
 | topic_id | string | Filter by enrolled topic UUID |
 | page | number | Page number (default: 1) |
 | limit | number | Items per page (default: 10) |
 
-**Example:** `GET /api/student/list?faculty_id=abc-123&limit=20`
+**Example:** `GET /api/student/list?course_id=abc-123&limit=20`
 
 **200 OK:**
 ```json
@@ -753,7 +753,7 @@ Get all enrollments for a specific student. **Admin only.**
     "enrollments": [
       {
         "id": "d4e5f6a7-...",
-        "faculty": { "id": "b2c3d4e5-...", "name": "computer science" },
+        "course": { "id": "b2c3d4e5-...", "name": "computer science" },
         "subject": { "id": "c3d4e5f6-...", "name": "data structures" },
         "topic": { "id": "d4e5f6a7-...", "name": "binary trees" }
       }
@@ -799,7 +799,7 @@ Get all teachers with their assignment counts. **Admin only.**
         "email": "john@example.com",
         "mobileNumber": "9876543210",
         "createdAt": "2026-07-06T13:34:50.631Z",
-        "facultyCount": 2,
+        "courseCount": 2,
         "subjectCount": 5,
         "totalAssignments": 7
       }
@@ -816,15 +816,15 @@ Get all teachers with their assignment counts. **Admin only.**
 
 ---
 
-### POST /api/teacher/assign/faculty
+### POST /api/teacher/assign/course
 
-Assign a faculty to a teacher.
+Assign a course to a teacher.
 
 **Body:**
 ```json
 {
   "teacher_id": "uuid",
-  "faculty_id": "uuid"
+  "course_id": "uuid"
 }
 ```
 
@@ -840,7 +840,7 @@ Assign a subject to a teacher.
 ```json
 {
   "teacher_id": "uuid",
-  "faculty_id": "uuid",
+  "course_id": "uuid",
   "subject_id": "uuid"
 }
 ```
@@ -859,7 +859,7 @@ Remove a teacher assignment.
 
 List all teacher assignments with filters.
 
-**Query Params:** `teacher_id`, `faculty_id`, `page`, `limit`
+**Query Params:** `teacher_id`, `course_id`, `page`, `limit`
 
 ---
 
@@ -888,12 +888,12 @@ Returns different KPI data depending on the user's role:
 
 **Teacher KPIs:**
 - `questionsAdded` — Questions created by this teacher
-- `studentsInFaculties` — Students enrolled in teacher's assigned faculties
-- `testsSubmitted` — Tests completed by students in teacher's faculties
-- `questionsInFaculties` — Total questions in teacher's assigned faculties
+- `studentsInCourses` — Students enrolled in teacher's assigned courses
+- `testsSubmitted` — Tests completed by students in teacher's courses
+- `questionsInCourses` — Total questions in teacher's assigned courses
 
 **Student KPIs:**
-- `questionsInEnrolledFaculties` — Questions in student's enrolled faculties
+- `questionsInEnrolledCourses` — Questions in student's enrolled courses
 - `testsSubmitted` — Tests completed by this student
 
 ---

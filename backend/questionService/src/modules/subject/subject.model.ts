@@ -4,7 +4,7 @@ import { sequelize } from "../../config/database";
 class Subject extends Model {
   declare id: string;
   declare name: string;
-  declare faculty_id: string;
+  declare course_id: string;
 }
 
 Subject.init(
@@ -16,7 +16,7 @@ Subject.init(
     name: {
       type: DataTypes.STRING(100),
     },
-    faculty_id: {
+    course_id: {
       type: DataTypes.UUID,
     },
   },

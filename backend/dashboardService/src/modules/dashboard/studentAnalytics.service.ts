@@ -1,13 +1,9 @@
 import { Op, fn, col, literal } from "sequelize";
-import { TestSession, TestAnswer, Question, Topic, Subject, Faculty } from "../models";
+import { TestSession, TestAnswer, Question, Topic, Subject, Course } from "../models";
 
 const MIN_ATTEMPTS = 3;
 
 export class StudentAnalyticsService {
-  /**
-   * Get topic performance for a student.
-   * Returns accuracy % and avg time per topic (min 3 attempts).
-   */
   static async getTopicPerformance(studentId: string) {
     const completedTests = await TestSession.findAll({
       where: { student_id: studentId, status: "completed" },
@@ -92,9 +88,6 @@ export class StudentAnalyticsService {
     };
   }
 
-  /**
-   * Get subject performance for a student.
-   */
   static async getSubjectPerformance(studentId: string) {
     const completedTests = await TestSession.findAll({
       where: { student_id: studentId, status: "completed" },
@@ -169,9 +162,6 @@ export class StudentAnalyticsService {
     };
   }
 
-  /**
-   * Get difficulty breakdown for a student.
-   */
   static async getDifficultyBreakdown(studentId: string) {
     const completedTests = await TestSession.findAll({
       where: { student_id: studentId, status: "completed" },
@@ -226,9 +216,6 @@ export class StudentAnalyticsService {
     };
   }
 
-  /**
-   * Get time analysis per topic.
-   */
   static async getTimeAnalysis(studentId: string) {
     const completedTests = await TestSession.findAll({
       where: { student_id: studentId, status: "completed" },
@@ -289,9 +276,6 @@ export class StudentAnalyticsService {
     };
   }
 
-  /**
-   * Get performance trends for 15/30/60 day windows.
-   */
   static async getPerformanceTrends(studentId: string) {
     const now = new Date();
     const d15 = new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000);
@@ -332,9 +316,6 @@ export class StudentAnalyticsService {
     };
   }
 
-  /**
-   * Get combined strengths and weaknesses summary.
-   */
   static async getStrengthsWeaknesses(studentId: string) {
     const topicData = await this.getTopicPerformance(studentId);
 
