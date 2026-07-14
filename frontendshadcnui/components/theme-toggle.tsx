@@ -4,9 +4,16 @@ import { Moon, Sun } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "./theme-provider";
 import { Button } from "./ui/button";
+import { usePathname } from "next/navigation";
 
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
+  const pathname = usePathname();
+
+  // Hide on test page since there's a theme toggle in the header
+  if (pathname.startsWith("/take-test")) {
+    return null;
+  }
 
   const toggleTheme = () => {
     setTheme(resolvedTheme === "dark" ? "light" : "dark");
