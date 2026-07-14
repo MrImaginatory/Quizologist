@@ -72,9 +72,10 @@ export const API_ROUTES = {
   TESTS: {
     BASE: `${BASE_URL}/api/test`,
     BY_ID: (id: string) => `${BASE_URL}/api/test/${id}`,
-    START: (id: string) => `${BASE_URL}/api/test/${id}/start`,
+    START: `${BASE_URL}/api/test/start`,
     SUBMIT: (id: string) => `${BASE_URL}/api/test/${id}/submit`,
     RESULT: (id: string) => `${BASE_URL}/api/test/${id}/result`,
+    HISTORY: `${BASE_URL}/api/test/history`,
   },
 
   // Dashboard

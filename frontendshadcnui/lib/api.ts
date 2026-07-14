@@ -425,3 +425,29 @@ export const enrollmentsApi = {
   unenroll: (id: string, token?: string) =>
     apiRequest(API_ROUTES.ENROLLMENTS.BY_ID(id), { method: "DELETE", token }),
 };
+
+export interface TestHistory {
+  id: string;
+  test_id: string;
+  status: string;
+  totalQuestions: number;
+  correct: number;
+  score: number;
+  startedAt: string;
+}
+
+export interface TestHistoryResponse {
+  success: boolean;
+  message: string;
+  data: {
+    tests: TestHistory[];
+    pagination: Pagination;
+  };
+}
+
+export const testsApi = {
+  getHistory: (page = 1, limit = 10, token?: string) =>
+    apiRequest<TestHistoryResponse>(`${API_ROUTES.TESTS.HISTORY}?page=${page}&limit=${limit}`, { token }),
+  getById: (id: string, token?: string) =>
+    apiRequest(API_ROUTES.TESTS.BY_ID(id), { token }),
+};

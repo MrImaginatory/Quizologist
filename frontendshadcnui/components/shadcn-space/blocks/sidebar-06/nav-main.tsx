@@ -1,6 +1,8 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ChevronRight, LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -28,11 +30,69 @@ export type NavItem = {
   children?: NavItem[];
 };
 
+function findActiveParent(items: NavItem[], pathname: string): string | null {
+  // First check for exact match
+  for (const item of items) {
+    if (item.href && pathname === item.href) {
+      return item.title || null;
+    }
+    if (item.children) {
+      for (const child of item.children) {
+        if (child.href && pathname === child.href) {
+          return item.title || null;
+        }
+      }
+    }
+  }
+
+  // Then check for prefix match (but not just "/dashboard" matching "/dashboard/enrollments")
+  for (const item of items) {
+    if (item.href && item.href !== "/dashboard" && pathname.startsWith(item.href)) {
+      return item.title || null;
+    }
+    if (item.children) {
+      for (const child of item.children) {
+        if (child.href && child.href !== "/dashboard" && pathname.startsWith(child.href)) {
+          return item.title || null;
+        }
+      }
+    }
+  }
+
+  // For dashboard specifically, only match exact path
+  if (pathname === "/dashboard") {
+    return "Dashboard";
+  }
+
+  return items.find((i) => !i.isSection)?.title || null;
+}
+
+function findActiveChild(items: NavItem[], pathname: string): string | null {
+  for (const item of items) {
+    if (item.children) {
+      for (const child of item.children) {
+        if (child.href && pathname === child.href) {
+          return child.title || null;
+        }
+      }
+    }
+  }
+  return null;
+}
+
 export function NavMain({ items }: { items: NavItem[] }) {
-  const [activeParent, setActiveParent] = React.useState<string | null>(
-    items.find((i) => !i.isSection)?.title || null
+  const pathname = usePathname();
+  const [activeParent, setActiveParent] = React.useState<string | null>(() =>
+    findActiveParent(items, pathname)
   );
-  const [activeChild, setActiveChild] = React.useState<string | null>(null);
+  const [activeChild, setActiveChild] = React.useState<string | null>(() =>
+    findActiveChild(items, pathname)
+  );
+
+  React.useEffect(() => {
+    setActiveParent(findActiveParent(items, pathname));
+    setActiveChild(findActiveChild(items, pathname));
+  }, [pathname, items]);
 
   return (
     <>
@@ -156,7 +216,7 @@ function NavMainItem({
                 "rounded-md text-sm font-medium px-3 py-2 h-9 transition-colors cursor-pointer",
                 isParentActive ? "bg-primary! text-primary-foreground!" : ""
               )}
-              render={<a href={item.href} />}
+              render={<Link href={item.href || "#"} />}
             >
               {item.icon && <item.icon />}
               {item.title}
@@ -244,7 +304,7 @@ function NavMainSubItem({
             setActiveParent(parentTitle || "");
             setActiveChild(item.title!);
           }}
-          render={<a href={item.href}>{item.title}</a>}
+          render={<Link href={item.href || "#"}>{item.title}</Link>}
         />
       </SidebarMenuSubItem>
     );

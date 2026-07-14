@@ -13,6 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { AppLogo } from "@/components/app-logo";
 import { useAuth } from "@/contexts/auth-context";
+import { capitalize } from "@/lib/utils";
 import { NavItem, NavMain } from "@/components/shadcn-space/blocks/sidebar-06/nav-main";
 import {
   LayoutDashboard,
@@ -35,7 +36,7 @@ const studentNav: NavItem[] = [
   { label: "Main", isSection: true },
   { title: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
   { title: "My Enrollments", icon: GraduationCap, href: "/dashboard/enrollments" },
-  { title: "My Tests", icon: ClipboardList, href: "/dashboard/tests" },
+  { title: "My Tests", icon: ClipboardList, href: "/dashboard/my-tests" },
   { title: "Results", icon: Trophy, href: "/dashboard/results" },
   { label: "Account", isSection: true },
   { title: "Profile", icon: Users, href: "/dashboard/profile" },
@@ -125,7 +126,7 @@ export function AppSidebar() {
             <div className="flex items-center gap-3">
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-card-foreground truncate">
-                  {user?.fname} {user?.lname}
+                  {capitalize(user?.fname || "")} {capitalize(user?.lname || "")}
                 </p>
                 <p className="text-xs text-muted-foreground truncate capitalize">
                   {user?.role}
