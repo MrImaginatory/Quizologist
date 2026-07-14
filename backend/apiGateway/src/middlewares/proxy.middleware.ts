@@ -21,9 +21,7 @@ export const proxyRequest = async (
       : route.target;
     const targetUrl = `${targetBase}${remainingPath}`;
 
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    };
+    const headers: Record<string, string> = {};
 
     if (req.user) {
       headers["x-user-id"] = req.user.userId;
@@ -38,6 +36,7 @@ export const proxyRequest = async (
 
     if (req.method !== "GET" && req.method !== "DELETE") {
       fetchOptions.body = JSON.stringify(req.body);
+      headers["Content-Type"] = "application/json";
     }
 
     const queryParams = new URLSearchParams(req.query as Record<string, string>);
@@ -45,8 +44,21 @@ export const proxyRequest = async (
     const fullUrl = queryString ? `${targetUrl}?${queryString}` : targetUrl;
 
     const response = await fetch(fullUrl, fetchOptions);
-    const data = await response.json();
+    const contentType = response.headers.get("content-type") || "";
 
+    // Handle binary responses (Excel, images, etc.)
+    if (contentType.includes("application/vnd.") || contentType.includes("application/octet-stream") || contentType.includes("application/pdf") || contentType.includes("image/")) {
+      const buffer = await response.arrayBuffer();
+      res.setHeader("Content-Type", contentType);
+      const disposition = response.headers.get("content-disposition");
+      if (disposition) {
+        res.setHeader("Content-Disposition", disposition);
+      }
+      return res.status(response.status).send(Buffer.from(buffer));
+    }
+
+    // Handle JSON responses
+    const data = await response.json();
     return res.status(response.status).json(data);
   } catch (error) {
     console.error("Proxy error:", error);

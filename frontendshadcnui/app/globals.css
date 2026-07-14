@@ -142,3 +142,12 @@ html.theme-transition *::after {
               stroke 0.3s ease !important;
   transition-delay: 0s !important;
 }
+
+/* Hide scrollbar in dialogs */
+[data-slot="dialog-content"] {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+[data-slot="dialog-content"]::-webkit-scrollbar {
+  display: none;
+}

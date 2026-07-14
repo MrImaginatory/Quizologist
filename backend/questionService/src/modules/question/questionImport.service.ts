@@ -47,8 +47,6 @@ export class QuestionImportService {
     const subjects = await Subject.findAll({ attributes: ["id", "name", "course_id"] });
     const topics = await Topic.findAll({ attributes: ["id", "name", "subject_id"] });
 
-    const courseNames = courses.map((c) => c.name);
-
     const subjectByCourse = new Map<string, string[]>();
     for (const s of subjects) {
       const list = subjectByCourse.get(s.course_id) || [];
@@ -107,15 +105,14 @@ export class QuestionImportService {
       if (exampleCount >= 3) break;
     }
 
-    // Add data validation for Correct Answer column (column J = index 10)
-    for (let row = 2; row <= sheet.rowCount + 50; row++) {
-      const cell = sheet.getCell(`J${row}`);
-      cell.dataValidation = {
-        type: "list",
-        allowBlank: true,
-        formulae: [`"Option 1,Option 2,Option 3,Option 4,Option 5"`],
-      };
-    }
+    // Add a comment to Correct Answer header explaining valid values
+    const headerCell = sheet.getCell("J1");
+    headerCell.note = {
+      texts: [
+        { font: { bold: true, size: 11 }, text: "Must match one of: Option 1, Option 2, Option 3, Option 4, Option 5\n" },
+        { font: { size: 11 }, text: "Enter the exact text of one of the options above." },
+      ],
+    };
 
     const buffer = await workbook.xlsx.writeBuffer();
     return Buffer.from(buffer);

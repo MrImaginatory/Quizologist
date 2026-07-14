@@ -43,6 +43,9 @@ export const API_ROUTES = {
     BY_ID: (id: string) => `${BASE_URL}/api/question/${id}`,
     BY_SUBJECT: (subjectId: string) => `${BASE_URL}/api/question/subject/${subjectId}`,
     BY_TOPIC: (topicId: string) => `${BASE_URL}/api/question/topic/${topicId}`,
+    FILTER: `${BASE_URL}/api/question/filter`,
+    BULK: `${BASE_URL}/api/question/bulk`,
+    IMPORT_TEMPLATE: `${BASE_URL}/api/question/import-template`,
   },
 
   // Students

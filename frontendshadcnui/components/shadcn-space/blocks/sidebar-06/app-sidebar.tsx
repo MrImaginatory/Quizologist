@@ -28,6 +28,7 @@ import {
   UserCog,
   BookOpen,
   Bookmark,
+  Upload,
 } from "lucide-react";
 
 const studentNav: NavItem[] = [
@@ -71,7 +72,14 @@ const adminNav: NavItem[] = [
       { title: "Topics", icon: Bookmark, href: "/dashboard/topics" },
     ],
   },
-  { title: "Questions", icon: FileQuestion, href: "/dashboard/questions" },
+  {
+    title: "Questions",
+    icon: FileQuestion,
+    children: [
+      { title: "All Questions", icon: FileQuestion, href: "/dashboard/questions" },
+      { title: "Import Excel", icon: Upload, href: "/dashboard/questions/import" },
+    ],
+  },
   { title: "Tests", icon: ClipboardList, href: "/dashboard/tests" },
   { label: "Insights", isSection: true },
   { title: "Analytics", icon: BarChart3, href: "/dashboard/analytics" },
