@@ -145,7 +145,89 @@ export const dashboardApi = {
     apiRequest(API_ROUTES.DASHBOARD.STUDENT_ANALYTICS(studentId), { token }),
   getTeacherAnalytics: (teacherId: string, token?: string) =>
     apiRequest(API_ROUTES.DASHBOARD.TEACHER_ANALYTICS(teacherId), { token }),
+  getStudentTopicPerformance: (token?: string) =>
+    apiRequest(API_ROUTES.DASHBOARD.STUDENT_TOPIC_PERFORMANCE, { token }),
+  getStudentSubjectPerformance: (token?: string) =>
+    apiRequest(API_ROUTES.DASHBOARD.STUDENT_SUBJECT_PERFORMANCE, { token }),
+  getStudentDifficultyBreakdown: (token?: string) =>
+    apiRequest(API_ROUTES.DASHBOARD.STUDENT_DIFFICULTY_BREAKDOWN, { token }),
+  getStudentTimeAnalysis: (token?: string) =>
+    apiRequest(API_ROUTES.DASHBOARD.STUDENT_TIME_ANALYSIS, { token }),
+  getStudentPerformanceTrends: (token?: string) =>
+    apiRequest(API_ROUTES.DASHBOARD.STUDENT_PERFORMANCE_TRENDS, { token }),
+  getStudentStrengthsWeaknesses: (token?: string) =>
+    apiRequest(API_ROUTES.DASHBOARD.STUDENT_STRENGTHS_WEAKNESSES, { token }),
 };
+
+export interface TopicPerformance {
+  topicId: string;
+  topicName: string;
+  subjectName: string;
+  totalAttempts: number;
+  correctAnswers: number;
+  accuracy: number;
+  avgTimePerQuestion: number;
+  status: "strong" | "moderate" | "weak";
+}
+
+export interface SubjectPerformance {
+  subjectId: string;
+  subjectName: string;
+  totalAttempts: number;
+  correctAnswers: number;
+  accuracy: number;
+  avgTimePerQuestion: number;
+  status: "strong" | "moderate" | "weak";
+}
+
+export interface PerformanceTrend {
+  testId: string;
+  score: number;
+  correct: number;
+  incorrect: number;
+  totalQuestions: number;
+  date: string;
+}
+
+export interface StrengthsWeaknessesResponse {
+  success: boolean;
+  message: string;
+  data: {
+    strong: TopicPerformance[];
+    weak: TopicPerformance[];
+    overallAccuracy: number;
+    totalTopicsAttempted: number;
+    totalTests: number;
+  };
+}
+
+export interface TopicPerformanceResponse {
+  success: boolean;
+  message: string;
+  data: {
+    topics: TopicPerformance[];
+    totalTests: number;
+  };
+}
+
+export interface SubjectPerformanceResponse {
+  success: boolean;
+  message: string;
+  data: {
+    subjects: SubjectPerformance[];
+    totalTests: number;
+  };
+}
+
+export interface PerformanceTrendsResponse {
+  success: boolean;
+  message: string;
+  data: {
+    last15Days: PerformanceTrend[];
+    last30Days: PerformanceTrend[];
+    last60Days: PerformanceTrend[];
+  };
+}
 
 export interface Course {
   id: string;
@@ -293,4 +375,53 @@ export const questionsApi = {
       API_ROUTES.QUESTIONS.BULK,
       { method: "POST", body: JSON.stringify({ questions }), token }
     ),
+};
+
+export interface Enrollment {
+  id: string;
+  student_id: string;
+  course: { id: string; name: string };
+  subject: { id: string; name: string } | null;
+  topic: { id: string; name: string } | null;
+}
+
+export interface EnrollmentsResponse {
+  success: boolean;
+  message: string;
+  data: {
+    enrollments: Enrollment[];
+    pagination: Pagination;
+  };
+}
+
+export interface EnrollmentPayload {
+  enrollments: {
+    course_id: string;
+    subject_id?: string;
+    topic_id?: string;
+  }[];
+}
+
+export interface EnrollmentResponse {
+  success: boolean;
+  message: string;
+  data: {
+    created: Enrollment[];
+    skipped: { enrollment: { course_id: string; subject_id?: string; topic_id?: string }; reason: string }[];
+    totalCreated: number;
+    totalSkipped: number;
+  };
+}
+
+export const enrollmentsApi = {
+  getAll: (page = 1, limit = 100, token?: string) =>
+    apiRequest<EnrollmentsResponse>(`${API_ROUTES.ENROLLMENTS.BASE}?page=${page}&limit=${limit}`, { token }),
+  enroll: (payload: EnrollmentPayload, token?: string) =>
+    apiRequest<EnrollmentResponse>(API_ROUTES.ENROLLMENTS.BASE, {
+      method: "POST",
+      body: JSON.stringify(payload),
+      token,
+    }),
+  unenroll: (id: string, token?: string) =>
+    apiRequest(API_ROUTES.ENROLLMENTS.BY_ID(id), { method: "DELETE", token }),
 };

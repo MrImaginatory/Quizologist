@@ -148,9 +148,16 @@ export function SignUpForm({ onSwitch }: SignUpFormProps) {
                 type="tel"
                 placeholder="9876543210"
                 value={formData.mobileNumber}
-                onChange={(e) => handleChange("mobileNumber", e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+                  handleChange("mobileNumber", value);
+                }}
+                maxLength={10}
                 required
               />
+              <p className="text-xs text-muted-foreground">
+                {formData.mobileNumber.length}/10 digits
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>

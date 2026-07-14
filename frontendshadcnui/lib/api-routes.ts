@@ -48,12 +48,16 @@ export const API_ROUTES = {
     IMPORT_TEMPLATE: `${BASE_URL}/api/question/import-template`,
   },
 
+  // Enrollments
+  ENROLLMENTS: {
+    BASE: `${BASE_URL}/api/enrollment`,
+    BY_ID: (id: string) => `${BASE_URL}/api/enrollment/${id}`,
+  },
+
   // Students
   STUDENTS: {
-    BASE: `${BASE_URL}/api/student`,
+    BASE: `${BASE_URL}/api/student/list`,
     BY_ID: (id: string) => `${BASE_URL}/api/student/${id}`,
-    ENROLL: `${BASE_URL}/api/student/enroll`,
-    ENROLLMENTS: (studentId: string) => `${BASE_URL}/api/student/${studentId}/enrollments`,
   },
 
   // Teachers
@@ -78,6 +82,12 @@ export const API_ROUTES = {
     STATS: `${BASE_URL}/api/dashboard/stats`,
     STUDENT_ANALYTICS: (studentId: string) => `${BASE_URL}/api/dashboard/student/${studentId}`,
     TEACHER_ANALYTICS: (teacherId: string) => `${BASE_URL}/api/dashboard/teacher/${teacherId}`,
+    STUDENT_TOPIC_PERFORMANCE: `${BASE_URL}/api/dashboard/student/topic-performance`,
+    STUDENT_SUBJECT_PERFORMANCE: `${BASE_URL}/api/dashboard/student/subject-performance`,
+    STUDENT_DIFFICULTY_BREAKDOWN: `${BASE_URL}/api/dashboard/student/difficulty-breakdown`,
+    STUDENT_TIME_ANALYSIS: `${BASE_URL}/api/dashboard/student/time-analysis`,
+    STUDENT_PERFORMANCE_TRENDS: `${BASE_URL}/api/dashboard/student/performance-trends`,
+    STUDENT_STRENGTHS_WEAKNESSES: `${BASE_URL}/api/dashboard/student/strengths-weaknesses`,
   },
 } as const;
 

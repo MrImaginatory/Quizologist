@@ -20,6 +20,14 @@ const SUBJECT_INCLUDE = { model: Subject, as: "subject", attributes: ["id", "nam
 const TOPIC_INCLUDE = { model: Topic, as: "topic", attributes: ["id", "name"] };
 const ALL_INCLUDES = [COURSE_INCLUDE, SUBJECT_INCLUDE, TOPIC_INCLUDE];
 
+function enrichEnrollment(enrollment: any) {
+  const plain = enrollment.toJSON ? enrollment.toJSON() : enrollment;
+  if (!plain.topic && plain.subject) {
+    plain.topic = { id: null, name: "All Topics" };
+  }
+  return plain;
+}
+
 async function validateEnrollmentItem(data: EnrollmentItemInput) {
   const course = await Course.findByPk(data.course_id);
   if (!course) throw ApiError.badRequest(RESPONSE_MESSAGES.ERROR.COURSE_NOT_FOUND);
@@ -87,7 +95,7 @@ export class EnrollmentService {
         include: ALL_INCLUDES,
       });
 
-      created.push(result!.toJSON());
+      created.push(enrichEnrollment(result!));
     }
 
     return { created, skipped, totalCreated: created.length, totalSkipped: skipped.length };
@@ -107,7 +115,7 @@ export class EnrollmentService {
     });
 
     return {
-      enrollments: rows.map((e) => e.toJSON()),
+      enrollments: rows.map((e) => enrichEnrollment(e)),
       pagination: {
         total: count,
         page,
@@ -128,7 +136,7 @@ export class EnrollmentService {
       throw ApiError.notFound(RESPONSE_MESSAGES.ERROR.ENROLLMENT_NOT_FOUND);
     }
 
-    return enrollment.toJSON();
+    return enrichEnrollment(enrollment);
   }
 
   static async delete(data: EnrollmentIdParam, studentId: string) {
@@ -159,7 +167,7 @@ export class EnrollmentService {
     });
 
     return {
-      enrollments: rows.map((e) => e.toJSON()),
+      enrollments: rows.map((e) => enrichEnrollment(e)),
       pagination: {
         total: count,
         page,

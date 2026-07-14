@@ -34,6 +34,7 @@ import {
 const studentNav: NavItem[] = [
   { label: "Main", isSection: true },
   { title: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+  { title: "My Enrollments", icon: GraduationCap, href: "/dashboard/enrollments" },
   { title: "My Tests", icon: ClipboardList, href: "/dashboard/tests" },
   { title: "Results", icon: Trophy, href: "/dashboard/results" },
   { label: "Account", isSection: true },
