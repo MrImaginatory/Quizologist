@@ -43,8 +43,13 @@ export const getUserByIdSchema = z.object({
   id: z.string().uuid("Invalid user ID format"),
 });
 
+export const assignLocationSchema = z.object({
+  location_id: z.string().uuid("Invalid location ID format").nullable(),
+});
+
 export type SignupInput = z.infer<typeof signupSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type GetAllUsersInput = z.infer<typeof getAllUsersSchema>;
 export type GetUserByRoleInput = z.infer<typeof getUserByRoleSchema>;
 export type GetUserByIdInput = z.infer<typeof getUserByIdSchema>;
+export type AssignLocationInput = z.infer<typeof assignLocationSchema>;

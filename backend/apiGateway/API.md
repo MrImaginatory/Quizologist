@@ -133,6 +133,78 @@ Get user by ID. **Admin only.**
 
 ---
 
+### PATCH /api/user/:id/location
+
+Assign or remove a location from a user. **Admin only.**
+
+**Body:**
+```json
+{
+  "location_id": "uuid"  // or null to remove
+}
+```
+
+---
+
+## Location Endpoints (Admin Only)
+
+### POST /api/location
+
+Create a new location.
+
+**Body:**
+```json
+{
+  "address_line_1": "123 Main Street",
+  "address_line_2": "Suite 100",
+  "landmark": "Near City Mall",
+  "city": "Mumbai",
+  "pincode": "400001",
+  "state": "Maharashtra",
+  "country": "India"
+}
+```
+
+| Field | Type | Required | Rules |
+|-------|------|----------|-------|
+| address_line_1 | string | Yes | 1-255 characters |
+| address_line_2 | string | No | 1-255 characters |
+| landmark | string | No | 1-255 characters |
+| city | string | Yes | 1-100 characters |
+| pincode | string | Yes | 1-10 characters |
+| state | string | Yes | 1-100 characters |
+| country | string | Yes | 1-100 characters (default: "India") |
+
+**201 Created:** Returns the created location object.
+
+---
+
+### GET /api/location
+
+Get all locations with pagination.
+
+**Query Params:** `page`, `limit`
+
+---
+
+### GET /api/location/:id
+
+Get a single location by UUID.
+
+---
+
+### PUT /api/location/:id
+
+Update a location. Central location cannot be modified.
+
+---
+
+### DELETE /api/location/:id
+
+Delete a location. Central location cannot be deleted.
+
+---
+
 ## Course Endpoints (Admin Only)
 
 All course endpoints require the `admin` role.

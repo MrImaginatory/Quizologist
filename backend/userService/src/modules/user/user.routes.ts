@@ -8,5 +8,6 @@ router.post("/login", UserController.login);
 router.get("/", UserController.getAllUsers);
 router.get("/role/:role", UserController.getUserByRole);
 router.get("/:id", UserController.getUserById);
+router.patch("/:id/location", UserController.assignLocation);
 
 export default router;

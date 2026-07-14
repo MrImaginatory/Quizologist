@@ -21,14 +21,20 @@ export const routes: RouteConfig[] = [
     auth: false,
   },
   {
-    path: "/user",
-    target: `${env.USER_SERVICE_URL}/api/user`,
+    path: "/user/location",
+    target: `${env.USER_SERVICE_URL}/api/user/location`,
     auth: true,
     roles: ["admin"],
   },
   {
     path: "/user/role",
     target: `${env.USER_SERVICE_URL}/api/user/role`,
+    auth: true,
+    roles: ["admin"],
+  },
+  {
+    path: "/user",
+    target: `${env.USER_SERVICE_URL}/api/user`,
     auth: true,
     roles: ["admin"],
   },

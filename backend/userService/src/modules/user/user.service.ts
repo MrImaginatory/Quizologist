@@ -4,26 +4,30 @@ import { ApiError } from "../../utils/ApiError";
 import { JwtToken, JwtPayload } from "../../utils/jwtToken";
 import { RESPONSE_MESSAGES } from "../../utils/responseMessages";
 import User from "./user.model";
+import Location from "../location/location.model";
 import {
   SignupInput,
   LoginInput,
   GetAllUsersInput,
   GetUserByRoleInput,
   GetUserByIdInput,
+  AssignLocationInput,
 } from "./user.validation";
+
+const TIMESTAMP_EXCLUDE = { exclude: ["createdAt", "updatedAt", "deletedAt"] };
+const LOCATION_INCLUDE = { model: Location, as: "location", attributes: ["id", "address_line_1", "address_line_2", "landmark", "city", "pincode", "state", "country"] };
+const USER_EXCLUDE = { exclude: ["password", "createdAt", "updatedAt", "deletedAt"] };
 
 export class UserService {
   static async signup(data: SignupInput) {
     const lowercasedEmail = data.email.toLowerCase();
 
-    // Check if a user with this email exists (including soft-deleted)
     const existingUser = await User.findOne({
       where: { email: lowercasedEmail },
       paranoid: false,
     });
 
     if (existingUser && existingUser.deletedAt) {
-      // User was soft-deleted, restore and update
       const hashedPassword = await bcrypt.hash(
         data.password,
         env.BCRYPT_SALT_ROUNDS
@@ -46,7 +50,8 @@ export class UserService {
       const token = JwtToken.generate(tokenPayload);
 
       const restored = await User.findByPk(existingUser.id, {
-        attributes: { exclude: ["password", "createdAt", "updatedAt", "deletedAt"] },
+        attributes: USER_EXCLUDE,
+        include: [LOCATION_INCLUDE],
       });
 
       return {
@@ -81,7 +86,8 @@ export class UserService {
     const token = JwtToken.generate(tokenPayload);
 
     const created = await User.findByPk(user.id, {
-      attributes: { exclude: ["password", "createdAt", "updatedAt", "deletedAt"] },
+      attributes: USER_EXCLUDE,
+      include: [LOCATION_INCLUDE],
     });
 
     return {
@@ -118,7 +124,8 @@ export class UserService {
     const token = JwtToken.generate(tokenPayload);
 
     const logged = await User.findByPk(user.id, {
-      attributes: { exclude: ["password", "createdAt", "updatedAt", "deletedAt"] },
+      attributes: USER_EXCLUDE,
+      include: [LOCATION_INCLUDE],
     });
 
     return {
@@ -132,7 +139,8 @@ export class UserService {
     const offset = (page - 1) * limit;
 
     const { rows: users, count: total } = await User.findAndCountAll({
-      attributes: { exclude: ["password", "createdAt", "updatedAt", "deletedAt"] },
+      attributes: USER_EXCLUDE,
+      include: [LOCATION_INCLUDE],
       limit,
       offset,
       order: [["createdAt", "DESC"]],
@@ -155,7 +163,8 @@ export class UserService {
 
     const { rows: users, count: total } = await User.findAndCountAll({
       where: { role },
-      attributes: { exclude: ["password", "createdAt", "updatedAt", "deletedAt"] },
+      attributes: USER_EXCLUDE,
+      include: [LOCATION_INCLUDE],
       limit,
       offset,
       order: [["createdAt", "DESC"]],
@@ -174,7 +183,8 @@ export class UserService {
 
   static async getUserById(data: GetUserByIdInput) {
     const user = await User.findByPk(data.id, {
-      attributes: { exclude: ["password", "createdAt", "updatedAt", "deletedAt"] },
+      attributes: USER_EXCLUDE,
+      include: [LOCATION_INCLUDE],
     });
 
     if (!user) {
@@ -182,5 +192,34 @@ export class UserService {
     }
 
     return user;
+  }
+
+  static async assignLocation(userId: string, data: AssignLocationInput) {
+    const user = await User.findByPk(userId);
+
+    if (!user) {
+      throw ApiError.notFound(RESPONSE_MESSAGES.ERROR.USER_NOT_FOUND);
+    }
+
+    if (data.location_id) {
+      const location = await Location.findByPk(data.location_id);
+
+      if (!location) {
+        throw ApiError.notFound(RESPONSE_MESSAGES.ERROR.LOCATION_NOT_FOUND);
+      }
+
+      if (location.is_central) {
+        throw ApiError.badRequest(RESPONSE_MESSAGES.ERROR.CANNOT_ASSIGN_CENTRAL);
+      }
+    }
+
+    await user.update({ location_id: data.location_id });
+
+    const updated = await User.findByPk(userId, {
+      attributes: USER_EXCLUDE,
+      include: [LOCATION_INCLUDE],
+    });
+
+    return updated!.toJSON();
   }
 }

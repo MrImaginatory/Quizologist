@@ -8,6 +8,7 @@ import {
   getAllUsersSchema,
   getUserByRoleSchema,
   getUserByIdSchema,
+  assignLocationSchema,
 } from "./user.validation";
 
 export class UserController {
@@ -85,6 +86,22 @@ export class UserController {
         RESPONSE_MESSAGES.SUCCESS.USER_FOUND,
         result
       );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async assignLocation(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = getUserByIdSchema.parse(req.params);
+      const validatedData = assignLocationSchema.parse(req.body);
+      const result = await UserService.assignLocation(id, validatedData);
+
+      const message = validatedData.location_id
+        ? RESPONSE_MESSAGES.SUCCESS.LOCATION_ASSIGNED
+        : RESPONSE_MESSAGES.SUCCESS.LOCATION_REMOVED;
+
+      return ApiResponse.success(res, message, result);
     } catch (error) {
       next(error);
     }

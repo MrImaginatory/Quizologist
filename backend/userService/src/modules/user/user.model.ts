@@ -4,7 +4,7 @@ import { UserAttributes, UserRole } from "../../types";
 
 type UserCreationAttributes = Optional<
   UserAttributes,
-  "id" | "createdAt" | "updatedAt" | "deletedAt"
+  "id" | "location_id" | "createdAt" | "updatedAt" | "deletedAt"
 >;
 
 class User
@@ -17,6 +17,7 @@ class User
   declare email: string;
   declare mobileNumber: string;
   declare password: string;
+  declare location_id: string | null;
   declare createdAt: Date;
   declare updatedAt: Date;
   declare deletedAt: Date | null;
@@ -65,6 +66,14 @@ User.init(
     password: {
       type: DataTypes.STRING,
       allowNull: false,
+    },
+    location_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: "locations",
+        key: "id",
+      },
     },
   },
   {

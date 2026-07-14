@@ -3,7 +3,9 @@ import cors from "cors";
 import { env } from "./config/env";
 import { connectDatabase } from "./config/database";
 import { seedAdmin } from "./config/seed";
+import "./config/associations";
 import userRoutes from "./modules/user/user.routes";
+import locationRoutes from "./modules/location/location.routes";
 import { ApiError } from "./utils/ApiError";
 import { ApiResponse } from "./utils/ApiResponse";
 
@@ -14,7 +16,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Routes
+// Routes (order matters — specific routes before wildcard /:id)
+app.use("/api/user/location", locationRoutes);
 app.use("/api/user", userRoutes);
 
 // Health check
@@ -42,9 +45,7 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
       field: e.path.join("."),
       message: e.message,
     })) || [];
-    
-    // We pass the structured errors in the data field of the ApiResponse since ApiResponse.error doesn't take data
-    // Let's manually construct the JSON response to match what the frontend expects
+
     return res.status(400).json({
       statusCode: 400,
       success: false,
