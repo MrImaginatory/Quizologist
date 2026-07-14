@@ -4,7 +4,7 @@ import { sequelize } from "../../config/database";
 interface TestSelectionAttributes {
   id: string;
   test_session_id: string;
-  faculty_id: string;
+  course_id: string;
   subject_id: string | null;
   topic_id: string | null;
   createdAt?: Date;
@@ -23,7 +23,7 @@ class TestSelection
 {
   declare id: string;
   declare test_session_id: string;
-  declare faculty_id: string;
+  declare course_id: string;
   declare subject_id: string | null;
   declare topic_id: string | null;
   declare createdAt: Date;
@@ -46,11 +46,11 @@ TestSelection.init(
         key: "id",
       },
     },
-    faculty_id: {
+    course_id: {
       type: DataTypes.UUID,
       allowNull: false,
       references: {
-        model: "faculties",
+        model: "courses",
         key: "id",
       },
     },

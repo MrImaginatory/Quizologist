@@ -12,7 +12,7 @@ class Question extends Model {
   declare difficulty: string;
   declare topic_id: string;
   declare subject_id: string;
-  declare faculty_id: string;
+  declare course_id: string;
 }
 
 Question.init(
@@ -27,7 +27,7 @@ Question.init(
     difficulty: { type: DataTypes.ENUM("beginner", "normal", "mid", "hard", "expert") },
     topic_id: { type: DataTypes.UUID },
     subject_id: { type: DataTypes.UUID },
-    faculty_id: { type: DataTypes.UUID },
+    course_id: { type: DataTypes.UUID },
   },
   {
     sequelize,

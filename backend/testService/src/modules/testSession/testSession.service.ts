@@ -7,7 +7,7 @@ import TestAnswer from "../testAnswer/testAnswer.model";
 import TestSelection from "../testSelection/testSelection.model";
 import Enrollment from "../enrollment/enrollment.model";
 import Question from "../question/question.model";
-import Faculty from "../faculty/faculty.model";
+import Course from "../course/course.model";
 import Subject from "../subject/subject.model";
 import Topic from "../topic/topic.model";
 import {
@@ -22,14 +22,14 @@ const TIMESTAMP_EXCLUDE = {
   exclude: ["createdAt", "updatedAt", "deletedAt"],
 };
 
-const FACULTY_INCLUDE = { model: Faculty, as: "faculty", attributes: ["id", "name"] };
+const COURSE_INCLUDE = { model: Course, as: "course", attributes: ["id", "name"] };
 const SUBJECT_INCLUDE = { model: Subject, as: "subject", attributes: ["id", "name"] };
 const TOPIC_INCLUDE = { model: Topic, as: "topic", attributes: ["id", "name"] };
 const SELECTION_INCLUDE = {
   model: TestSelection,
   as: "selections",
-  attributes: ["faculty_id", "subject_id", "topic_id"],
-  include: [FACULTY_INCLUDE, SUBJECT_INCLUDE, TOPIC_INCLUDE],
+  attributes: ["course_id", "subject_id", "topic_id"],
+  include: [COURSE_INCLUDE, SUBJECT_INCLUDE, TOPIC_INCLUDE],
 };
 
 function generateTestId(firstName: string, lastName: string): string {
@@ -45,11 +45,11 @@ function flattenSelections(session: any) {
   const plain = session.toJSON ? session.toJSON() : session;
   const selections = plain.selections || [];
   if (selections.length > 0) {
-    plain.faculty = selections[0].faculty || null;
+    plain.course = selections[0].course || null;
     plain.subject = selections[0].subject || null;
     plain.topic = selections[0].topic || null;
   } else {
-    plain.faculty = null;
+    plain.course = null;
     plain.subject = null;
     plain.topic = null;
   }
@@ -66,7 +66,7 @@ function stripQuestionForTest(q: any) {
     difficulty: q.difficulty,
     topicName: q.topic?.name || null,
     subjectName: q.subject?.name || null,
-    facultyName: q.faculty?.name || null,
+    courseName: q.course?.name || null,
   };
 }
 
@@ -116,17 +116,17 @@ export class TestSessionService {
 
     // Validate enrollment for each selection (hierarchical check)
     for (const selection of data.selections) {
-      // Check if student has ANY enrollment for this faculty
+      // Check if student has ANY enrollment for this course
       const enrollment = await Enrollment.findOne({
         where: {
           student_id: studentId,
-          faculty_id: selection.faculty_id,
+          course_id: selection.course_id,
         },
       });
 
       if (!enrollment) {
         throw ApiError.badRequest(
-          `You are not enrolled in the selected faculty`
+          `You are not enrolled in the selected course`
         );
       }
     }
@@ -135,7 +135,7 @@ export class TestSessionService {
     const questionConditions: any[] = [];
 
     for (const selection of data.selections) {
-      const condition: any = { faculty_id: selection.faculty_id };
+      const condition: any = { course_id: selection.course_id };
       if (selection.subject_id) condition.subject_id = selection.subject_id;
       if (selection.topic_id) condition.topic_id = selection.topic_id;
       questionConditions.push(condition);
@@ -148,7 +148,7 @@ export class TestSessionService {
       include: [
         { model: Topic, as: "topic", attributes: ["id", "name"] },
         { model: Subject, as: "subject", attributes: ["id", "name"] },
-        { model: Faculty, as: "faculty", attributes: ["id", "name"] },
+        { model: Course, as: "course", attributes: ["id", "name"] },
       ],
       order: sequelize.random(),
     });
@@ -196,7 +196,7 @@ export class TestSessionService {
     // Create test selections
     const selectionStubs = data.selections.map((s) => ({
       test_session_id: session.id,
-      faculty_id: s.faculty_id,
+      course_id: s.course_id,
       subject_id: s.subject_id || null,
       topic_id: s.topic_id || null,
     }));
@@ -337,7 +337,7 @@ export class TestSessionService {
           include: [
             { model: Topic, as: "topic", attributes: ["id", "name"] },
             { model: Subject, as: "subject", attributes: ["id", "name"] },
-            { model: Faculty, as: "faculty", attributes: ["id", "name"] },
+            { model: Course, as: "course", attributes: ["id", "name"] },
           ],
         });
 
@@ -355,7 +355,7 @@ export class TestSessionService {
           timeTaken: answer.time_taken,
           topicName: q?.topic?.name || null,
           subjectName: q?.subject?.name || null,
-          facultyName: q?.faculty?.name || null,
+          courseName: q?.course?.name || null,
         };
       })
     );
@@ -471,7 +471,7 @@ export class TestSessionService {
               include: [
                 { model: Topic, as: "topic", attributes: ["id", "name"] },
                 { model: Subject, as: "subject", attributes: ["id", "name"] },
-                { model: Faculty, as: "faculty", attributes: ["id", "name"] },
+                { model: Course, as: "course", attributes: ["id", "name"] },
               ],
             });
 
@@ -489,7 +489,7 @@ export class TestSessionService {
               timeTaken: answer.time_taken,
               topicName: q?.topic?.name || null,
               subjectName: q?.subject?.name || null,
-              facultyName: q?.faculty?.name || null,
+              courseName: q?.course?.name || null,
             };
           })
         );
@@ -559,8 +559,8 @@ export class TestSessionService {
         {
           model: TestSelection,
           as: "selections",
-          attributes: ["faculty_id", "subject_id", "topic_id"],
-          include: [FACULTY_INCLUDE, SUBJECT_INCLUDE, TOPIC_INCLUDE],
+          attributes: ["course_id", "subject_id", "topic_id"],
+          include: [COURSE_INCLUDE, SUBJECT_INCLUDE, TOPIC_INCLUDE],
         },
       ],
       limit,
@@ -571,7 +571,7 @@ export class TestSessionService {
     const summary = rows.map((session) => {
       const plain = session.toJSON() as any;
       const selections = plain.selections || [];
-      const faculties = [...new Set(selections.map((s: any) => s.faculty?.name).filter(Boolean))];
+      const courses = [...new Set(selections.map((s: any) => s.course?.name).filter(Boolean))];
       const subjects = [...new Set(selections.map((s: any) => s.subject?.name).filter(Boolean))];
 
       return {
@@ -588,7 +588,7 @@ export class TestSessionService {
           : 0,
         durationMinutes: plain.duration_minutes,
         disconnects: plain.disconnect_count,
-        faculties,
+        courses,
         subjects,
         startedAt: plain.started_at,
         completedAt: plain.completed_at,
@@ -634,7 +634,7 @@ export class TestSessionService {
           include: [
             { model: Topic, as: "topic", attributes: ["id", "name"] },
             { model: Subject, as: "subject", attributes: ["id", "name"] },
-            { model: Faculty, as: "faculty", attributes: ["id", "name"] },
+            { model: Course, as: "course", attributes: ["id", "name"] },
           ],
         });
 
@@ -652,7 +652,7 @@ export class TestSessionService {
           timeTaken: answer.time_taken,
           topicName: q?.topic?.name || null,
           subjectName: q?.subject?.name || null,
-          facultyName: q?.faculty?.name || null,
+          courseName: q?.course?.name || null,
         };
       })
     );

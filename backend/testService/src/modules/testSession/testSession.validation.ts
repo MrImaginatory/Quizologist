@@ -12,9 +12,9 @@ export const DURATION_LIMITS: Record<number, { min: number; max: number }> = {
 
 export const ALLOWED_DURATIONS = Object.keys(DURATION_LIMITS).map(Number);
 
-// Selection schema for each faculty/subject/topic selection
+// Selection schema for each course/subject/topic selection
 const selectionSchema = z.object({
-  faculty_id: z.string().uuid("Invalid faculty ID format"),
+  course_id: z.string().uuid("Invalid course ID format"),
   subject_id: z.string().uuid("Invalid subject ID format").optional(),
   topic_id: z.string().uuid("Invalid topic ID format").optional(),
 });

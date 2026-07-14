@@ -29,7 +29,7 @@ All endpoints require a Bearer token or gateway headers (`x-user-id`, `x-user-em
 
 ### POST /start
 
-Start a new test session with multiple faculty/subject/topic selections.
+Start a new test session with multiple course/subject/topic selections.
 
 **Body:**
 ```json
@@ -37,9 +37,9 @@ Start a new test session with multiple faculty/subject/topic selections.
   "duration_minutes": 30,
   "question_limit": 45,
   "selections": [
-    { "faculty_id": "uuid", "subject_id": "uuid", "topic_id": "uuid" },
-    { "faculty_id": "uuid", "subject_id": "uuid" },
-    { "faculty_id": "uuid" }
+    { "course_id": "uuid", "subject_id": "uuid", "topic_id": "uuid" },
+    { "course_id": "uuid", "subject_id": "uuid" },
+    { "course_id": "uuid" }
   ]
 }
 ```
@@ -48,8 +48,8 @@ Start a new test session with multiple faculty/subject/topic selections.
 |-------|------|----------|-------|
 | duration_minutes | number | Yes | One of: 15, 20, 25, 30, 40, 45 |
 | question_limit | number | Yes | Must be within min/max for selected duration |
-| selections | array | Yes | 1-200 selections, each with faculty_id required |
-| selections[].faculty_id | string | Yes | UUID, must have enrollment |
+| selections | array | Yes | 1-200 selections, each with course_id required |
+| selections[].course_id | string | Yes | UUID, must have enrollment |
 | selections[].subject_id | string | No | UUID, must have enrollment |
 | selections[].topic_id | string | No | UUID, must have enrollment |
 
@@ -75,7 +75,7 @@ Start a new test session with multiple faculty/subject/topic selections.
         "difficulty": "normal",
         "topicName": "binary trees",
         "subjectName": "data structures",
-        "facultyName": "computer science"
+        "courseName": "computer science"
       }
     ]
   }
@@ -86,7 +86,7 @@ Start a new test session with multiple faculty/subject/topic selections.
 ```json
 {
   "success": false,
-  "message": "You are not enrolled in the selected faculty/subject/topic"
+  "message": "You are not enrolled in the selected course/subject/topic"
 }
 ```
 
@@ -217,7 +217,7 @@ Get full result with correct answers and explanations. Only works after test is 
         "timeTaken": 45,
         "topicName": "binary trees",
         "subjectName": "data structures",
-        "facultyName": "computer science"
+        "courseName": "computer science"
       }
     ]
   }
@@ -352,7 +352,7 @@ Get completed test results with full question breakdown for a specific student. 
             "timeTaken": 45,
             "topicName": "binary trees",
             "subjectName": "data structures",
-            "facultyName": "computer science"
+            "courseName": "computer science"
           }
         ]
       }
@@ -410,7 +410,7 @@ Get a lightweight summary of completed test results for table display. No questi
         "skipped": 3,
         "durationMinutes": 30,
         "disconnects": 1,
-        "faculties": ["computer science"],
+        "courses": ["computer science"],
         "subjects": ["data structures", "algorithms"],
         "startedAt": "2026-07-08T14:30:00.000Z",
         "completedAt": "2026-07-08T15:00:00.000Z"
@@ -576,7 +576,7 @@ socket.on("test_submitted", (data) => {
 | Active test check | Cannot start if one is already `pending` or `in_progress` |
 | Rate limit | Cannot create another test within 5 minutes |
 | Auto-abandon | Tests older than 24 hours are marked `abandoned` |
-| Enrollment required | Must be enrolled in each selected faculty/subject/topic |
+| Enrollment required | Must be enrolled in each selected course/subject/topic |
 | Questions required | At least 1 question must exist for the selected scope |
 | Only owner | Student can only submit/view their own tests |
 | Duration validation | Must be one of: 15, 20, 25, 30, 40, 45 minutes |
@@ -590,7 +590,7 @@ socket.on("test_submitted", (data) => {
 
 | Status | Message |
 |--------|---------|
-| 400 | You are not enrolled in the selected faculty/subject/topic |
+| 400 | You are not enrolled in the selected course/subject/topic |
 | 400 | No questions found for the selected scope |
 | 400 | Test has not been completed yet |
 | 400 | This test has already been submitted |
