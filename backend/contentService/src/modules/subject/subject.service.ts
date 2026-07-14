@@ -1,28 +1,28 @@
 import { ApiError } from "../../utils/ApiError";
 import { RESPONSE_MESSAGES } from "../../utils/responseMessages";
-import Faculty from "../faculty/faculty.model";
+import Course from "../course/course.model";
 import Subject from "./subject.model";
 import Topic from "../topic/topic.model";
 import {
   CreateSubjectInput,
   UpdateSubjectInput,
   SubjectIdParam,
-  GetSubjectsByFacultyInput,
+  GetSubjectsByCourseInput,
   GetAllSubjectsInput,
 } from "./subject.validation";
 
 const TIMESTAMP_EXCLUDE = { exclude: ["createdAt", "updatedAt", "deletedAt"] };
-const FACULTY_INCLUDE = { model: Faculty, as: "faculty", attributes: ["id", "name"] };
+const COURSE_INCLUDE = { model: Course, as: "course", attributes: ["id", "name"] };
 
 export class SubjectService {
   static async create(data: CreateSubjectInput) {
-    const faculty = await Faculty.findByPk(data.faculty_id);
-    if (!faculty) {
-      throw ApiError.notFound(RESPONSE_MESSAGES.ERROR.FACULTY_NOT_FOUND);
+    const course = await Course.findByPk(data.course_id);
+    if (!course) {
+      throw ApiError.notFound(RESPONSE_MESSAGES.ERROR.COURSE_NOT_FOUND);
     }
 
     const existing = await Subject.findOne({
-      where: { name: data.name.toLowerCase(), faculty_id: data.faculty_id },
+      where: { name: data.name.toLowerCase(), course_id: data.course_id },
     });
 
     if (existing) {
@@ -32,12 +32,12 @@ export class SubjectService {
     const subject = await Subject.create({
       name: data.name.toLowerCase(),
       description: data.description || null,
-      faculty_id: data.faculty_id,
+      course_id: data.course_id,
     });
 
     const created = await Subject.findByPk(subject.id, {
       attributes: TIMESTAMP_EXCLUDE,
-      include: [FACULTY_INCLUDE],
+      include: [COURSE_INCLUDE],
     });
 
     return created!.toJSON();
@@ -49,7 +49,7 @@ export class SubjectService {
 
     const { rows, count } = await Subject.findAndCountAll({
       attributes: TIMESTAMP_EXCLUDE,
-      include: [FACULTY_INCLUDE],
+      include: [COURSE_INCLUDE],
       limit,
       offset,
       order: [["createdAt", "DESC"]],
@@ -66,19 +66,19 @@ export class SubjectService {
     };
   }
 
-  static async getByFacultyId(data: GetSubjectsByFacultyInput) {
-    const faculty = await Faculty.findByPk(data.facultyId);
-    if (!faculty) {
-      throw ApiError.notFound(RESPONSE_MESSAGES.ERROR.FACULTY_NOT_FOUND);
+  static async getByCourseId(data: GetSubjectsByCourseInput) {
+    const course = await Course.findByPk(data.courseId);
+    if (!course) {
+      throw ApiError.notFound(RESPONSE_MESSAGES.ERROR.COURSE_NOT_FOUND);
     }
 
     const { page, limit } = data;
     const offset = (page - 1) * limit;
 
     const { rows, count } = await Subject.findAndCountAll({
-      where: { faculty_id: data.facultyId },
+      where: { course_id: data.courseId },
       attributes: TIMESTAMP_EXCLUDE,
-      include: [FACULTY_INCLUDE],
+      include: [COURSE_INCLUDE],
       limit,
       offset,
       order: [["createdAt", "DESC"]],
@@ -98,7 +98,7 @@ export class SubjectService {
   static async getById(data: SubjectIdParam) {
     const subject = await Subject.findByPk(data.id, {
       attributes: TIMESTAMP_EXCLUDE,
-      include: [FACULTY_INCLUDE],
+      include: [COURSE_INCLUDE],
     });
 
     if (!subject) {
@@ -115,18 +115,18 @@ export class SubjectService {
       throw ApiError.notFound(RESPONSE_MESSAGES.ERROR.SUBJECT_NOT_FOUND);
     }
 
-    if (data.faculty_id) {
-      const faculty = await Faculty.findByPk(data.faculty_id);
-      if (!faculty) {
-        throw ApiError.notFound(RESPONSE_MESSAGES.ERROR.FACULTY_NOT_FOUND);
+    if (data.course_id) {
+      const course = await Course.findByPk(data.course_id);
+      if (!course) {
+        throw ApiError.notFound(RESPONSE_MESSAGES.ERROR.COURSE_NOT_FOUND);
       }
-      subject.set("faculty_id", data.faculty_id);
+      subject.set("course_id", data.course_id);
     }
 
     if (data.name) {
-      const targetFacultyId = data.faculty_id || subject.faculty_id;
+      const targetCourseId = data.course_id || subject.course_id;
       const existing = await Subject.findOne({
-        where: { name: data.name.toLowerCase(), faculty_id: targetFacultyId },
+        where: { name: data.name.toLowerCase(), course_id: targetCourseId },
       });
 
       if (existing && existing.id !== data.id) {
@@ -144,7 +144,7 @@ export class SubjectService {
 
     const updated = await Subject.findByPk(data.id, {
       attributes: TIMESTAMP_EXCLUDE,
-      include: [FACULTY_INCLUDE],
+      include: [COURSE_INCLUDE],
     });
 
     return updated!.toJSON();

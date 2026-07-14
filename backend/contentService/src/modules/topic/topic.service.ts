@@ -1,7 +1,7 @@
 import { ApiError } from "../../utils/ApiError";
 import { RESPONSE_MESSAGES } from "../../utils/responseMessages";
 import Subject from "../subject/subject.model";
-import Faculty from "../faculty/faculty.model";
+import Course from "../course/course.model";
 import Topic from "./topic.model";
 import Question from "../question/question.model";
 import {
@@ -17,7 +17,7 @@ const SUBJECT_INCLUDE = {
   model: Subject,
   as: "subject",
   attributes: ["id", "name"],
-  include: [{ model: Faculty, as: "faculty", attributes: ["id", "name"] }],
+  include: [{ model: Course, as: "course", attributes: ["id", "name"] }],
 };
 
 export class TopicService {

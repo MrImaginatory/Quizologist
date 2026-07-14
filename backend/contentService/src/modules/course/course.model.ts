@@ -1,15 +1,15 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../../config/database";
-import { FacultyAttributes } from "../../types";
+import { CourseAttributes } from "../../types";
 
-type FacultyCreationAttributes = Optional<
-  FacultyAttributes,
+type CourseCreationAttributes = Optional<
+  CourseAttributes,
   "id" | "description" | "createdAt" | "updatedAt" | "deletedAt"
 >;
 
-class Faculty
-  extends Model<FacultyAttributes, FacultyCreationAttributes>
-  implements FacultyAttributes
+class Course
+  extends Model<CourseAttributes, CourseCreationAttributes>
+  implements CourseAttributes
 {
   declare id: string;
   declare name: string;
@@ -19,7 +19,7 @@ class Faculty
   declare deletedAt: Date | null;
 }
 
-Faculty.init(
+Course.init(
   {
     id: {
       type: DataTypes.UUID,
@@ -41,12 +41,12 @@ Faculty.init(
   },
   {
     sequelize,
-    tableName: "faculties",
+    tableName: "courses",
     timestamps: true,
     paranoid: true,
     underscored: true,
-    modelName: "Faculty",
+    modelName: "Course",
   }
 );
 
-export default Faculty;
+export default Course;

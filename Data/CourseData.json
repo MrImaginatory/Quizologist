@@ -1,6 +1,6 @@
-[
+﻿[
     {
-        "faculty": "Accounting & Auditing",
+        "course": "Accounting & Auditing",
         "subjects": [
             {
                 "subject_name": "Financial Accounting",
@@ -205,7 +205,7 @@
         ]
     },
     {
-        "faculty": "Finance & Banking",
+        "course": "Finance & Banking",
         "subjects": [
             {
                 "subject_name": "Financial Management",
@@ -410,7 +410,7 @@
         ]
     },
     {
-        "faculty": "Business Management & HR",
+        "course": "Business Management & HR",
         "subjects": [
             {
                 "subject_name": "Principles of Management",
@@ -615,7 +615,7 @@
         ]
     },
     {
-        "faculty": "Marketing & Digital Commerce",
+        "course": "Marketing & Digital Commerce",
         "subjects": [
             {
                 "subject_name": "Principles of Marketing",
@@ -820,7 +820,7 @@
         ]
     },
     {
-        "faculty": "Taxation & Corporate Law",
+        "course": "Taxation & Corporate Law",
         "subjects": [
             {
                 "subject_name": "Direct Tax Laws",

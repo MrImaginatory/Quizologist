@@ -3,7 +3,7 @@ import cors from "cors";
 import { env } from "./config/env";
 import { connectDatabase } from "./config/database";
 import "./config/associations";
-import facultyRoutes from "./modules/faculty/faculty.routes";
+import courseRoutes from "./modules/course/course.routes";
 import subjectRoutes from "./modules/subject/subject.routes";
 import topicRoutes from "./modules/topic/topic.routes";
 import { ApiError } from "./utils/ApiError";
@@ -15,7 +15,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use("/api/content/faculty", facultyRoutes);
+app.use("/api/content/course", courseRoutes);
 app.use("/api/content/subject", subjectRoutes);
 app.use("/api/content/topic", topicRoutes);
 

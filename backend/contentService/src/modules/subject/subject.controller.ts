@@ -6,7 +6,7 @@ import {
   createSubjectSchema,
   updateSubjectSchema,
   subjectIdParamSchema,
-  getSubjectsByFacultySchema,
+  getSubjectsByCourseSchema,
   getAllSubjectsSchema,
 } from "./subject.validation";
 
@@ -42,13 +42,13 @@ export class SubjectController {
     }
   }
 
-  static async getByFacultyId(req: Request, res: Response, next: NextFunction) {
+  static async getByCourseId(req: Request, res: Response, next: NextFunction) {
     try {
-      const data = getSubjectsByFacultySchema.parse({
+      const data = getSubjectsByCourseSchema.parse({
         ...req.params,
         ...req.query,
       });
-      const result = await SubjectService.getByFacultyId(data);
+      const result = await SubjectService.getByCourseId(data);
 
       return ApiResponse.success(
         res,

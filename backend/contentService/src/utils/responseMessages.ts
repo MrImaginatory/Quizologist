@@ -1,10 +1,10 @@
 export const RESPONSE_MESSAGES = {
   SUCCESS: {
-    FACULTY_CREATED: "Faculty created successfully",
-    FACULTY_UPDATED: "Faculty updated successfully",
-    FACULTY_DELETED: "Faculty deleted successfully",
-    FACULTY_FOUND: "Faculty retrieved successfully",
-    FACULTIES_FOUND: "Faculties retrieved successfully",
+    COURSE_CREATED: "Course created successfully",
+    COURSE_UPDATED: "Course updated successfully",
+    COURSE_DELETED: "Course deleted successfully",
+    COURSE_FOUND: "Course retrieved successfully",
+    COURSES_FOUND: "Courses retrieved successfully",
 
     SUBJECT_CREATED: "Subject created successfully",
     SUBJECT_UPDATED: "Subject updated successfully",
@@ -19,11 +19,11 @@ export const RESPONSE_MESSAGES = {
     TOPICS_FOUND: "Topics retrieved successfully",
   },
   ERROR: {
-    FACULTY_EXISTS: "Faculty with this name already exists",
-    FACULTY_NOT_FOUND: "Faculty not found or has been deleted",
-    FACULTY_HAS_SUBJECTS: "Cannot delete faculty — subjects are still linked to it",
+    COURSE_EXISTS: "Course with this name already exists",
+    COURSE_NOT_FOUND: "Course not found or has been deleted",
+    COURSE_HAS_SUBJECTS: "Cannot delete course — subjects are still linked to it",
 
-    SUBJECT_EXISTS: "Subject with this name already exists in this faculty",
+    SUBJECT_EXISTS: "Subject with this name already exists in this course",
     SUBJECT_NOT_FOUND: "Subject not found or has been deleted",
     SUBJECT_HAS_TOPICS: "Cannot delete subject — topics are still linked to it",
 

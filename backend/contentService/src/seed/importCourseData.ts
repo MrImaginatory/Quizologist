@@ -2,7 +2,7 @@ import path from "path";
 import fs from "fs";
 import { connectDatabase } from "../config/database";
 import "../config/associations";
-import Faculty from "../modules/faculty/faculty.model";
+import Course from "../modules/course/course.model";
 import Subject from "../modules/subject/subject.model";
 import Topic from "../modules/topic/topic.model";
 
@@ -11,46 +11,46 @@ interface TopicData {
   topics: string[];
 }
 
-interface FacultyData {
-  faculty: string;
+interface CourseData {
+  course: string;
   subjects: TopicData[];
 }
 
 async function importData() {
-  console.log("Starting faculty data import...\n");
+  console.log("Starting course data import...\n");
 
   await connectDatabase();
 
-  const jsonPath = path.join(__dirname, "../../../../Data/FacultyData.json");
+  const jsonPath = path.join(__dirname, "../../../../Data/CourseData.json");
   const rawData = fs.readFileSync(jsonPath, "utf-8");
-  const faculties: FacultyData[] = JSON.parse(rawData);
+  const courses: CourseData[] = JSON.parse(rawData);
 
-  let totalFaculties = 0;
+  let totalCourses = 0;
   let totalSubjects = 0;
   let totalTopics = 0;
-  let skippedFaculties = 0;
+  let skippedCourses = 0;
   let skippedSubjects = 0;
   let skippedTopics = 0;
 
-  for (const facultyData of faculties) {
-    const facultyName = facultyData.faculty.toLowerCase().trim();
+  for (const courseData of courses) {
+    const courseName = courseData.course.toLowerCase().trim();
 
-    let faculty = await Faculty.findOne({ where: { name: facultyName } });
+    let course = await Course.findOne({ where: { name: courseName } });
 
-    if (faculty) {
-      skippedFaculties++;
-      console.log(`[SKIP] Faculty "${facultyData.faculty}" already exists`);
+    if (course) {
+      skippedCourses++;
+      console.log(`[SKIP] Course "${courseData.course}" already exists`);
     } else {
-      faculty = await Faculty.create({ name: facultyName });
-      totalFaculties++;
-      console.log(`[CREATED] Faculty "${facultyData.faculty}"`);
+      course = await Course.create({ name: courseName });
+      totalCourses++;
+      console.log(`[CREATED] Course "${courseData.course}"`);
     }
 
-    for (const subjectData of facultyData.subjects) {
+    for (const subjectData of courseData.subjects) {
       const subjectName = subjectData.subject_name.toLowerCase().trim();
 
       let subject = await Subject.findOne({
-        where: { name: subjectName, faculty_id: faculty.id },
+        where: { name: subjectName, course_id: course.id },
       });
 
       if (subject) {
@@ -59,7 +59,7 @@ async function importData() {
       } else {
         subject = await Subject.create({
           name: subjectName,
-          faculty_id: faculty.id,
+          course_id: course.id,
         });
         totalSubjects++;
         console.log(`  [CREATED] Subject "${subjectData.subject_name}"`);
@@ -86,7 +86,7 @@ async function importData() {
   }
 
   console.log("\n--- Import Summary ---");
-  console.log(`Faculties: ${totalFaculties} created, ${skippedFaculties} skipped`);
+  console.log(`Courses: ${totalCourses} created, ${skippedCourses} skipped`);
   console.log(`Subjects:  ${totalSubjects} created, ${skippedSubjects} skipped`);
   console.log(`Topics:    ${totalTopics} created, ${skippedTopics} skipped`);
   console.log("Import completed successfully!");

@@ -4,17 +4,17 @@ Base URL: `http://localhost:3002/api/content`
 
 ---
 
-## Faculty
+## Course
 
-### POST /faculty
+### POST /course
 
-Create a new faculty.
+Create a new course.
 
 **Body:**
 ```json
 {
   "name": "Computer Science",
-  "description": "Faculty of Computer Science and Engineering"
+  "description": "Course of Computer Science and Engineering"
 }
 ```
 
@@ -27,11 +27,11 @@ Create a new faculty.
 ```json
 {
   "success": true,
-  "message": "Faculty created successfully",
+  "message": "Course created successfully",
   "data": {
     "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     "name": "computer science",
-    "description": "Faculty of Computer Science and Engineering"
+    "description": "Course of Computer Science and Engineering"
   }
 }
 ```
@@ -40,16 +40,16 @@ Create a new faculty.
 ```json
 {
   "success": false,
-  "message": "Faculty with this name already exists",
+  "message": "Course with this name already exists",
   "data": null
 }
 ```
 
 ---
 
-### GET /faculty
+### GET /course
 
-Get all faculties with pagination.
+Get all courses with pagination.
 
 **Query Params:** `page` (default 1), `limit` (default 10, max 100)
 
@@ -57,13 +57,13 @@ Get all faculties with pagination.
 ```json
 {
   "success": true,
-  "message": "Faculties retrieved successfully",
+  "message": "Courses retrieved successfully",
   "data": {
-    "faculties": [
+    "courses": [
       {
         "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
         "name": "computer science",
-        "description": "Faculty of Computer Science and Engineering"
+        "description": "Course of Computer Science and Engineering"
       }
     ],
     "pagination": {
@@ -78,19 +78,19 @@ Get all faculties with pagination.
 
 ---
 
-### GET /faculty/:id
+### GET /course/:id
 
-Get a single faculty by UUID.
+Get a single course by UUID.
 
 **200 OK:**
 ```json
 {
   "success": true,
-  "message": "Faculty retrieved successfully",
+  "message": "Course retrieved successfully",
   "data": {
     "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     "name": "computer science",
-    "description": "Faculty of Computer Science and Engineering"
+    "description": "Course of Computer Science and Engineering"
   }
 }
 ```
@@ -99,16 +99,16 @@ Get a single faculty by UUID.
 ```json
 {
   "success": false,
-  "message": "Faculty not found",
+  "message": "Course not found",
   "data": null
 }
 ```
 
 ---
 
-### PUT /faculty/:id
+### PUT /course/:id
 
-Update a faculty.
+Update a course.
 
 **Body:**
 ```json
@@ -122,7 +122,7 @@ Update a faculty.
 ```json
 {
   "success": true,
-  "message": "Faculty updated successfully",
+  "message": "Course updated successfully",
   "data": {
     "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     "name": "computer science & engineering",
@@ -133,17 +133,17 @@ Update a faculty.
 
 ---
 
-### DELETE /faculty/:id
+### DELETE /course/:id
 
-Soft delete a faculty.
+Soft delete a course.
 
 **200 OK:**
 ```json
 {
   "success": true,
-  "message": "Faculty deleted successfully",
+  "message": "Course deleted successfully",
   "data": {
-    "message": "Faculty deleted successfully"
+    "message": "Course deleted successfully"
   }
 }
 ```
@@ -154,14 +154,14 @@ Soft delete a faculty.
 
 ### POST /subject
 
-Create a new subject under a faculty.
+Create a new subject under a course.
 
 **Body:**
 ```json
 {
   "name": "Data Structures",
   "description": "Study of data structures and algorithms",
-  "faculty_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+  "course_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
 }
 ```
 
@@ -169,7 +169,7 @@ Create a new subject under a faculty.
 |-------------|--------|----------|--------------------------|
 | name        | string | Yes      | 1-100 characters         |
 | description | string | No       | Optional                 |
-| faculty_id  | string | Yes      | Valid UUID               |
+| course_id   | string | Yes      | Valid UUID               |
 
 **201 Created:**
 ```json
@@ -180,7 +180,7 @@ Create a new subject under a faculty.
     "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
     "name": "data structures",
     "description": "Study of data structures and algorithms",
-    "faculty_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+    "course_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
   }
 }
 ```
@@ -204,8 +204,8 @@ Get all subjects with pagination.
         "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
         "name": "data structures",
         "description": "Study of data structures and algorithms",
-        "faculty_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-        "faculty": {
+        "course_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "course": {
           "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
           "name": "computer science"
         }
@@ -223,9 +223,9 @@ Get all subjects with pagination.
 
 ---
 
-### GET /subject/faculty/:facultyId
+### GET /subject/course/:courseId
 
-Get all subjects under a specific faculty.
+Get all subjects under a specific course.
 
 **Query Params:** `page`, `limit`
 
@@ -240,8 +240,8 @@ Get all subjects under a specific faculty.
         "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
         "name": "data structures",
         "description": "Study of data structures and algorithms",
-        "faculty_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-        "faculty": {
+        "course_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "course": {
           "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
           "name": "computer science"
         }
@@ -272,8 +272,8 @@ Get a single subject by UUID.
     "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
     "name": "data structures",
     "description": "Study of data structures and algorithms",
-    "faculty_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-    "faculty": {
+    "course_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "course": {
       "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
       "name": "computer science"
     }
@@ -291,7 +291,7 @@ Update a subject.
 ```json
 {
   "name": "Advanced Data Structures",
-  "faculty_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+  "course_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
 }
 ```
 
@@ -304,7 +304,7 @@ Update a subject.
     "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
     "name": "advanced data structures",
     "description": "Study of data structures and algorithms",
-    "faculty_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+    "course_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
   }
 }
 ```
@@ -386,7 +386,7 @@ Get all topics with pagination.
         "subject": {
           "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
           "name": "data structures",
-          "faculty": {
+          "course": {
             "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
             "name": "computer science"
           }
@@ -426,7 +426,7 @@ Get all topics under a specific subject.
         "subject": {
           "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
           "name": "data structures",
-          "faculty": {
+          "course": {
             "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
             "name": "computer science"
           }
@@ -462,7 +462,7 @@ Get a single topic by UUID.
     "subject": {
       "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
       "name": "data structures",
-      "faculty": {
+      "course": {
         "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
         "name": "computer science"
       }

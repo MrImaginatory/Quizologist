@@ -5,7 +5,7 @@ export interface AuthRequest extends Request {
   user?: JwtPayload;
 }
 
-export interface FacultyAttributes {
+export interface CourseAttributes {
   id: string;
   name: string;
   description: string | null;
@@ -18,7 +18,7 @@ export interface SubjectAttributes {
   id: string;
   name: string;
   description: string | null;
-  faculty_id: string;
+  course_id: string;
   createdAt?: Date;
   updatedAt?: Date;
   deletedAt?: Date | null;
