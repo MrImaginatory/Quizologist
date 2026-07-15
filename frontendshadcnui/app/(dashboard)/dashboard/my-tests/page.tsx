@@ -3,13 +3,16 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTestHistory } from "@/hooks/use-test-history";
-import { TestHistory } from "@/lib/api";
+import { useAuth } from "@/contexts/auth-context";
+import { TestHistory, testsApi } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, ClipboardCheck, Trophy, CheckCircle, Play } from "lucide-react";
+import { Loader2, ClipboardCheck, Trophy, CheckCircle, Play, RotateCcw, XCircle, BookOpen } from "lucide-react";
 import { DataTable } from "@/components/data-table";
 import { StartTestDialog } from "@/components/dialogs/start-test-dialog";
+import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
+import { toast } from "sonner";
 
 const statusColors: Record<string, string> = {
   completed: "bg-green-500/10 text-green-500 border-green-500/20",
@@ -19,10 +22,14 @@ const statusColors: Record<string, string> = {
 
 export default function MyTestsPage() {
   const router = useRouter();
+  const { token } = useAuth();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [showStartDialog, setShowStartDialog] = useState(false);
-  const { tests, total, totalPages, isLoading, error } = useTestHistory({ page, limit });
+  const [abandonTarget, setAbandonTarget] = useState<TestHistory | null>(null);
+  const [showAbandonDialog, setShowAbandonDialog] = useState(false);
+  const [isAbandoning, setIsAbandoning] = useState(false);
+  const { tests, total, totalPages, isLoading, error, refetch } = useTestHistory({ page, limit });
 
   const columns = [
     { key: "sno", header: "#", render: (_t: TestHistory, index: number) => index + 1 },
@@ -31,11 +38,11 @@ export default function MyTestsPage() {
     )},
     { key: "status", header: "Status", render: (t: TestHistory) => (
       <Badge variant="outline" className={statusColors[t.status] || ""}>
-        {t.status === "completed" ? "Completed" : t.status === "in_progress" ? "In Progress" : t.status}
+        {t.status === "completed" ? "Completed" : t.status === "in_progress" ? "In Progress" : t.status === "abandoned" ? "Abandoned" : t.status}
       </Badge>
     )},
     { key: "score", header: "Score", render: (t: TestHistory) => {
-      const score = typeof t.score === "number" ? t.score : 0;
+      const score = parseFloat(String(t.score)) || 0;
       return (
         <span className={`font-medium ${score >= 70 ? "text-green-500" : score >= 50 ? "text-yellow-500" : "text-red-500"}`}>
           {score > 0 ? score.toFixed(1) : "-"}%
@@ -43,20 +50,84 @@ export default function MyTestsPage() {
       );
     }},
     { key: "correct", header: "Correct", render: (t: TestHistory) => (
-      <span>{t.correct} / {t.totalQuestions}</span>
+      <span>{t.correct || 0} / {t.total_questions}</span>
     )},
-    { key: "startedAt", header: "Date", render: (t: TestHistory) => (
-      <span>{new Date(t.startedAt).toLocaleDateString()}</span>
-    )},
+    { key: "started_at", header: "Date", render: (t: TestHistory) => {
+      if (!t.started_at) return <span>-</span>;
+      const date = new Date(t.started_at);
+      if (isNaN(date.getTime())) return <span>-</span>;
+      return <span>{date.toLocaleDateString()}</span>;
+    }},
+    { key: "actions", header: "Actions", render: (t: TestHistory) => {
+      if (t.status === "in_progress") {
+        return (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.push(`/live-test?id=${t.id}`)}
+              className="gap-1"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Resume
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-destructive hover:text-destructive"
+              onClick={() => handleAbandonClick(t)}
+            >
+              <XCircle className="h-4 w-4" />
+            </Button>
+          </div>
+        );
+      }
+      if (t.status === "completed") {
+        return (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.push(`/test-result?id=${t.id}`)}
+            className="gap-1"
+          >
+            <BookOpen className="h-4 w-4" />
+            View
+          </Button>
+        );
+      }
+      return null;
+    }},
   ];
 
   const completedTests = tests.filter((t) => t.status === "completed");
   const avgScore = completedTests.length > 0
-    ? completedTests.reduce((sum, t) => sum + (t.score || 0), 0) / completedTests.length
+    ? completedTests.reduce((sum, t) => sum + (parseFloat(String(t.score)) || 0), 0) / completedTests.length
     : 0;
 
   const handleStartTest = (testId: string) => {
-    router.push(`/take-test?id=${testId}`);
+    router.push(`/live-test?id=${testId}`);
+  };
+
+  const handleAbandonClick = (test: TestHistory) => {
+    setAbandonTarget(test);
+    setShowAbandonDialog(true);
+  };
+
+  const handleConfirmAbandon = async () => {
+    if (!abandonTarget) return;
+
+    setIsAbandoning(true);
+    try {
+      await testsApi.abandon(abandonTarget.id, token || undefined);
+      toast.success("Test abandoned successfully");
+      setShowAbandonDialog(false);
+      setAbandonTarget(null);
+      refetch();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to abandon test");
+    } finally {
+      setIsAbandoning(false);
+    }
   };
 
   return (
@@ -127,6 +198,17 @@ export default function MyTestsPage() {
         open={showStartDialog}
         onOpenChange={setShowStartDialog}
         onStartTest={handleStartTest}
+      />
+
+      {/* Abandon Confirmation Dialog */}
+      <ConfirmDialog
+        open={showAbandonDialog}
+        onOpenChange={setShowAbandonDialog}
+        title="Abandon Test?"
+        description="Are you sure you want to abandon this test? Your progress will be lost and the test will be marked as abandoned."
+        confirmText="Abandon"
+        isLoading={isAbandoning}
+        onConfirm={handleConfirmAbandon}
       />
     </div>
   );

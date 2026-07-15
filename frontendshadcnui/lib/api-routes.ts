@@ -74,8 +74,8 @@ export const API_ROUTES = {
     BY_ID: (id: string) => `${BASE_URL}/api/test/${id}`,
     START: `${BASE_URL}/api/test/start`,
     SUBMIT: (id: string) => `${BASE_URL}/api/test/${id}/submit`,
-    ABANDON: (id: string) => `${BASE_URL}/api/test/${id}/abandon`,
-    RESULT: (id: string) => `${BASE_URL}/api/test/${id}/result`,
+    ABANDON: (id: string) => `${BASE_URL}/api/test/abandon/${id}`,
+    RESULT: (id: string) => `${BASE_URL}/api/test/result/${id}/`,
     HISTORY: `${BASE_URL}/api/test/history`,
   },
 

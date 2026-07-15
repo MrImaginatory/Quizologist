@@ -226,15 +226,69 @@ export class TestSessionService {
     const session = await TestSession.findOne({
       where: { id: data.testId, student_id: studentId },
       attributes: TIMESTAMP_EXCLUDE,
-      include: [SELECTION_INCLUDE],
+      include: [
+        SELECTION_INCLUDE,
+        {
+          model: TestAnswer,
+          as: "answers",
+          attributes: ["question_id", "createdAt"],
+          include: [
+            {
+              model: Question,
+              as: "question",
+              attributes: ["id", "question", "choices", "difficulty"],
+              include: [
+                { model: Topic, as: "topic", attributes: ["id", "name"] },
+                { model: Subject, as: "subject", attributes: ["id", "name"] },
+                { model: Course, as: "course", attributes: ["id", "name"] },
+              ],
+            },
+          ],
+        },
+      ],
+      order: [[{ model: TestAnswer, as: "answers" }, "createdAt", "ASC"]],
     });
 
     if (!session) {
       throw ApiError.notFound(RESPONSE_MESSAGES.ERROR.TEST_NOT_FOUND);
     }
 
-    return flattenSelections(session);
+    const plain = session.toJSON ? session.toJSON() : (session as any);
+    const answers: any[] = plain.answers || [];
+
+    const questions = answers.map((a: any, index: number) => ({
+      index,
+      questionId: a.question?.id || "",
+      question: a.question?.question || "",
+      choices: a.question?.choices || [],
+      difficulty: a.question?.difficulty || "",
+      topicName: a.question?.topic?.name || null,
+      subjectName: a.question?.subject?.name || null,
+      courseName: a.question?.course?.name || null,
+    }));
+
+    // Build selections-flattened base
+    const selections: any[] = plain.selections || [];
+    if (selections.length > 0) {
+      plain.course = selections[0].course || null;
+      plain.subject = selections[0].subject || null;
+      plain.topic = selections[0].topic || null;
+    } else {
+      plain.course = null;
+      plain.subject = null;
+      plain.topic = null;
+    }
+    delete plain.selections;
+    delete plain.answers;
+
+    return {
+      ...plain,
+      totalQuestions: questions.length,
+      questions,
+    };
   }
+
+
 
   static async getHistory(studentId: string, data: PaginationInput) {
     const { page, limit } = data;

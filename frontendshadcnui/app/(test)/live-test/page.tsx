@@ -29,17 +29,28 @@ import { useAuth } from "@/contexts/auth-context";
 import { useTestSocket } from "@/hooks/use-test-socket";
 import { testsApi, TestSession } from "@/lib/api";
 
-function TakeTestContent() {
+function LiveTestContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const testId = searchParams.get("id");
   const { token } = useAuth();
   const { theme, setTheme, resolvedTheme } = useTheme();
 
+  // Read saved state once synchronously — before any useState calls
+  const _saved = (() => {
+    if (typeof window === "undefined" || !testId) return null;
+    try { return JSON.parse(localStorage.getItem(`test_state_${testId}`) || "null"); }
+    catch { return null; }
+  })();
+
   const [testSession, setTestSession] = useState<TestSession | null>(null);
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, string>>({});
-  const [skipped, setSkipped] = useState<Set<number>>(new Set());
+  const [currentQuestion, setCurrentQuestion] = useState<number>(_saved?.currentQuestion ?? 0);
+  const [answers, setAnswers] = useState<Record<number, string>>(() => {
+    if (!_saved?.answers) return {};
+    // JSON keys are always strings — convert back to number keys
+    return Object.fromEntries(Object.entries(_saved.answers).map(([k, v]) => [Number(k), String(v)]));
+  });
+  const [skipped, setSkipped] = useState<Set<number>>(new Set(_saved?.skipped ?? []));
   const [timeLeft, setTimeLeft] = useState(0);
   const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
@@ -51,17 +62,26 @@ function TakeTestContent() {
 
   const questionStartTime = useRef<number>(Date.now());
 
+  // Persist state to localStorage on every change
+  useEffect(() => {
+    if (!testId || testCompleted) return;
+    localStorage.setItem(`test_state_${testId}`, JSON.stringify({
+      answers,
+      skipped: Array.from(skipped),
+      currentQuestion,
+    }));
+  }, [answers, skipped, currentQuestion, testId, testCompleted]);
+
   // Socket connection
   const { isConnected, joinTest, sendAnswer, sendSkip, submitTest, startHeartbeat, stopHeartbeat } = useTestSocket({
     onTestJoined: (data) => {
-      setTimeLeft(data.timeRemaining);
       startHeartbeat(testId!, data.currentIndex);
     },
     onAnswerRecorded: (data) => {
-      setTimeLeft(data.timeRemaining);
+      // Timer is managed by client-side calculation from ends_at
     },
     onTimeUpdate: (data) => {
-      setTimeLeft(data.timeRemaining);
+      // Timer is managed by client-side calculation from ends_at
     },
     onTestSubmitted: (data) => {
       setResults({
@@ -76,6 +96,19 @@ function TakeTestContent() {
       setError(data.message);
     },
   });
+
+  // Warn user before refresh/leaving page
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!testCompleted && testId) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [testCompleted, testId]);
 
   // Fetch test session
   useEffect(() => {
@@ -101,6 +134,24 @@ function TakeTestContent() {
       joinTest(testId);
     }
   }, [isConnected, testId, testSession, joinTest]);
+
+  // Timer based on server's ends_at time
+  useEffect(() => {
+    if (!testSession?.ends_at || testCompleted) return;
+
+    const endsAt = new Date(testSession.ends_at).getTime();
+
+    const timer = setInterval(() => {
+      const remaining = Math.max(0, Math.floor((endsAt - Date.now()) / 1000));
+      setTimeLeft(remaining);
+      if (remaining <= 0) {
+        clearInterval(timer);
+        handleSubmit();
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [testSession?.ends_at, testCompleted]);
 
   const question = testSession?.questions?.[currentQuestion];
   const totalQuestions = testSession?.questions?.length || 0;
@@ -167,6 +218,7 @@ function TakeTestContent() {
     if (testId) {
       stopHeartbeat();
       submitTest(testId);
+      localStorage.removeItem(`test_state_${testId}`);
     }
     setShowConfirmSubmit(false);
   };
@@ -178,6 +230,7 @@ function TakeTestContent() {
       } catch (err) {
         console.error("Failed to abandon test:", err);
       }
+      localStorage.removeItem(`test_state_${testId}`);
     }
     stopHeartbeat();
     router.push("/dashboard/my-tests");
@@ -217,14 +270,24 @@ function TakeTestContent() {
   if (error || !testSession) {
     return (
       <div className="h-screen flex items-center justify-center bg-background">
-        <Card className="w-full max-w-md mx-4">
-          <CardHeader>
-            <CardTitle className="text-destructive">Error</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-muted-foreground">{error || "Failed to load test session"}</p>
+        <Card className="w-full max-w-md mx-4 shadow-lg">
+          <CardContent className="p-8 text-center">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 200 }}
+              className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-500/10 mb-4"
+            >
+              <AlertCircle className="h-8 w-8 text-amber-500" />
+            </motion.div>
+            <h2 className="text-xl font-bold mb-2">Oops! Something went wrong</h2>
+            <p className="text-muted-foreground mb-6">
+              {error === "This test has already been completed"
+                ? "This test has already been completed. You can view your results in the test history."
+                : error || "We couldn't load the test session. Please try again."}
+            </p>
             <Button onClick={() => router.push("/dashboard/my-tests")} className="w-full">
-              Go Back
+              View Test History
             </Button>
           </CardContent>
         </Card>
@@ -234,44 +297,100 @@ function TakeTestContent() {
 
   // Results Screen
   if (testCompleted && results) {
+    const score = results.score;
+    const incorrect = results.total - results.correct;
+    const scoreColor = score >= 70 ? "text-emerald-500" : score >= 50 ? "text-amber-500" : "text-red-500";
+    const bgColor = score >= 70 ? "bg-emerald-500/10" : score >= 50 ? "bg-amber-500/10" : "bg-red-500/10";
+
     return (
       <div className="h-screen flex items-center justify-center bg-background p-4">
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3 }}
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          className="w-full max-w-2xl"
         >
-          <Card className="w-full max-w-md shadow-xl">
-            <CardHeader className="text-center pb-2">
-              <CardTitle className="text-2xl font-bold">Test Completed</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6 pt-4">
-              <div className="text-center">
+          <Card className="w-full shadow-2xl border-0">
+            <CardContent className="p-8">
+              {/* Header with checkmark */}
+              <div className="text-center mb-8">
                 <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ scale: 1, rotate: 0 }}
                   transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                  className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-primary/10"
+                  className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/10 mb-4"
                 >
-                  <span className="text-3xl font-bold text-primary">{results.score.toFixed(0)}%</span>
+                  <CheckCircle2 className="h-8 w-8 text-emerald-500" />
                 </motion.div>
-                <p className="text-muted-foreground mt-3">Your Score</p>
+                <motion.h2
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="text-2xl font-bold"
+                >
+                  Test Completed!
+                </motion.h2>
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                  className="text-muted-foreground mt-1"
+                >
+                  Great job finishing the test
+                </motion.p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-center p-4 rounded-xl bg-emerald-500/10">
-                  <div className="text-2xl font-bold text-emerald-500">{results.correct}</div>
+              {/* Score Circle */}
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.5, type: "spring", stiffness: 150 }}
+                className="flex justify-center mb-6"
+              >
+                <div className={`relative w-32 h-32 rounded-full ${bgColor} flex items-center justify-center`}>
+                  <div className="text-center">
+                    <span className={`text-4xl font-bold ${scoreColor}`}>
+                      {score.toFixed(0)}
+                    </span>
+                    <span className={`text-lg ${scoreColor}`}>%</span>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Stats Grid */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+                className="grid grid-cols-3 gap-3 mb-6"
+              >
+                <div className="text-center p-3 rounded-xl bg-emerald-500/10">
+                  <div className="text-xl font-bold text-emerald-500">{results.correct}</div>
                   <p className="text-xs text-muted-foreground">Correct</p>
                 </div>
-                <div className="text-center p-4 rounded-xl bg-red-500/10">
-                  <div className="text-2xl font-bold text-red-500">{results.total - results.correct}</div>
+                <div className="text-center p-3 rounded-xl bg-red-500/10">
+                  <div className="text-xl font-bold text-red-500">{incorrect}</div>
                   <p className="text-xs text-muted-foreground">Incorrect</p>
                 </div>
-              </div>
+                <div className="text-center p-3 rounded-xl bg-muted">
+                  <div className="text-xl font-bold">{results.total}</div>
+                  <p className="text-xs text-muted-foreground">Total</p>
+                </div>
+              </motion.div>
 
-              <Button className="w-full" size="lg" onClick={() => router.push("/dashboard/my-tests")}>
-                View Test History
-              </Button>
+              {/* Action Button */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.7 }}
+              >
+                <Button
+                  className="w-full h-12"
+                  onClick={() => router.push("/dashboard/my-tests")}
+                >
+                  View Test History
+                </Button>
+              </motion.div>
             </CardContent>
           </Card>
         </motion.div>
@@ -382,25 +501,15 @@ function TakeTestContent() {
         {/* Question Content */}
         <div className="flex-1 flex flex-col overflow-hidden relative">
           {/* Watermark */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0">
-            <div
-              className="absolute inset-0"
-              style={{
-                transform: "rotate(-35deg) scale(1.5)",
-                transformOrigin: "center center",
-              }}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0 flex items-center justify-center">
+            <div 
+              className="flex flex-wrap justify-center content-center gap-x-20 gap-y-20 w-[150vw] h-[150vh] opacity-[0.08] dark:opacity-[0.04]"
+              style={{ transform: "rotate(-35deg)" }}
             >
-              {Array.from({ length: 80 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="absolute font-mono text-[10px] opacity-[0.07] dark:opacity-[0.05] text-gray-900 dark:text-gray-100 whitespace-nowrap"
-                  style={{
-                    top: `${Math.floor(i / 10) * 80 - 300}px`,
-                    left: `${(i % 10) * 200 - 200}px`,
-                  }}
-                >
+              {Array.from({ length: 150 }).map((_, i) => (
+                <span key={i} className="font-mono text-xl text-foreground whitespace-nowrap">
                   {testSession.test_id}
-                </div>
+                </span>
               ))}
             </div>
           </div>
@@ -668,14 +777,14 @@ function TakeTestContent() {
   );
 }
 
-export default function TakeTestPage() {
+export default function LiveTestPage() {
   return (
     <Suspense fallback={
       <div className="h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     }>
-      <TakeTestContent />
+      <LiveTestContent />
     </Suspense>
   );
 }

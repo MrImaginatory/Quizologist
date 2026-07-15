@@ -430,10 +430,11 @@ export interface TestHistory {
   id: string;
   test_id: string;
   status: string;
-  totalQuestions: number;
+  total_questions: number;
   correct: number;
-  score: number;
-  startedAt: string;
+  score: string | number;
+  started_at: string;
+  course?: { id: string; name: string };
 }
 
 export interface TestHistoryResponse {
@@ -497,11 +498,48 @@ export interface SubmitTestResponse {
   };
 }
 
+export interface TestResult {
+  id: string;
+  test_id: string;
+  status: string;
+  totalQuestions: number;
+  attempted: number;
+  skipped: number;
+  correct: number;
+  incorrect: number;
+  score: number;
+  disconnectCount: number;
+  startedAt: string;
+  completedAt: string;
+  questions: {
+    index: number;
+    question: string;
+    choices: string[];
+    selectedAnswer: string | null;
+    correctAnswer: string;
+    isCorrect: boolean;
+    explanation: string;
+    videoUrl: string;
+    timeTaken: number;
+    topicName: string;
+    subjectName: string;
+    courseName: string;
+  }[];
+}
+
+export interface TestResultResponse {
+  success: boolean;
+  message: string;
+  data: TestResult;
+}
+
 export const testsApi = {
   getHistory: (page = 1, limit = 10, token?: string) =>
     apiRequest<TestHistoryResponse>(`${API_ROUTES.TESTS.HISTORY}?page=${page}&limit=${limit}`, { token }),
   getById: (id: string, token?: string) =>
     apiRequest<StartTestResponse>(API_ROUTES.TESTS.BY_ID(id), { token }),
+  getResult: (testId: string, token?: string) =>
+    apiRequest<TestResultResponse>(API_ROUTES.TESTS.RESULT(testId), { token }),
   start: (payload: StartTestPayload, token?: string) =>
     apiRequest<StartTestResponse>(API_ROUTES.TESTS.START, {
       method: "POST",

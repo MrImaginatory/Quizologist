@@ -261,7 +261,7 @@ export function StartTestDialog({ open, onOpenChange, onStartTest }: StartTestDi
     }
   };
 
-  const toggleAllSubjects = (index: number, subjectIds: string[]) => {
+  const toggleAllSubjects = async (index: number, subjectIds: string[]) => {
     const updated = [...selections];
     const current = updated[index].subjectIds;
     const allSelected = subjectIds.every((id) => current.includes(id));
@@ -273,6 +273,30 @@ export function StartTestDialog({ open, onOpenChange, onStartTest }: StartTestDi
     updated[index].topicIds = [];
     setSelections(updated);
     setSelectedSubjectIdsMap((prev) => ({ ...prev, [index]: updated[index].subjectIds }));
+
+    // Fetch topics for all selected subjects
+    if (updated[index].subjectIds.length > 0) {
+      setLoadingTopicsMap((prev) => ({ ...prev, [index]: true }));
+      try {
+        const allTopics: Topic[] = [];
+        for (const subjectId of updated[index].subjectIds) {
+          const response = await topicsApi.getBySubject(subjectId, 1, 100, token || undefined);
+          allTopics.push(...response.data.topics);
+        }
+        // Remove duplicates by id
+        const uniqueTopics = allTopics.filter((topic, i, self) =>
+          i === self.findIndex((t) => t.id === topic.id)
+        );
+        setTopicsMap((prev) => ({ ...prev, [index]: uniqueTopics }));
+      } catch (err) {
+        console.error("Failed to fetch topics:", err);
+        setTopicsMap((prev) => ({ ...prev, [index]: [] }));
+      } finally {
+        setLoadingTopicsMap((prev) => ({ ...prev, [index]: false }));
+      }
+    } else {
+      setTopicsMap((prev) => ({ ...prev, [index]: [] }));
+    }
   };
 
   const toggleTopic = (index: number, topicId: string) => {

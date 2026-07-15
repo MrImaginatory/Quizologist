@@ -8,6 +8,7 @@ import Question from "../modules/question/question.model";
 
 TestSession.hasMany(TestAnswer, { foreignKey: "test_session_id", as: "answers" });
 TestAnswer.belongsTo(TestSession, { foreignKey: "test_session_id", as: "testSession" });
+TestAnswer.belongsTo(Question, { foreignKey: "question_id", as: "question" });
 
 TestSession.hasMany(TestSelection, { foreignKey: "test_session_id", as: "selections" });
 TestSelection.belongsTo(TestSession, { foreignKey: "test_session_id", as: "testSession" });

@@ -11,7 +11,7 @@ export function ThemeToggle() {
   const pathname = usePathname();
 
   // Hide on test page since there's a theme toggle in the header
-  if (pathname.startsWith("/take-test")) {
+  if (pathname.startsWith("/live-test")) {
     return null;
   }
 

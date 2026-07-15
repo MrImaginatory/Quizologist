@@ -68,7 +68,10 @@ export function useTestSocket(options: UseTestSocketOptions = {}) {
 
     const socket = io(socketUrl, {
       auth: { token },
-      transports: ["websocket", "polling"],
+      transports: ["polling", "websocket"],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
     });
 
     socket.on("connect", () => {
@@ -76,6 +79,11 @@ export function useTestSocket(options: UseTestSocketOptions = {}) {
     });
 
     socket.on("disconnect", () => {
+      setIsConnected(false);
+    });
+
+    socket.on("connect_error", () => {
+      // Silently handle connection errors
       setIsConnected(false);
     });
 
