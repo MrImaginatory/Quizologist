@@ -432,13 +432,13 @@ export default function TakeTestPage() {
                 transformOrigin: "center center",
               }}
             >
-              {Array.from({ length: 80 }).map((_, i) => (
+              {Array.from({ length: 400 }).map((_, i) => (
                 <div
                   key={i}
-                  className="absolute font-mono text-[10px] opacity-[0.07] dark:opacity-[0.05] text-gray-900 dark:text-gray-100 whitespace-nowrap"
+                  className="absolute font-mono text-sm opacity-[0.15] dark:opacity-[0.05] text-gray-900 dark:text-gray-100 whitespace-nowrap"
                   style={{
-                    top: `${Math.floor(i / 10) * 80 - 300}px`,
-                    left: `${(i % 10) * 200 - 200}px`,
+                    top: `${Math.floor(i / 20) * 120 - 1000}px`,
+                    left: `${(i % 20) * 250 - 1000}px`,
                   }}
                 >
                   {testSession.test_id}
