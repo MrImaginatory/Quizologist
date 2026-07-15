@@ -38,6 +38,17 @@ export class DashboardService {
       { type: QueryTypes.SELECT }
     ) as any[];
 
+    const usersByLocation = await sequelize.query(
+      `SELECT l.id, l.city, l.state, COUNT(u.id) as user_count
+       FROM locations l
+       LEFT JOIN users u ON u.location_id = l.id AND u.deleted_at IS NULL
+       WHERE l.deleted_at IS NULL
+       GROUP BY l.id, l.city, l.state
+       ORDER BY user_count DESC
+       LIMIT 10`,
+      { type: QueryTypes.SELECT }
+    ) as any[];
+
     return {
       testsSubmitted: parseInt(testsSubmitted?.count || "0", 10),
       totalQuestions: parseInt(totalQuestions?.count || "0", 10),
@@ -46,6 +57,7 @@ export class DashboardService {
       studentsCount: parseInt(studentsCount?.count || "0", 10),
       totalSubjects: parseInt(totalSubjects?.count || "0", 10),
       totalTeachers: parseInt(totalTeachers?.count || "0", 10),
+      usersByLocation,
     };
   }
 

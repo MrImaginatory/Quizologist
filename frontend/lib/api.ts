@@ -143,6 +143,12 @@ export interface DashboardStatsResponse {
     totalSubjects?: number;
     totalTeachers?: number;
     totalCourses?: number;
+    usersByLocation?: Array<{
+      id: string;
+      city: string;
+      state: string;
+      user_count: number;
+    }>;
     // Teacher
     questionsAdded?: number;
     studentsInCourses?: number;
@@ -605,7 +611,36 @@ export interface TestResultResponse {
   data: TestResult;
 }
 
+export interface StudentResultsResponse {
+  success: boolean;
+  message: string;
+  data: {
+    results: TestResult[];
+    pagination: Pagination;
+  };
+}
+
 export const testsApi = {
+  getAll: (params: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    subjectId?: string;
+    studentId?: string;
+    dateFrom?: string;
+    dateTo?: string;
+  }, token?: string) => {
+    const searchParams = new URLSearchParams();
+    if (params.page) searchParams.set("page", params.page.toString());
+    if (params.limit) searchParams.set("limit", params.limit.toString());
+    if (params.status) searchParams.set("status", params.status);
+    if (params.subjectId) searchParams.set("subjectId", params.subjectId);
+    if (params.studentId) searchParams.set("studentId", params.studentId);
+    if (params.dateFrom) searchParams.set("dateFrom", params.dateFrom);
+    if (params.dateTo) searchParams.set("dateTo", params.dateTo);
+    const query = searchParams.toString();
+    return apiRequest<TestHistoryResponse>(`${API_ROUTES.TESTS.ALL}${query ? `?${query}` : ""}`, { token });
+  },
   getHistory: (page = 1, limit = 10, token?: string) =>
     apiRequest<TestHistoryResponse>(`${API_ROUTES.TESTS.HISTORY}?page=${page}&limit=${limit}`, { token }),
   getById: (id: string, token?: string) =>
@@ -628,4 +663,9 @@ export const testsApi = {
       method: "POST",
       token,
     }),
+  getStudentResults: (studentId: string, page = 1, limit = 10, token?: string) =>
+    apiRequest<StudentResultsResponse>(
+      `${API_ROUTES.TESTS.STUDENT_RESULTS(studentId)}?page=${page}&limit=${limit}`,
+      { token }
+    ),
 };

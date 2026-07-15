@@ -5,13 +5,17 @@ import { useAuth } from "@/contexts/auth-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatisticsCard } from "@/components/statistics-card";
 import { dashboardApi, DashboardStatsResponse } from "@/lib/api";
-import { Loader2 } from "lucide-react";
+import { Loader2, MapPin } from "lucide-react";
+import { ViewToggle } from "@/components/dashboard/view-toggle";
+import { UsersByLocationChart } from "@/components/charts/users-by-location-chart";
+import { UsersByLocationTable } from "@/components/dashboard/users-by-location-table";
 
 export function AdminDashboard() {
   const { token } = useAuth();
   const [stats, setStats] = useState<DashboardStatsResponse["data"] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [locationView, setLocationView] = useState<"table" | "chart">("chart");
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -103,27 +107,33 @@ export function AdminDashboard() {
     },
   ];
 
+  const usersByLocation = stats?.usersByLocation || [];
+
   return (
     <div className="space-y-6">
       <StatisticsCard stats={adminStats} />
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">No recent activity to display.</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">Coming soon.</p>
-          </CardContent>
-        </Card>
-      </div>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <MapPin className="h-5 w-5" />
+            Users by Location
+            {usersByLocation.length > 0 && (
+              <span className="text-sm font-normal text-muted-foreground">
+                ({usersByLocation.reduce((sum, loc) => sum + loc.user_count, 0)} total users)
+              </span>
+            )}
+          </CardTitle>
+          <ViewToggle value={locationView} onChange={setLocationView} />
+        </CardHeader>
+        <CardContent>
+          {locationView === "chart" ? (
+            <UsersByLocationChart data={usersByLocation} />
+          ) : (
+            <UsersByLocationTable data={usersByLocation} />
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

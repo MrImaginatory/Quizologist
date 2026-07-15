@@ -38,7 +38,12 @@ Get dashboard statistics based on the authenticated user's role. Returns differe
     "topicsCovered": 312,
     "studentsCount": 892,
     "totalSubjects": 19,
-    "totalTeachers": 11
+    "totalTeachers": 11,
+    "usersByLocation": [
+      { "id": "b2c3d4e5-...", "city": "Mumbai", "state": "Maharashtra", "user_count": 45 },
+      { "id": "c3d4e5f6-...", "city": "Delhi", "state": "Delhi", "user_count": 32 },
+      { "id": "d4e5f6a7-...", "city": "Bangalore", "state": "Karnataka", "user_count": 28 }
+    ]
   }
 }
 ```
@@ -52,6 +57,11 @@ Get dashboard statistics based on the authenticated user's role. Returns differe
 | studentsCount | number | Total registered students |
 | totalSubjects | number | Total active subjects |
 | totalTeachers | number | Total registered teachers |
+| usersByLocation | array | User count grouped by location |
+| usersByLocation[].id | string | Location UUID |
+| usersByLocation[].city | string | City name |
+| usersByLocation[].state | string | State name |
+| usersByLocation[].user_count | number | Number of users assigned to this location |
 
 ---
 

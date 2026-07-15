@@ -35,6 +35,7 @@ function TestResultContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const testId = searchParams.get("id");
+  const studentId = searchParams.get("studentId");
   const { token, user } = useAuth();
 
   const [result, setResult] = useState<TestResult | null>(null);
@@ -42,13 +43,25 @@ function TestResultContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const isAdminOrTeacher = user?.role === "admin" || user?.role === "teacher";
+
   useEffect(() => {
     if (!testId || !token) return;
 
     const fetchResult = async () => {
       try {
-        const response = await testsApi.getResult(testId, token);
-        setResult(response.data);
+        if (isAdminOrTeacher && studentId) {
+          const response = await testsApi.getStudentResults(studentId, 1, 100, token);
+          const foundResult = response.data.results.find((r) => r.id === testId);
+          if (foundResult) {
+            setResult(foundResult);
+          } else {
+            setError("Test result not found");
+          }
+        } else {
+          const response = await testsApi.getResult(testId, token);
+          setResult(response.data);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load results");
       } finally {
@@ -57,7 +70,7 @@ function TestResultContent() {
     };
 
     fetchResult();
-  }, [testId, token]);
+  }, [testId, studentId, token, isAdminOrTeacher]);
 
   const question = result?.questions?.[currentQuestion];
   const totalQuestions = result?.questions?.length || 0;
@@ -82,7 +95,7 @@ function TestResultContent() {
             <p className="text-muted-foreground mb-6">
               {error || "The results for this test are not available yet."}
             </p>
-            <Button onClick={() => router.push("/dashboard/my-tests")} className="w-full">
+            <Button onClick={() => router.push(isAdminOrTeacher ? "/dashboard/tests" : "/dashboard/my-tests")} className="w-full">
               View Test History
             </Button>
           </CardContent>
@@ -101,7 +114,7 @@ function TestResultContent() {
       <header className="shrink-0 border-b bg-card">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => router.push("/dashboard/my-tests")}>
+            <Button variant="ghost" size="icon" onClick={() => router.push(isAdminOrTeacher ? "/dashboard/tests" : "/dashboard/my-tests")}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>

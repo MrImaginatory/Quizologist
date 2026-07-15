@@ -83,9 +83,6 @@ const adminNav: NavItem[] = [
   },
   { title: "Tests", icon: ClipboardList, href: "/dashboard/tests" },
   { title: "Locations", icon: MapPin, href: "/dashboard/locations" },
-  { label: "Insights", isSection: true },
-  { title: "Analytics", icon: BarChart3, href: "/dashboard/analytics" },
-  { title: "Settings", icon: Settings, href: "/dashboard/settings" },
 ];
 
 export function AppSidebar() {
