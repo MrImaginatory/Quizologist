@@ -1,21 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useTestHistory } from "@/hooks/use-test-history";
 import { TestHistory } from "@/lib/api";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Loader2, ClipboardCheck, Trophy, Clock, CheckCircle } from "lucide-react";
+import { Loader2, ClipboardCheck, Trophy, CheckCircle, Play } from "lucide-react";
 import { DataTable } from "@/components/data-table";
+import { StartTestDialog } from "@/components/dialogs/start-test-dialog";
 
 const statusColors: Record<string, string> = {
   completed: "bg-green-500/10 text-green-500 border-green-500/20",
@@ -24,8 +18,10 @@ const statusColors: Record<string, string> = {
 };
 
 export default function MyTestsPage() {
+  const router = useRouter();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
+  const [showStartDialog, setShowStartDialog] = useState(false);
   const { tests, total, totalPages, isLoading, error } = useTestHistory({ page, limit });
 
   const columns = [
@@ -38,11 +34,14 @@ export default function MyTestsPage() {
         {t.status === "completed" ? "Completed" : t.status === "in_progress" ? "In Progress" : t.status}
       </Badge>
     )},
-    { key: "score", header: "Score", render: (t: TestHistory) => (
-      <span className={`font-medium ${t.score >= 70 ? "text-green-500" : t.score >= 50 ? "text-yellow-500" : "text-red-500"}`}>
-        {t.score?.toFixed(1) || "-"}%
-      </span>
-    )},
+    { key: "score", header: "Score", render: (t: TestHistory) => {
+      const score = typeof t.score === "number" ? t.score : 0;
+      return (
+        <span className={`font-medium ${score >= 70 ? "text-green-500" : score >= 50 ? "text-yellow-500" : "text-red-500"}`}>
+          {score > 0 ? score.toFixed(1) : "-"}%
+        </span>
+      );
+    }},
     { key: "correct", header: "Correct", render: (t: TestHistory) => (
       <span>{t.correct} / {t.totalQuestions}</span>
     )},
@@ -56,11 +55,21 @@ export default function MyTestsPage() {
     ? completedTests.reduce((sum, t) => sum + (t.score || 0), 0) / completedTests.length
     : 0;
 
+  const handleStartTest = (testId: string) => {
+    router.push(`/take-test?id=${testId}`);
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">My Tests</h1>
-        <p className="text-muted-foreground">View your test history and performance</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">My Tests</h1>
+          <p className="text-muted-foreground">View your test history and performance</p>
+        </div>
+        <Button onClick={() => setShowStartDialog(true)}>
+          <Play className="mr-2 h-4 w-4" />
+          Start Test
+        </Button>
       </div>
 
       {/* KPI Cards */}
@@ -111,6 +120,13 @@ export default function MyTestsPage() {
         pagination={{ page, totalPages, total, limit }}
         onPageChange={setPage}
         onLimitChange={setLimit}
+      />
+
+      {/* Start Test Dialog */}
+      <StartTestDialog
+        open={showStartDialog}
+        onOpenChange={setShowStartDialog}
+        onStartTest={handleStartTest}
       />
     </div>
   );

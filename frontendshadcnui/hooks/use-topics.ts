@@ -7,9 +7,10 @@ import { topicsApi, Topic } from "@/lib/api";
 interface UseTopicsOptions {
   page?: number;
   limit?: number;
+  subjectId?: string;
 }
 
-export function useTopics({ page = 1, limit = 10 }: UseTopicsOptions = {}) {
+export function useTopics({ page = 1, limit = 10, subjectId }: UseTopicsOptions = {}) {
   const { token } = useAuth();
   const [topics, setTopics] = useState<Topic[]>([]);
   const [total, setTotal] = useState(0);
@@ -22,7 +23,9 @@ export function useTopics({ page = 1, limit = 10 }: UseTopicsOptions = {}) {
       setIsLoading(true);
       setError("");
       try {
-        const response = await topicsApi.getAll(page, limit, token || undefined);
+        const response = subjectId
+          ? await topicsApi.getBySubject(subjectId, page, limit, token || undefined)
+          : await topicsApi.getAll(page, limit, token || undefined);
         setTopics(response.data.topics);
         setTotal(response.data.pagination.total);
         setTotalPages(response.data.pagination.totalPages);
@@ -34,7 +37,7 @@ export function useTopics({ page = 1, limit = 10 }: UseTopicsOptions = {}) {
     };
 
     fetchTopics();
-  }, [page, limit, token]);
+  }, [page, limit, subjectId, token]);
 
   return { topics, total, totalPages, isLoading, error };
 }

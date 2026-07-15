@@ -7,9 +7,10 @@ import { subjectsApi, Subject } from "@/lib/api";
 interface UseSubjectsOptions {
   page?: number;
   limit?: number;
+  courseId?: string;
 }
 
-export function useSubjects({ page = 1, limit = 10 }: UseSubjectsOptions = {}) {
+export function useSubjects({ page = 1, limit = 10, courseId }: UseSubjectsOptions = {}) {
   const { token } = useAuth();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [total, setTotal] = useState(0);
@@ -22,7 +23,9 @@ export function useSubjects({ page = 1, limit = 10 }: UseSubjectsOptions = {}) {
       setIsLoading(true);
       setError("");
       try {
-        const response = await subjectsApi.getAll(page, limit, token || undefined);
+        const response = courseId
+          ? await subjectsApi.getByCourse(courseId, page, limit, token || undefined)
+          : await subjectsApi.getAll(page, limit, token || undefined);
         setSubjects(response.data.subjects);
         setTotal(response.data.pagination.total);
         setTotalPages(response.data.pagination.totalPages);
@@ -34,7 +37,7 @@ export function useSubjects({ page = 1, limit = 10 }: UseSubjectsOptions = {}) {
     };
 
     fetchSubjects();
-  }, [page, limit, token]);
+  }, [page, limit, courseId, token]);
 
   return { subjects, total, totalPages, isLoading, error };
 }

@@ -445,9 +445,77 @@ export interface TestHistoryResponse {
   };
 }
 
+export interface StartTestPayload {
+  duration_minutes: number;
+  question_limit: number;
+  selections: {
+    course_id: string;
+    subject_id?: string;
+    topic_id?: string;
+  }[];
+}
+
+export interface TestSession {
+  id: string;
+  test_id: string;
+  status: string;
+  duration_minutes: number;
+  question_limit: number;
+  ends_at: string;
+  totalQuestions: number;
+  questions: {
+    index: number;
+    questionId: string;
+    question: string;
+    choices: string[];
+    difficulty: string;
+    topicName: string;
+    subjectName: string;
+    courseName: string;
+  }[];
+}
+
+export interface StartTestResponse {
+  success: boolean;
+  message: string;
+  data: TestSession;
+}
+
+export interface SubmitTestResponse {
+  success: boolean;
+  message: string;
+  data: {
+    id: string;
+    test_id: string;
+    status: string;
+    totalQuestions: number;
+    attempted: number;
+    skipped: number;
+    correct: number;
+    incorrect: number;
+    score: number;
+  };
+}
+
 export const testsApi = {
   getHistory: (page = 1, limit = 10, token?: string) =>
     apiRequest<TestHistoryResponse>(`${API_ROUTES.TESTS.HISTORY}?page=${page}&limit=${limit}`, { token }),
   getById: (id: string, token?: string) =>
-    apiRequest(API_ROUTES.TESTS.BY_ID(id), { token }),
+    apiRequest<StartTestResponse>(API_ROUTES.TESTS.BY_ID(id), { token }),
+  start: (payload: StartTestPayload, token?: string) =>
+    apiRequest<StartTestResponse>(API_ROUTES.TESTS.START, {
+      method: "POST",
+      body: JSON.stringify(payload),
+      token,
+    }),
+  submit: (testId: string, token?: string) =>
+    apiRequest<SubmitTestResponse>(API_ROUTES.TESTS.SUBMIT(testId), {
+      method: "POST",
+      token,
+    }),
+  abandon: (testId: string, token?: string) =>
+    apiRequest(API_ROUTES.TESTS.ABANDON(testId), {
+      method: "POST",
+      token,
+    }),
 };

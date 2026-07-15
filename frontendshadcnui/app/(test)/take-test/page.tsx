@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,152 +20,23 @@ import {
   X,
   Sun,
   Moon,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useTheme } from "@/components/theme-provider";
 import { capitalize } from "@/lib/utils";
+import { useTheme } from "@/components/theme-provider";
+import { useAuth } from "@/contexts/auth-context";
+import { useTestSocket } from "@/hooks/use-test-socket";
+import { testsApi, TestSession } from "@/lib/api";
 
-interface Question {
-  index: number;
-  questionId: string;
-  question: string;
-  choices: string[];
-  difficulty: string;
-  topicName: string;
-  subjectName: string;
-  courseName: string;
-}
+function TakeTestContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const testId = searchParams.get("id");
+  const { token } = useAuth();
+  const { theme, setTheme, resolvedTheme } = useTheme();
 
-interface TestSession {
-  id: string;
-  test_id: string;
-  status: string;
-  duration_minutes: number;
-  question_limit: number;
-  ends_at: string;
-  totalQuestions: number;
-  questions: Question[];
-}
-
-// Dummy test session data
-const dummyTestSession: TestSession = {
-  id: "test-123",
-  test_id: "john_doe_mon_20260714_171500",
-  status: "in_progress",
-  duration_minutes: 30,
-  question_limit: 10,
-  ends_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
-  totalQuestions: 10,
-  questions: [
-    {
-      index: 0,
-      questionId: "q1",
-      question: "What is the time complexity of binary search?",
-      choices: ["O(n)", "O(log n)", "O(n^2)", "O(1)"],
-      difficulty: "normal",
-      topicName: "Algorithms",
-      subjectName: "Computer Science",
-      courseName: "Data Structures",
-    },
-    {
-      index: 1,
-      questionId: "q2",
-      question: "Which data structure uses LIFO (Last In First Out) principle?",
-      choices: ["Queue", "Stack", "Array", "Linked List"],
-      difficulty: "beginner",
-      topicName: "Data Structures",
-      subjectName: "Computer Science",
-      courseName: "Data Structures",
-    },
-    {
-      index: 2,
-      questionId: "q3",
-      question: "What is the worst-case time complexity of Quick Sort?",
-      choices: ["O(n log n)", "O(n^2)", "O(n)", "O(log n)"],
-      difficulty: "hard",
-      topicName: "Sorting Algorithms",
-      subjectName: "Algorithms",
-      courseName: "Data Structures",
-    },
-    {
-      index: 3,
-      questionId: "q4",
-      question: "Which traversal of a binary search tree gives sorted order?",
-      choices: ["Pre-order", "Post-order", "In-order", "Level-order"],
-      difficulty: "normal",
-      topicName: "Tree Traversals",
-      subjectName: "Data Structures",
-      courseName: "Data Structures",
-    },
-    {
-      index: 4,
-      questionId: "q5",
-      question: "What is the space complexity of merge sort?",
-      choices: ["O(1)", "O(log n)", "O(n)", "O(n^2)"],
-      difficulty: "mid",
-      topicName: "Sorting Algorithms",
-      subjectName: "Algorithms",
-      courseName: "Data Structures",
-    },
-    {
-      index: 5,
-      questionId: "q6",
-      question: "Which graph algorithm is used to find shortest path in weighted graphs?",
-      choices: ["BFS", "DFS", "Dijkstra's", "Prim's"],
-      difficulty: "normal",
-      topicName: "Graph Algorithms",
-      subjectName: "Algorithms",
-      courseName: "Data Structures",
-    },
-    {
-      index: 6,
-      questionId: "q7",
-      question: "What is the load factor in hash tables?",
-      choices: [
-        "Number of elements / Number of buckets",
-        "Number of buckets / Number of elements",
-        "Total capacity / Used capacity",
-        "None of the above",
-      ],
-      difficulty: "mid",
-      topicName: "Hash Tables",
-      subjectName: "Data Structures",
-      courseName: "Data Structures",
-    },
-    {
-      index: 7,
-      questionId: "q8",
-      question: "Which type of queue allows insertion at both ends?",
-      choices: ["Simple Queue", "Priority Queue", "Deque", "Circular Queue"],
-      difficulty: "beginner",
-      topicName: "Queues",
-      subjectName: "Data Structures",
-      courseName: "Data Structures",
-    },
-    {
-      index: 8,
-      questionId: "q9",
-      question: "What is the height of a balanced binary tree with n nodes?",
-      choices: ["O(n)", "O(log n)", "O(n^2)", "O(1)"],
-      difficulty: "hard",
-      topicName: "Balanced Trees",
-      subjectName: "Data Structures",
-      courseName: "Data Structures",
-    },
-    {
-      index: 9,
-      questionId: "q10",
-      question: "Which algorithm is used for cycle detection in a graph?",
-      choices: ["BFS", "DFS", "Both BFS and DFS", "None of the above"],
-      difficulty: "expert",
-      topicName: "Graph Algorithms",
-      subjectName: "Algorithms",
-      courseName: "Data Structures",
-    },
-  ],
-};
-
-export default function TakeTestPage() {
+  const [testSession, setTestSession] = useState<TestSession | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [skipped, setSkipped] = useState<Set<number>>(new Set());
@@ -174,28 +46,66 @@ export default function TakeTestPage() {
   const [testCompleted, setTestCompleted] = useState(false);
   const [results, setResults] = useState<{ score: number; correct: number; total: number } | null>(null);
   const [questionNavOpen, setQuestionNavOpen] = useState(true);
-  const { theme, setTheme, resolvedTheme } = useTheme();
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const testSession = dummyTestSession;
-  const question = testSession.questions[currentQuestion];
-  const totalQuestions = testSession.questions.length;
+  const questionStartTime = useRef<number>(Date.now());
+
+  // Socket connection
+  const { isConnected, joinTest, sendAnswer, sendSkip, submitTest, startHeartbeat, stopHeartbeat } = useTestSocket({
+    onTestJoined: (data) => {
+      setTimeLeft(data.timeRemaining);
+      startHeartbeat(testId!, data.currentIndex);
+    },
+    onAnswerRecorded: (data) => {
+      setTimeLeft(data.timeRemaining);
+    },
+    onTimeUpdate: (data) => {
+      setTimeLeft(data.timeRemaining);
+    },
+    onTestSubmitted: (data) => {
+      setResults({
+        score: data.result.score,
+        correct: data.result.correct,
+        total: data.result.totalQuestions,
+      });
+      setTestCompleted(true);
+      stopHeartbeat();
+    },
+    onError: (data) => {
+      setError(data.message);
+    },
+  });
+
+  // Fetch test session
+  useEffect(() => {
+    if (!testId || !token) return;
+
+    const fetchTest = async () => {
+      try {
+        const response = await testsApi.getById(testId, token);
+        setTestSession(response.data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load test");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTest();
+  }, [testId, token]);
+
+  // Join test room when connected
+  useEffect(() => {
+    if (isConnected && testId && testSession) {
+      joinTest(testId);
+    }
+  }, [isConnected, testId, testSession, joinTest]);
+
+  const question = testSession?.questions?.[currentQuestion];
+  const totalQuestions = testSession?.questions?.length || 0;
   const answeredCount = Object.keys(answers).length;
   const skippedCount = skipped.size;
-
-  // Calculate time left
-  useEffect(() => {
-    const endTime = new Date(testSession.ends_at).getTime();
-    const timer = setInterval(() => {
-      const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
-      setTimeLeft(remaining);
-      if (remaining <= 0) {
-        clearInterval(timer);
-        handleSubmit(answers);
-      }
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -203,14 +113,20 @@ export default function TakeTestPage() {
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const handleAnswer = (answer: string) => {
+  const handleAnswer = useCallback((answer: string) => {
+    if (!question || !testId) return;
+
+    const timeTaken = Math.floor((Date.now() - questionStartTime.current) / 1000);
+    sendAnswer(testId, currentQuestion, question.questionId, answer, timeTaken);
+    questionStartTime.current = Date.now();
+
     setAnswers((prev) => ({ ...prev, [currentQuestion]: answer }));
     setSkipped((prev) => {
       const newSet = new Set(prev);
       newSet.delete(currentQuestion);
       return newSet;
     });
-  };
+  }, [currentQuestion, question, testId, sendAnswer]);
 
   const handleClear = () => {
     setAnswers((prev) => {
@@ -220,42 +136,51 @@ export default function TakeTestPage() {
     });
   };
 
-  const handleSkip = () => {
+  const handleSkip = useCallback(() => {
+    if (!question || !testId) return;
+
+    const timeTaken = Math.floor((Date.now() - questionStartTime.current) / 1000);
+    sendSkip(testId, currentQuestion, question.questionId, timeTaken);
+    questionStartTime.current = Date.now();
+
     setSkipped((prev) => new Set(prev).add(currentQuestion));
     if (currentQuestion < totalQuestions - 1) {
       setCurrentQuestion(currentQuestion + 1);
     }
-  };
+  }, [currentQuestion, question, testId, sendSkip, totalQuestions]);
 
   const handleNext = () => {
     if (currentQuestion < totalQuestions - 1) {
       setCurrentQuestion(currentQuestion + 1);
+      questionStartTime.current = Date.now();
     }
   };
 
   const handlePrevious = () => {
     if (currentQuestion > 0) {
       setCurrentQuestion(currentQuestion - 1);
+      questionStartTime.current = Date.now();
     }
   };
 
-  const handleSubmit = (finalAnswers: Record<number, string> = answers) => {
-    let correct = 0;
-    testSession.questions.forEach((q, index) => {
-      if (finalAnswers[index] === q.choices[0]) {
-        correct++;
-      }
-    });
-
-    const score = (correct / testSession.questions.length) * 100;
-    setResults({ score, correct, total: testSession.questions.length });
-    setTestCompleted(true);
+  const handleSubmit = () => {
+    if (testId) {
+      stopHeartbeat();
+      submitTest(testId);
+    }
     setShowConfirmSubmit(false);
   };
 
-  const handleCancel = () => {
-    setShowCancelConfirm(false);
-    window.location.href = "/dashboard/my-tests";
+  const handleCancel = async () => {
+    if (testId && token) {
+      try {
+        await testsApi.abandon(testId, token);
+      } catch (err) {
+        console.error("Failed to abandon test:", err);
+      }
+    }
+    stopHeartbeat();
+    router.push("/dashboard/my-tests");
   };
 
   const getQuestionStatus = (index: number): "answered" | "skipped" | "current" | "unanswered" => {
@@ -275,6 +200,37 @@ export default function TakeTestPage() {
       default: return "bg-gray-500/10 text-gray-500 border-gray-500/20";
     }
   };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading test...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error || !testSession) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-background">
+        <Card className="w-full max-w-md mx-4">
+          <CardHeader>
+            <CardTitle className="text-destructive">Error</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-muted-foreground">{error || "Failed to load test session"}</p>
+            <Button onClick={() => router.push("/dashboard/my-tests")} className="w-full">
+              Go Back
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   // Results Screen
   if (testCompleted && results) {
@@ -313,7 +269,7 @@ export default function TakeTestPage() {
                 </div>
               </div>
 
-              <Button className="w-full" size="lg" onClick={() => window.location.href = "/dashboard/my-tests"}>
+              <Button className="w-full" size="lg" onClick={() => router.push("/dashboard/my-tests")}>
                 View Test History
               </Button>
             </CardContent>
@@ -323,13 +279,14 @@ export default function TakeTestPage() {
     );
   }
 
+  if (!question) return null;
+
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
       {/* Header */}
       <header className="shrink-0 border-b bg-card px-4 lg:px-6 py-3">
         <div className="flex items-center justify-between mx-auto">
           <div className="flex items-center gap-3">
-            {/* Logo only on mobile, Logo + Name on desktop */}
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
               <span className="text-primary font-bold text-sm">Q</span>
             </div>
@@ -340,7 +297,6 @@ export default function TakeTestPage() {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Theme Toggle */}
             <Button
               variant="ghost"
               size="icon"
@@ -354,7 +310,6 @@ export default function TakeTestPage() {
               )}
             </Button>
 
-            {/* Timer */}
             <div className={cn(
               "flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl font-mono text-sm font-semibold transition-colors",
               timeLeft <= 60 ? "bg-red-500/10 text-red-500" : "bg-muted"
@@ -363,7 +318,6 @@ export default function TakeTestPage() {
               <span>{formatTime(timeLeft)}</span>
             </div>
 
-            {/* Cancel Button */}
             <Button
               variant="destructive"
               size="sm"
@@ -402,7 +356,11 @@ export default function TakeTestPage() {
                     return (
                       <button
                         key={index}
-                        onClick={() => setCurrentQuestion(index)}
+                        onClick={() => {
+                          setCurrentQuestion(index);
+                          setQuestionNavOpen(false);
+                          questionStartTime.current = Date.now();
+                        }}
                         className={cn(
                           "w-10 h-10 rounded-lg text-sm font-medium transition-all shrink-0",
                           status === "current" && "bg-primary text-primary-foreground shadow-md",
@@ -432,13 +390,13 @@ export default function TakeTestPage() {
                 transformOrigin: "center center",
               }}
             >
-              {Array.from({ length: 400 }).map((_, i) => (
+              {Array.from({ length: 80 }).map((_, i) => (
                 <div
                   key={i}
-                  className="absolute font-mono text-sm opacity-[0.15] dark:opacity-[0.05] text-gray-900 dark:text-gray-100 whitespace-nowrap"
+                  className="absolute font-mono text-[10px] opacity-[0.07] dark:opacity-[0.05] text-gray-900 dark:text-gray-100 whitespace-nowrap"
                   style={{
-                    top: `${Math.floor(i / 20) * 120 - 1000}px`,
-                    left: `${(i % 20) * 250 - 1000}px`,
+                    top: `${Math.floor(i / 10) * 80 - 300}px`,
+                    left: `${(i % 10) * 200 - 200}px`,
                   }}
                 >
                   {testSession.test_id}
@@ -448,95 +406,92 @@ export default function TakeTestPage() {
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 lg:p-6 relative z-10">
-            {/* Question Meta */}
             <div className="flex items-center justify-between mb-6">
-                <span className="text-sm font-medium">
-                  {currentQuestion + 1}/{totalQuestions}
-                </span>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className={cn("text-xs", getDifficultyColor(question.difficulty))}>
-                    {capitalize(question.difficulty)}
-                  </Badge>
-                  <Badge variant="secondary" className="text-xs">
-                    {capitalize(question.courseName)}
-                  </Badge>
-                  <Badge variant="secondary" className="text-xs">
-                    {capitalize(question.subjectName)}
-                  </Badge>
-                </div>
-              </div>
-
-              {/* Question */}
-              <h2 className="text-xl sm:text-2xl font-semibold mb-8 leading-relaxed">
-                {question.question}
-              </h2>
-
-              {/* Choices */}
-              <div className="space-y-3">
-                {question.choices.map((choice, choiceIndex) => {
-                  const letter = String.fromCharCode(65 + choiceIndex);
-                  const isSelected = answers[currentQuestion] === choice;
-
-                  return (
-                    <motion.button
-                      key={choiceIndex}
-                      onClick={() => handleAnswer(choice)}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: choiceIndex * 0.05 }}
-                      className={cn(
-                        "w-full p-4 sm:p-5 rounded-xl border-2 text-left transition-all duration-200 flex items-center gap-4 group",
-                        isSelected
-                          ? "border-primary bg-primary/5 shadow-sm"
-                          : "border-border hover:border-primary/40 hover:bg-muted/30"
-                      )}
-                    >
-                      <span className={cn(
-                        "w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold shrink-0 transition-colors",
-                        isSelected
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
-                      )}>
-                        {letter}
-                      </span>
-                      <span className="flex-1 text-base">{choice}</span>
-                      {isSelected && (
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ type: "spring", stiffness: 300 }}
-                        >
-                          <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
-                        </motion.div>
-                      )}
-                    </motion.button>
-                  );
-                })}
+              <span className="text-sm font-medium">
+                {currentQuestion + 1}/{totalQuestions}
+              </span>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className={cn("text-xs", getDifficultyColor(question.difficulty))}>
+                  {capitalize(question.difficulty)}
+                </Badge>
+                <Badge variant="secondary" className="text-xs">
+                  {capitalize(question.courseName)}
+                </Badge>
+                <Badge variant="secondary" className="text-xs">
+                  {capitalize(question.subjectName)}
+                </Badge>
               </div>
             </div>
 
+            <h2 className="text-xl sm:text-2xl font-semibold mb-8 leading-relaxed">
+              {question.question}
+            </h2>
+
+            <div className="space-y-3">
+              {question.choices.map((choice, choiceIndex) => {
+                const letter = String.fromCharCode(65 + choiceIndex);
+                const isSelected = answers[currentQuestion] === choice;
+
+                return (
+                  <motion.button
+                    key={choiceIndex}
+                    onClick={() => handleAnswer(choice)}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: choiceIndex * 0.05 }}
+                    className={cn(
+                      "w-full p-4 sm:p-5 rounded-xl border-2 text-left transition-all duration-200 flex items-center gap-4 group",
+                      isSelected
+                        ? "border-primary bg-primary/5 shadow-sm"
+                        : "border-border hover:border-primary/40 hover:bg-muted/30"
+                    )}
+                  >
+                    <span className={cn(
+                      "w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold shrink-0 transition-colors",
+                      isSelected
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                    )}>
+                      {letter}
+                    </span>
+                    <span className="flex-1 text-base">{choice}</span>
+                    {isSelected && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: "spring", stiffness: 300 }}
+                      >
+                        <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+                      </motion.div>
+                    )}
+                  </motion.button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Bottom Navigation */}
-            <div className="shrink-0 border-t bg-card p-3 sm:p-4 relative z-10">
-              <div className="flex items-center justify-between gap-2 sm:gap-4">
+          <div className="shrink-0 border-t bg-card p-3 sm:p-4 relative z-10">
+            <div className="flex items-center justify-between gap-2 sm:gap-4">
+              <Button
+                variant="outline"
+                onClick={handlePrevious}
+                disabled={currentQuestion === 0}
+                className="gap-1.5"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                <span className="hidden sm:inline">Previous</span>
+              </Button>
+
+              <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
-                  onClick={handlePrevious}
-                  disabled={currentQuestion === 0}
+                  onClick={handleClear}
+                  disabled={!answers[currentQuestion]}
                   className="gap-1.5"
                 >
-                  <ChevronLeft className="h-4 w-4" />
-                  <span className="hidden sm:inline">Previous</span>
-                </Button>
-
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={handleClear}
-                    disabled={!answers[currentQuestion]}
-                    className="gap-1.5"
-                  >
-                    <Eraser className="h-4 w-4" />
-                    <span className="hidden sm:inline">Clear</span>
+                  <Eraser className="h-4 w-4" />
+                  <span className="hidden sm:inline">Clear</span>
                 </Button>
                 <Button
                   variant="outline"
@@ -563,7 +518,6 @@ export default function TakeTestPage() {
         </div>
 
         {/* Desktop: Question Count on Right Side */}
-
         <aside className="hidden md:flex w-64 shrink-0 border-l bg-card flex-col">
           <div className="p-4 border-b">
             <div className="flex items-center justify-between">
@@ -572,7 +526,6 @@ export default function TakeTestPage() {
                 {answeredCount}/{totalQuestions}
               </span>
             </div>
-            {/* Progress Bar */}
             <div className="mt-3 h-1.5 bg-muted rounded-full overflow-hidden">
               <motion.div
                 className="h-full bg-primary rounded-full"
@@ -589,7 +542,10 @@ export default function TakeTestPage() {
                 return (
                   <motion.button
                     key={index}
-                    onClick={() => setCurrentQuestion(index)}
+                    onClick={() => {
+                      setCurrentQuestion(index);
+                      questionStartTime.current = Date.now();
+                    }}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     className={cn(
@@ -607,7 +563,6 @@ export default function TakeTestPage() {
               })}
             </div>
 
-            {/* Legend */}
             <div className="mt-4 pt-4 border-t space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -670,7 +625,7 @@ export default function TakeTestPage() {
                 <Button variant="outline" onClick={() => setShowConfirmSubmit(false)}>
                   Go Back
                 </Button>
-                <Button onClick={() => handleSubmit()}>Submit Test</Button>
+                <Button onClick={handleSubmit}>Submit Test</Button>
               </div>
             </Card>
           </motion.div>
@@ -710,5 +665,17 @@ export default function TakeTestPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function TakeTestPage() {
+  return (
+    <Suspense fallback={
+      <div className="h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    }>
+      <TakeTestContent />
+    </Suspense>
   );
 }
