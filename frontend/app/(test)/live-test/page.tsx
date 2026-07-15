@@ -406,10 +406,24 @@ function LiveTestContent() {
       <header className="shrink-0 border-b bg-card px-4 lg:px-6 py-3">
         <div className="flex items-center justify-between mx-auto">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-              <span className="text-primary font-bold text-sm">Q</span>
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center relative">
+              {process.env.NEXT_PUBLIC_APP_LOGO ? (
+                <img src={process.env.NEXT_PUBLIC_APP_LOGO} alt="Logo" className="w-5 h-5 object-contain" />
+              ) : (
+                <span className="text-primary font-bold text-sm">Q</span>
+              )}
+              {/* Connected Dot */}
+              <div 
+                className={cn(
+                  "absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-background",
+                  isConnected ? "bg-emerald-500" : "bg-red-500"
+                )}
+                title={isConnected ? "Connected" : "Disconnected"}
+              />
             </div>
-            <h1 className="text-lg font-bold hidden sm:block">Quiz App</h1>
+            <h1 className="text-lg font-bold hidden sm:block">
+              {process.env.NEXT_PUBLIC_APP_NAME || "Quiz App"}
+            </h1>
             <Badge variant="secondary" className="font-mono text-xs hidden md:inline-flex">
               {testSession.test_id}
             </Badge>
