@@ -15,17 +15,27 @@ import {
   Clock,
   ArrowLeft,
   Loader2,
+  Download,
+  FileText,
+  FileSpreadsheet,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { capitalize } from "@/lib/utils";
 import { useAuth } from "@/contexts/auth-context";
 import { testsApi, TestResult } from "@/lib/api";
+import { exportTestResultToPDF, exportTestResultToExcel } from "@/lib/export-utils";
 
 function TestResultContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const testId = searchParams.get("id");
-  const { token } = useAuth();
+  const { token, user } = useAuth();
 
   const [result, setResult] = useState<TestResult | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -100,6 +110,26 @@ function TestResultContent() {
             </div>
           </div>
           <div className="flex items-center gap-4">
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button variant="outline" size="sm">
+                    <Download className="h-4 w-4 mr-1.5" />
+                    Download
+                  </Button>
+                }
+              />
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => exportTestResultToPDF(result, user || {})}>
+                  <FileText className="h-4 w-4 mr-2" />
+                  Download PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => exportTestResultToExcel(result, user || {})}>
+                  <FileSpreadsheet className="h-4 w-4 mr-2" />
+                  Download Excel
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Badge variant="outline" className={cn("text-sm", bgColor, scoreColor)}>
               {score.toFixed(1)}%
             </Badge>
