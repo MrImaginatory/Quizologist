@@ -7,6 +7,7 @@ import { locationsApi, Location } from "@/lib/api";
 interface UseLocationsOptions {
   page?: number;
   limit?: number;
+  fetchAll?: boolean;
 }
 
 interface UseLocationsResult {
@@ -18,7 +19,7 @@ interface UseLocationsResult {
   refetch: () => void;
 }
 
-export function useLocations({ page = 1, limit = 10 }: UseLocationsOptions = {}): UseLocationsResult {
+export function useLocations({ page = 1, limit = 10, fetchAll = false }: UseLocationsOptions = {}): UseLocationsResult {
   const { token } = useAuth();
   const [locations, setLocations] = useState<Location[]>([]);
   const [total, setTotal] = useState(0);
@@ -30,7 +31,8 @@ export function useLocations({ page = 1, limit = 10 }: UseLocationsOptions = {})
     setIsLoading(true);
     setError("");
     try {
-      const response = await locationsApi.getAll(page, limit, token || undefined);
+      const effectiveLimit = fetchAll ? 100 : limit;
+      const response = await locationsApi.getAll(page, effectiveLimit, token || undefined);
       setLocations(response.data.locations);
       setTotal(response.data.pagination.total);
       setTotalPages(response.data.pagination.totalPages);
@@ -39,7 +41,7 @@ export function useLocations({ page = 1, limit = 10 }: UseLocationsOptions = {})
     } finally {
       setIsLoading(false);
     }
-  }, [page, limit, token]);
+  }, [page, limit, fetchAll, token]);
 
   useEffect(() => {
     fetchLocations();

@@ -88,6 +88,14 @@ export interface User {
   role: string;
   email: string;
   mobileNumber: string;
+  location?: {
+    id: string;
+    address_line_1: string;
+    city: string;
+    pincode: string;
+    state: string;
+    country: string;
+  } | null;
 }
 
 interface Pagination {
@@ -113,6 +121,12 @@ export const usersApi = {
     apiRequest(API_ROUTES.USERS.BY_ID(id), { token }),
   getByRole: (role: string, page = 1, limit = 10, token?: string) =>
     apiRequest<UsersResponse>(`${API_ROUTES.USERS.BY_ROLE(role)}?page=${page}&limit=${limit}`, { token }),
+  assignLocation: (userId: string, locationId: string | null, token?: string) =>
+    apiRequest(API_ROUTES.USERS.ASSIGN_LOCATION(userId), {
+      method: "PATCH",
+      body: JSON.stringify({ location_id: locationId }),
+      token,
+    }),
 };
 
 export interface DashboardStatsResponse {

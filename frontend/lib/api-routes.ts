@@ -15,6 +15,7 @@ export const API_ROUTES = {
     BASE: `${BASE_URL}/api/user`,
     BY_ID: (id: string) => `${BASE_URL}/api/user/${id}`,
     BY_ROLE: (role: string) => `${BASE_URL}/api/user/role/${role}`,
+    ASSIGN_LOCATION: (id: string) => `${BASE_URL}/api/user/${id}/location`,
   },
 
   // Courses

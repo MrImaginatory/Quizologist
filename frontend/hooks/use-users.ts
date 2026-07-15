@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { usersApi, User } from "@/lib/api";
 
@@ -16,6 +16,7 @@ interface UseUsersReturn {
   isLoading: boolean;
   error: string;
   totalPages: number;
+  refetch: () => void;
 }
 
 export function useUsers({ role, page = 1, limit = 10 }: UseUsersOptions = {}): UseUsersReturn {
@@ -26,29 +27,29 @@ export function useUsers({ role, page = 1, limit = 10 }: UseUsersOptions = {}): 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      setIsLoading(true);
-      setError("");
-      try {
-        let response;
-        if (role) {
-          response = await usersApi.getByRole(role, page, limit, token || undefined);
-        } else {
-          response = await usersApi.getAll(page, limit, token || undefined);
-        }
-        setUsers(response.data.users);
-        setTotal(response.data.pagination.total);
-        setTotalPages(response.data.pagination.totalPages);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch users");
-      } finally {
-        setIsLoading(false);
+  const fetchUsers = useCallback(async () => {
+    setIsLoading(true);
+    setError("");
+    try {
+      let response;
+      if (role) {
+        response = await usersApi.getByRole(role, page, limit, token || undefined);
+      } else {
+        response = await usersApi.getAll(page, limit, token || undefined);
       }
-    };
-
-    fetchUsers();
+      setUsers(response.data.users);
+      setTotal(response.data.pagination.total);
+      setTotalPages(response.data.pagination.totalPages);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch users");
+    } finally {
+      setIsLoading(false);
+    }
   }, [role, page, limit, token]);
 
-  return { users, total, isLoading, error, totalPages };
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  return { users, total, isLoading, error, totalPages, refetch: fetchUsers };
 }
