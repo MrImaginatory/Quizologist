@@ -24,7 +24,6 @@ import {
   LogOut,
   FileQuestion,
   GraduationCap,
-  Trophy,
   UserCheck,
   UserCog,
   BookOpen,
@@ -37,7 +36,6 @@ const studentNav: NavItem[] = [
   { title: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
   { title: "My Enrollments", icon: GraduationCap, href: "/dashboard/enrollments" },
   { title: "My Tests", icon: ClipboardList, href: "/dashboard/my-tests" },
-  { title: "Results", icon: Trophy, href: "/dashboard/results" },
   { label: "Account", isSection: true },
   { title: "Profile", icon: Users, href: "/dashboard/profile" },
 ];
