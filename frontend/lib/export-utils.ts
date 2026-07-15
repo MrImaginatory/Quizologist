@@ -61,25 +61,19 @@ export function exportTestResultToPDF(result: TestResult, user: UserData) {
   doc.text("Summary", margin, yPos);
   yPos += 8;
 
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
   const summaryData = [
-    [`Total Questions`, result.totalQuestions.toString()],
-    [`Attempted`, result.attempted.toString()],
-    [`Correct`, result.correct.toString()],
-    [`Incorrect`, result.incorrect.toString()],
-    [`Skipped`, result.skipped.toString()],
-    [`Score`, `${result.score.toFixed(1)}%`],
+    [result.totalQuestions.toString(), result.attempted.toString(), result.correct.toString(), result.incorrect.toString(), result.skipped.toString(), `${result.score.toFixed(1)}%`],
   ];
 
   autoTable(doc, {
     startY: yPos,
-    head: [],
+    head: [["Total Questions", "Attempted", "Correct", "Incorrect", "Skipped", "Score"]],
     body: summaryData,
-    theme: "plain",
+    theme: "grid",
     margin: { left: margin, right: margin },
-    styles: { fontSize: 10, cellPadding: 3 },
-    columnStyles: { 0: { fontStyle: "bold", cellWidth: 60 } },
+    styles: { fontSize: 9, cellPadding: 4, halign: "center", valign: "middle" },
+    headStyles: { fillColor: [66, 66, 66], textColor: [255, 255, 255], fontStyle: "bold", halign: "center" },
+    bodyStyles: { halign: "center" },
   });
 
   yPos = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
@@ -111,24 +105,32 @@ export function exportTestResultToPDF(result: TestResult, user: UserData) {
         yPos = 20;
       }
       const letter = choiceLetters[ci] || `${ci + 1}`;
-      let prefix = `   ${letter}) `;
+      const prefix = `   ${letter}) `;
       let textColor: [number, number, number] = [60, 60, 60];
+      let symbol = "";
 
       if (choice === q.correctAnswer) {
         textColor = [0, 128, 0];
-        prefix = `   ${letter}) [Correct] `;
+        symbol = "[Correct]";
       }
       if (choice === q.selectedAnswer && choice !== q.correctAnswer) {
         textColor = [200, 0, 0];
-        prefix = `   ${letter}) [Your Answer] `;
+        symbol = "[Incorrect]";
       }
 
+      doc.setFont("helvetica", "normal");
       doc.setTextColor(...textColor);
-      const choiceLines = doc.splitTextToSize(choice, contentWidth - 20);
+      const choiceLines = doc.splitTextToSize(choice, contentWidth - 35);
       doc.text(prefix + choiceLines[0], margin, yPos);
+      if (symbol) {
+        const lastLineWidth = doc.getTextWidth(prefix + choiceLines[0]);
+        doc.setFont("helvetica", "bold");
+        doc.text(` ${symbol}`, margin + lastLineWidth, yPos);
+      }
       if (choiceLines.length > 1) {
         yPos += 4;
         choiceLines.slice(1).forEach((line: string) => {
+          doc.setFont("helvetica", "normal");
           doc.text(`       ${line}`, margin, yPos);
           yPos += 4;
         });

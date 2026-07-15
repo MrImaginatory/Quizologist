@@ -65,27 +65,21 @@ export class QuestionImportService {
     workbook.creator = "QuizNew Admin";
     workbook.created = new Date();
 
-    const sheet = workbook.addWorksheet("Questions", {
-      properties: { defaultColWidth: 20 },
+    // Sheet 1: Reference — all course/subject/topic names
+    const refSheet = workbook.addWorksheet("Reference", {
+      properties: { defaultColWidth: 25 },
     });
 
-    // Header row styling
-    const headerRow = sheet.addRow(TEMPLATE_HEADERS);
-    headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
-    headerRow.fill = {
+    const refHeaders = ["Course Name", "Subject Name", "Topic Name"];
+    const refHeaderRow = refSheet.addRow(refHeaders);
+    refHeaderRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    refHeaderRow.fill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "FF4472C4" },
+      fgColor: { argb: "FF2E75B6" },
     };
-    headerRow.alignment = { horizontal: "center" };
+    refHeaderRow.alignment = { horizontal: "center" };
 
-    // Set column widths
-    sheet.columns.forEach((col) => {
-      col.width = 22;
-    });
-
-    // Pre-fill first 3 rows with sample data showing valid combinations
-    let exampleCount = 0;
     for (const course of courses) {
       const courseSubjects = subjectByCourse.get(course.id) || [];
       for (const subjectName of courseSubjects) {
@@ -95,18 +89,40 @@ export class QuestionImportService {
         if (!subject) continue;
 
         const subjectTopics = topicBySubject.get(subject.id) || [];
-        for (const topicName of subjectTopics) {
-          if (exampleCount >= 3) break;
-          sheet.addRow([course.name, subjectName, topicName]);
-          exampleCount++;
+        if (subjectTopics.length === 0) {
+          refSheet.addRow([course.name, subjectName, ""]);
+        } else {
+          for (const topicName of subjectTopics) {
+            refSheet.addRow([course.name, subjectName, topicName]);
+          }
         }
-        if (exampleCount >= 3) break;
       }
-      if (exampleCount >= 3) break;
     }
 
-    // Add a comment to Correct Answer header explaining valid values
-    const headerCell = sheet.getCell("J1");
+    // Sheet 2: Questions — import format with 2 empty sample rows
+    const qSheet = workbook.addWorksheet("Questions", {
+      properties: { defaultColWidth: 22 },
+    });
+
+    const qHeaderRow = qSheet.addRow(TEMPLATE_HEADERS);
+    qHeaderRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    qHeaderRow.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FF4472C4" },
+    };
+    qHeaderRow.alignment = { horizontal: "center" };
+
+    qSheet.columns.forEach((col) => {
+      col.width = 22;
+    });
+
+    // Add 2 empty sample rows so user sees the format
+    qSheet.addRow(["", "", "", "", "", "", "", "", "", "", "", "", ""]);
+    qSheet.addRow(["", "", "", "", "", "", "", "", "", "", "", "", ""]);
+
+    // Comment on Correct Answer header
+    const headerCell = qSheet.getCell("J1");
     headerCell.note = {
       texts: [
         { font: { bold: true, size: 11 }, text: "Must match one of: Option 1, Option 2, Option 3, Option 4, Option 5\n" },
