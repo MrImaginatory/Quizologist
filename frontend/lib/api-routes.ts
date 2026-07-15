@@ -91,6 +91,12 @@ export const API_ROUTES = {
     STUDENT_PERFORMANCE_TRENDS: `${BASE_URL}/api/dashboard/student/performance-trends`,
     STUDENT_STRENGTHS_WEAKNESSES: `${BASE_URL}/api/dashboard/student/strengths-weaknesses`,
   },
+
+  // Locations
+  LOCATIONS: {
+    BASE: `${BASE_URL}/api/user/location`,
+    BY_ID: (id: string) => `${BASE_URL}/api/user/location/${id}`,
+  },
 } as const;
 
 // Socket.IO URL

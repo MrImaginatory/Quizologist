@@ -315,6 +315,64 @@ export const topicsApi = {
     apiRequest(API_ROUTES.TOPICS.BY_ID(id), { method: "DELETE", token }),
 };
 
+export interface Location {
+  id: string;
+  address_line_1: string;
+  address_line_2?: string;
+  landmark?: string;
+  city: string;
+  pincode: string;
+  state: string;
+  country: string;
+  is_central: boolean;
+}
+
+export interface CreateLocationPayload {
+  address_line_1: string;
+  address_line_2?: string;
+  landmark?: string;
+  city: string;
+  pincode: string;
+  state: string;
+  country: string;
+}
+
+export interface LocationsResponse {
+  success: boolean;
+  message: string;
+  data: {
+    locations: Location[];
+    pagination: Pagination;
+  };
+}
+
+export interface LocationResponse {
+  success: boolean;
+  message: string;
+  data: Location;
+}
+
+export const locationsApi = {
+  getAll: (page = 1, limit = 10, token?: string) =>
+    apiRequest<LocationsResponse>(`${API_ROUTES.LOCATIONS.BASE}?page=${page}&limit=${limit}`, { token }),
+  getById: (id: string, token?: string) =>
+    apiRequest<LocationResponse>(API_ROUTES.LOCATIONS.BY_ID(id), { token }),
+  create: (payload: CreateLocationPayload, token?: string) =>
+    apiRequest<LocationResponse>(API_ROUTES.LOCATIONS.BASE, {
+      method: "POST",
+      body: JSON.stringify(payload),
+      token,
+    }),
+  update: (id: string, payload: Partial<CreateLocationPayload>, token?: string) =>
+    apiRequest<LocationResponse>(API_ROUTES.LOCATIONS.BY_ID(id), {
+      method: "PUT",
+      body: JSON.stringify(payload),
+      token,
+    }),
+  delete: (id: string, token?: string) =>
+    apiRequest(API_ROUTES.LOCATIONS.BY_ID(id), { method: "DELETE", token }),
+};
+
 export interface Question {
   id: string;
   type: "mcq" | "descriptive";
