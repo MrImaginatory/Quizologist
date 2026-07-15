@@ -1,10 +1,12 @@
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
+import http from "http";
 import path from "path";
 import { env } from "./config/env";
 import { authenticate } from "./middlewares/auth.middleware";
 import { authorize } from "./middlewares/rbac.middleware";
 import { proxyRequest } from "./middlewares/proxy.middleware";
+import { setupSocketProxy } from "./middlewares/socketProxy.middleware";
 import { findMatchingRoute } from "./config/routes";
 import { ApiError } from "./utils/ApiError";
 import { ApiResponse } from "./utils/ApiResponse";
@@ -100,8 +102,14 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 });
 
 const startServer = async () => {
-  app.listen(env.PORT, () => {
+  const server = http.createServer(app);
+
+  // Attach WebSocket proxy for /socket.io/ paths
+  setupSocketProxy(server);
+
+  server.listen(env.PORT, () => {
     console.log(`API Gateway running on port ${env.PORT}`);
+    console.log(`Socket.IO proxy enabled for /socket.io/ → test-service`);
     console.log(`Environment: ${env.NODE_ENV}`);
   });
 };

@@ -1016,3 +1016,59 @@ Returns different KPI data depending on the user's role:
   "data": null
 }
 ```
+
+---
+
+## Socket.IO Proxy
+
+The gateway proxies WebSocket connections to the test service. Frontend clients connect through the gateway instead of directly to the test service.
+
+### Connection
+
+```javascript
+import { io } from "socket.io-client";
+
+const socket = io("http://localhost:3000", {
+  path: "/socket.io",
+  auth: { token: "eyJhbGciOiJIUzI1NiIs..." }
+});
+```
+
+### How It Works
+
+1. Client sends HTTP upgrade request to `GET /socket.io/?token=xxx`
+2. Gateway verifies the JWT token
+3. If valid, gateway pipes the raw TCP connection to the test service
+4. If invalid, gateway rejects with 401 and destroys the socket
+5. All subsequent Socket.IO traffic flows through the gateway transparently
+
+### Authentication
+
+Token can be provided via:
+- `auth: { token: "..." }` — Socket.IO standard
+- Query param: `/socket.io/?token=xxx`
+- Authorization header: `Authorization: Bearer xxx`
+
+### Nginx Configuration
+
+For production with Nginx in front of the gateway:
+
+```nginx
+# REST API
+location /api/ {
+    proxy_pass http://gateway:3000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+}
+
+# Socket.IO
+location /socket.io/ {
+    proxy_pass http://gateway:3000;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_read_timeout 86400;
+}
+```

@@ -64,11 +64,12 @@ export function useTestSocket(options: UseTestSocketOptions = {}) {
   useEffect(() => {
     if (!token) return;
 
-    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3005";
+    const socketUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
     const socket = io(socketUrl, {
+      path: "/socket.io",
       auth: { token },
-      transports: ["polling", "websocket"],
+      transports: ["websocket"], // ponytail: skip polling, gateway only handles WS upgrades
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,6 +15,10 @@ import {
 import { useStudentDashboard } from "@/hooks/use-student-dashboard";
 import { capitalize } from "@/lib/utils";
 import { Loader2, Target, BookOpen, CheckCircle, TrendingUp } from "lucide-react";
+import { ViewToggle } from "@/components/dashboard/view-toggle";
+import { PerformanceTrendChart } from "@/components/charts/performance-trend-chart";
+import { SubjectRadarChart } from "@/components/charts/subject-radar-chart";
+import { TopicBarChart } from "@/components/charts/topic-bar-chart";
 
 const statusColors: Record<string, string> = {
   strong: "bg-green-500/10 text-green-500 border-green-500/20",
@@ -32,6 +37,10 @@ export function StudentDashboard() {
     isLoading,
     error,
   } = useStudentDashboard();
+
+  const [trendsView, setTrendsView] = useState<"table" | "chart">("table");
+  const [subjectView, setSubjectView] = useState<"table" | "chart">("table");
+  const [topicView, setTopicView] = useState<"table" | "chart">("table");
 
   if (isLoading) {
     return (
@@ -95,11 +104,12 @@ export function StudentDashboard() {
 
       {/* Performance Trends */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5" />
             Performance Trends
           </CardTitle>
+          <ViewToggle value={trendsView} onChange={setTrendsView} />
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="15days">
@@ -109,29 +119,42 @@ export function StudentDashboard() {
               <TabsTrigger value="60days">60 Days</TabsTrigger>
             </TabsList>
             <TabsContent value="15days">
-              <PerformanceTable data={performanceTrends.last15Days} />
+              {trendsView === "table" ? (
+                <PerformanceTable data={performanceTrends.last15Days} />
+              ) : (
+                <PerformanceTrendChart data={performanceTrends.last15Days} />
+              )}
             </TabsContent>
             <TabsContent value="30days">
-              <PerformanceTable data={performanceTrends.last30Days} />
+              {trendsView === "table" ? (
+                <PerformanceTable data={performanceTrends.last30Days} />
+              ) : (
+                <PerformanceTrendChart data={performanceTrends.last30Days} />
+              )}
             </TabsContent>
             <TabsContent value="60days">
-              <PerformanceTable data={performanceTrends.last60Days} />
+              {trendsView === "table" ? (
+                <PerformanceTable data={performanceTrends.last60Days} />
+              ) : (
+                <PerformanceTrendChart data={performanceTrends.last60Days} />
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
 
-      {/* Subject Performance & Strengths/Weaknesses */}
+      {/* Subject Performance & Topic Performance */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Subject Performance */}
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Subject Performance</CardTitle>
+            <ViewToggle value={subjectView} onChange={setSubjectView} />
           </CardHeader>
           <CardContent>
             {subjectPerformance.length === 0 ? (
               <p className="text-muted-foreground text-center py-4">No data available</p>
-            ) : (
+            ) : subjectView === "table" ? (
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -154,19 +177,22 @@ export function StudentDashboard() {
                   ))}
                 </TableBody>
               </Table>
+            ) : (
+              <SubjectRadarChart data={subjectPerformance} />
             )}
           </CardContent>
         </Card>
 
         {/* Topic Performance */}
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Topic Performance</CardTitle>
+            <ViewToggle value={topicView} onChange={setTopicView} />
           </CardHeader>
           <CardContent>
             {topicPerformance.length === 0 ? (
               <p className="text-muted-foreground text-center py-4">No data available</p>
-            ) : (
+            ) : topicView === "table" ? (
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -191,6 +217,8 @@ export function StudentDashboard() {
                   ))}
                 </TableBody>
               </Table>
+            ) : (
+              <TopicBarChart data={topicPerformance} />
             )}
           </CardContent>
         </Card>

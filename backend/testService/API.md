@@ -2,7 +2,7 @@
 
 Base URL: `http://localhost:3005/api/test`
 
-> In production, all REST requests go through the API Gateway at `http://localhost:3000/api/test`. Socket.IO connects directly to `http://localhost:3005`.
+> In production, all REST requests go through the API Gateway at `http://localhost:3000/api/test`. Socket.IO also connects through the API Gateway at `http://localhost:3000`.
 
 ---
 
@@ -486,9 +486,19 @@ Get all tests with filters (admin only).
 
 ## Socket.IO
 
-Connect directly to `http://localhost:3005` with JWT token.
+Connect through the API Gateway at `http://localhost:3000` with JWT token. The gateway authenticates and proxies the connection to this service.
 
-**Connection:**
+**Connection (through gateway):**
+```javascript
+import { io } from "socket.io-client";
+
+const socket = io("http://localhost:3000", {
+  path: "/socket.io",
+  auth: { token: "eyJhbGciOiJIUzI1NiIs..." }
+});
+```
+
+**Direct connection (development only):**
 ```javascript
 const socket = io("http://localhost:3005", {
   auth: { token: "eyJhbGciOiJIUzI1NiIs..." }
