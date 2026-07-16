@@ -15,7 +15,7 @@ export function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStatsResponse["data"] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [locationView, setLocationView] = useState<"table" | "chart">("chart");
+  const [locationView, setLocationView] = useState<"table" | "chart">("table");
 
   useEffect(() => {
     const fetchStats = async () => {

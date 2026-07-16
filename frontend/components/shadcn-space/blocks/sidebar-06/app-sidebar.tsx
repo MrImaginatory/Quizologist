@@ -63,7 +63,6 @@ const teacherNav: NavItem[] = [
     ],
   },
   { title: "Students", icon: Users, href: "/dashboard/students" },
-  { title: "Analytics", icon: BarChart3, href: "/dashboard/analytics" },
 ];
 
 const adminNav: NavItem[] = [
@@ -96,7 +95,14 @@ const adminNav: NavItem[] = [
       { title: "Import Excel", icon: Upload, href: "/dashboard/questions/import" },
     ],
   },
-  { title: "Tests", icon: ClipboardList, href: "/dashboard/tests" },
+  {
+    title: "Tests",
+    icon: ClipboardList,
+    children: [
+      { title: "View Tests", icon: ClipboardList, href: "/dashboard/tests" },
+      { title: "Manage Tests", icon: ClipboardList, href: "/dashboard/tests/manage" },
+    ],
+  },
   { title: "Locations", icon: MapPin, href: "/dashboard/locations" },
 ];
 

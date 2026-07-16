@@ -7,7 +7,15 @@ import { RouteGuard } from "@/components/auth/route-guard";
 import { useAuth } from "@/contexts/auth-context";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Bell } from "lucide-react";
+import { Bell, LogOut, User } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { capitalize } from "@/lib/utils";
 
 function LiveDateTime() {
   const [now, setNow] = useState(new Date());
@@ -44,7 +52,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   const initials = user
     ? `${user.fname?.charAt(0) || ""}${user.lname?.charAt(0) || ""}`.toUpperCase()
@@ -65,11 +73,28 @@ export default function DashboardLayout({
                 <Bell className="h-5 w-5" />
                 <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive" />
               </Button>
-              <Avatar className="h-9 w-9 cursor-pointer">
-                <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
+              <DropdownMenu>
+                <DropdownMenuTrigger className="outline-none">
+                  <Avatar className="h-9 w-9 cursor-pointer">
+                    <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" sideOffset={8}>
+                  <div className="px-3 py-2">
+                    <p className="text-sm font-medium">
+                      {capitalize(user?.fname || "")} {capitalize(user?.lname || "")}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{user?.email}</p>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={logout} className="text-destructive cursor-pointer">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </header>
           <main className="flex-1 p-6">{children}</main>

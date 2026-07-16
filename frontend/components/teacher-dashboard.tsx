@@ -4,28 +4,104 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatisticsCard } from "@/components/statistics-card";
-import { dashboardApi, DashboardStatsResponse } from "@/lib/api";
-import { Loader2 } from "lucide-react";
+import { dashboardApi, teachersApi, DashboardStatsResponse } from "@/lib/api";
+import { Loader2, Trophy, AlertTriangle, BookOpen } from "lucide-react";
+import { capitalize } from "@/lib/utils";
+import { ViewToggle } from "@/components/dashboard/view-toggle";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from "@/components/ui/chart";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
+import {
+  RadarChart,
+  Radar,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+} from "recharts";
+
+interface TopStudent {
+  id: string;
+  fname: string;
+  lname: string;
+  email: string;
+  totalTests: number;
+  avgScore: number;
+  avgCorrect: number;
+  avgIncorrect: number;
+}
+
+interface WeakTopic {
+  topicId: string;
+  topicName: string;
+  subjectName: string;
+  courseName: string;
+  weakStudentCount: number;
+  totalStudents: number;
+  avgAccuracy: number;
+}
+
+interface CoverageTopic {
+  topicId: string;
+  topicName: string;
+  subjectName: string;
+  courseName: string;
+  count: number;
+}
+
+const topStudentsConfig: ChartConfig = {
+  avgScore: {
+    label: "Avg Score",
+    color: "var(--chart-1)",
+  },
+};
+
+const weakTopicsConfig: ChartConfig = {
+  avgAccuracy: {
+    label: "Accuracy %",
+    color: "var(--chart-4)",
+  },
+};
+
+const coverageConfig: ChartConfig = {
+  count: {
+    label: "Questions",
+    color: "var(--chart-2)",
+  },
+};
 
 export function TeacherDashboard() {
   const { token } = useAuth();
   const [stats, setStats] = useState<DashboardStatsResponse["data"] | null>(null);
+  const [topStudents, setTopStudents] = useState<TopStudent[]>([]);
+  const [weakTopics, setWeakTopics] = useState<WeakTopic[]>([]);
+  const [coverageTopics, setCoverageTopics] = useState<CoverageTopic[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [topStudentsView, setTopStudentsView] = useState<"table" | "chart">("table");
+  const [weakTopicsView, setWeakTopicsView] = useState<"table" | "chart">("table");
+  const [coverageView, setCoverageView] = useState<"table" | "chart">("table");
+
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchData = async () => {
       try {
-        const response = await dashboardApi.getStats(token || undefined);
-        setStats(response.data);
+        const [statsRes, topStudentsRes, weakRes, coverageRes] = await Promise.all([
+          dashboardApi.getStats(token || undefined),
+          teachersApi.getTopStudents({ limit: 10 }, token || undefined),
+          teachersApi.getWeaknessSummary({}, token || undefined),
+          teachersApi.getQuestionCoverage({ limit: 10 }, token || undefined),
+        ]);
+        setStats(statsRes.data);
+        setTopStudents(topStudentsRes.data?.students || []);
+        setWeakTopics(weakRes.data?.weakTopics || []);
+        setCoverageTopics(coverageRes.data?.topics || []);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch stats");
+        setError(err instanceof Error ? err.message : "Failed to fetch dashboard data");
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchStats();
+    fetchData();
   }, [token]);
 
   if (isLoading) {
@@ -85,27 +161,214 @@ export function TeacherDashboard() {
     },
   ];
 
+  const topStudentsChartData = topStudents.slice(0, 5).map((s) => ({
+    name: `${capitalize(s.fname)} ${capitalize(s.lname)}`,
+    avgScore: s.avgScore,
+  }));
+
+  const weakTopicsChartData = weakTopics.slice(0, 6).map((t) => ({
+    name: capitalize(t.topicName),
+    avgAccuracy: t.avgAccuracy,
+  }));
+
+  const coverageChartData = coverageTopics.slice(0, 10).map((t) => ({
+    name: capitalize(t.topicName),
+    count: t.count,
+  }));
+
   return (
     <div className="space-y-6">
       <StatisticsCard stats={teacherStats} />
-      <div className="grid gap-4 md:grid-cols-2">
+
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Top Students */}
         <Card>
           <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-yellow-500" />
+                Top Students
+              </CardTitle>
+              <ViewToggle value={topStudentsView} onChange={setTopStudentsView} />
+            </div>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">No recent activity to display.</p>
+            {topStudents.length === 0 ? (
+              <p className="text-muted-foreground">No student data available.</p>
+            ) : topStudentsView === "table" ? (
+              <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                {topStudents.map((student, index) => (
+                  <div key={student.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-medium text-muted-foreground w-6">
+                        #{index + 1}
+                      </span>
+                      <div>
+                        <p className="text-sm font-medium">
+                          {capitalize(student.fname)} {capitalize(student.lname)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">{student.totalTests} tests</p>
+                      </div>
+                    </div>
+                    <span className="text-sm font-bold text-primary">
+                      {student.avgScore}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <ChartContainer config={topStudentsConfig} className="h-[250px] w-full">
+                <BarChart data={topStudentsChartData} accessibilityLayer>
+                  <CartesianGrid vertical={false} stroke="var(--border)" />
+                  <XAxis
+                    dataKey="name"
+                    tickLine={false}
+                    tickMargin={10}
+                    axisLine={false}
+                    tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
+                    tickFormatter={(value) => value.split(" ")[0]}
+                  />
+                  <YAxis
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={5}
+                    tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
+                  />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey="avgScore" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ChartContainer>
+            )}
           </CardContent>
         </Card>
+
+        {/* Weak Topics */}
         <Card>
           <CardHeader>
-            <CardTitle>Student Performance</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-orange-500" />
+                Topics Needing Attention
+              </CardTitle>
+              <ViewToggle value={weakTopicsView} onChange={setWeakTopicsView} />
+            </div>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">No performance data available.</p>
+            {weakTopics.length === 0 ? (
+              <p className="text-muted-foreground">No weak topics identified.</p>
+            ) : weakTopicsView === "table" ? (
+              <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                {weakTopics.slice(0, 5).map((topic) => (
+                  <div key={topic.topicId} className="p-2 rounded-lg bg-muted/50">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium">{capitalize(topic.topicName)}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {capitalize(topic.subjectName)} • {capitalize(topic.courseName)}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-bold text-orange-500">
+                          {topic.weakStudentCount}/{topic.totalStudents}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {topic.avgAccuracy}% avg
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <ChartContainer config={weakTopicsConfig} className="h-[250px] w-full">
+                <RadarChart data={weakTopicsChartData}>
+                  <PolarGrid stroke="var(--border)" />
+                  <PolarAngleAxis
+                    dataKey="name"
+                    tick={{ fill: "var(--muted-foreground)", fontSize: 10 }}
+                  />
+                  <PolarRadiusAxis
+                    angle={90}
+                    domain={[0, 100]}
+                    tick={{ fill: "var(--muted-foreground)", fontSize: 10 }}
+                  />
+                  <Radar
+                    name="Accuracy"
+                    dataKey="avgAccuracy"
+                    stroke="var(--chart-4)"
+                    fill="var(--chart-4)"
+                    fillOpacity={0.3}
+                  />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                </RadarChart>
+              </ChartContainer>
+            )}
           </CardContent>
         </Card>
       </div>
+
+      {/* Question Coverage */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-blue-500" />
+              Question Coverage by Topic
+            </CardTitle>
+            <ViewToggle value={coverageView} onChange={setCoverageView} />
+          </div>
+        </CardHeader>
+        <CardContent>
+          {coverageTopics.length === 0 ? (
+            <p className="text-muted-foreground">No question data available.</p>
+          ) : coverageView === "table" ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left p-2 font-medium">Topic</th>
+                    <th className="text-left p-2 font-medium">Subject</th>
+                    <th className="text-left p-2 font-medium">Course</th>
+                    <th className="text-right p-2 font-medium">Questions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {coverageTopics.map((topic) => (
+                    <tr key={topic.topicId} className="border-b last:border-0">
+                      <td className="p-2">{capitalize(topic.topicName)}</td>
+                      <td className="p-2 text-muted-foreground">{capitalize(topic.subjectName)}</td>
+                      <td className="p-2 text-muted-foreground">{capitalize(topic.courseName)}</td>
+                      <td className="p-2 text-right font-medium">{topic.count}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <ChartContainer config={coverageConfig} className="h-[300px] w-full">
+              <BarChart data={coverageChartData} accessibilityLayer>
+                <CartesianGrid vertical={false} stroke="var(--border)" />
+                <XAxis
+                  dataKey="name"
+                  tickLine={false}
+                  tickMargin={10}
+                  axisLine={false}
+                  tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
+                  tickFormatter={(value) => value.length > 12 ? value.slice(0, 12) + "..." : value}
+                />
+                <YAxis
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={5}
+                  tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
+                />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="count" fill="var(--chart-2)" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ChartContainer>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -657,6 +657,29 @@ export const teachersApi = {
     const query = searchParams.toString();
     return apiRequest<TeachingTestsResponse>(`${API_ROUTES.TEACHERS.TEACHING_TESTS}${query ? `?${query}` : ""}`, { token });
   },
+  getTopStudents: (params: { course_id?: string; subject_id?: string; limit?: number }, token?: string): Promise<TopStudentsResponse> => {
+    const searchParams = new URLSearchParams();
+    if (params.course_id) searchParams.set("course_id", params.course_id);
+    if (params.subject_id) searchParams.set("subject_id", params.subject_id);
+    if (params.limit) searchParams.set("limit", params.limit.toString());
+    const query = searchParams.toString();
+    return apiRequest<TopStudentsResponse>(`${API_ROUTES.TEACHERS.TEACHING_TOP_STUDENTS}${query ? `?${query}` : ""}`, { token });
+  },
+  getWeaknessSummary: (params: { course_id?: string; threshold?: number }, token?: string): Promise<WeaknessSummaryResponse> => {
+    const searchParams = new URLSearchParams();
+    if (params.course_id) searchParams.set("course_id", params.course_id);
+    if (params.threshold) searchParams.set("threshold", params.threshold.toString());
+    const query = searchParams.toString();
+    return apiRequest<WeaknessSummaryResponse>(`${API_ROUTES.TEACHERS.TEACHING_WEAKNESS_SUMMARY}${query ? `?${query}` : ""}`, { token });
+  },
+  getQuestionCoverage: (params: { course_id?: string; subject_id?: string; limit?: number }, token?: string): Promise<QuestionCoverageResponse> => {
+    const searchParams = new URLSearchParams();
+    if (params.course_id) searchParams.set("course_id", params.course_id);
+    if (params.subject_id) searchParams.set("subject_id", params.subject_id);
+    if (params.limit) searchParams.set("limit", params.limit.toString());
+    const query = searchParams.toString();
+    return apiRequest<QuestionCoverageResponse>(`${API_ROUTES.TEACHERS.TEACHING_QUESTION_COVERAGE}${query ? `?${query}` : ""}`, { token });
+  },
 };
 
 export interface TeachingTest {
@@ -704,6 +727,59 @@ export interface TeachingStudentsResponse {
   data: {
     students: TeachingStudent[];
     pagination: Pagination;
+  };
+}
+
+export interface TopStudent {
+  id: string;
+  fname: string;
+  lname: string;
+  email: string;
+  totalTests: number;
+  avgScore: number;
+  avgCorrect: number;
+  avgIncorrect: number;
+}
+
+export interface TopStudentsResponse {
+  success: boolean;
+  message: string;
+  data: {
+    students: TopStudent[];
+  };
+}
+
+export interface WeakTopic {
+  topicId: string;
+  topicName: string;
+  subjectName: string;
+  courseName: string;
+  weakStudentCount: number;
+  totalStudents: number;
+  avgAccuracy: number;
+}
+
+export interface WeaknessSummaryResponse {
+  success: boolean;
+  message: string;
+  data: {
+    weakTopics: WeakTopic[];
+  };
+}
+
+export interface CoverageTopic {
+  topicId: string;
+  topicName: string;
+  subjectName: string;
+  courseName: string;
+  count: number;
+}
+
+export interface QuestionCoverageResponse {
+  success: boolean;
+  message: string;
+  data: {
+    topics: CoverageTopic[];
   };
 }
 

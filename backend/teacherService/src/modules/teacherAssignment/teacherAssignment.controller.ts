@@ -10,6 +10,9 @@ import {
   getTeacherAssignmentsSchema,
   getTeachingStudentsSchema,
   getTeachingTestsSchema,
+  getTopStudentsSchema,
+  getWeaknessSummarySchema,
+  getQuestionCoverageSchema,
 } from "./teacherAssignment.validation";
 
 export class TeacherAssignmentController {
@@ -152,6 +155,71 @@ export class TeacherAssignmentController {
       });
 
       return ApiResponse.success(res, "Teaching tests retrieved successfully", result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getTopStudents(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const teacherId = req.user?.userId || req.query.teacher_id as string;
+      if (!teacherId) {
+        return ApiResponse.error(res, "Teacher ID is required", 400);
+      }
+
+      const validatedData = getTopStudentsSchema.parse(req.query);
+
+      const result = await TeacherAssignmentService.getTopStudents({
+        teacherId,
+        course_id: validatedData.course_id,
+        subject_id: validatedData.subject_id,
+        limit: validatedData.limit,
+      });
+
+      return ApiResponse.success(res, "Top students retrieved successfully", result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getWeaknessSummary(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const teacherId = req.user?.userId || req.query.teacher_id as string;
+      if (!teacherId) {
+        return ApiResponse.error(res, "Teacher ID is required", 400);
+      }
+
+      const validatedData = getWeaknessSummarySchema.parse(req.query);
+
+      const result = await TeacherAssignmentService.getWeaknessSummary({
+        teacherId,
+        course_id: validatedData.course_id,
+        threshold: validatedData.threshold,
+      });
+
+      return ApiResponse.success(res, "Weakness summary retrieved successfully", result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getQuestionCoverage(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const teacherId = req.user?.userId || req.query.teacher_id as string;
+      if (!teacherId) {
+        return ApiResponse.error(res, "Teacher ID is required", 400);
+      }
+
+      const validatedData = getQuestionCoverageSchema.parse(req.query);
+
+      const result = await TeacherAssignmentService.getQuestionCoverage({
+        teacherId,
+        course_id: validatedData.course_id,
+        subject_id: validatedData.subject_id,
+        limit: validatedData.limit,
+      });
+
+      return ApiResponse.success(res, "Question coverage retrieved successfully", result);
     } catch (error) {
       next(error);
     }

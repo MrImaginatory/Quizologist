@@ -73,6 +73,9 @@ export const API_ROUTES = {
     TEACHER_ENROLLMENT: `${BASE_URL}/api/teacher/teacher-enrollment`,
     TEACHING_STUDENTS: `${BASE_URL}/api/teacher/teaching/students`,
     TEACHING_TESTS: `${BASE_URL}/api/teacher/teaching/tests`,
+    TEACHING_TOP_STUDENTS: `${BASE_URL}/api/teacher/teaching/top-students`,
+    TEACHING_WEAKNESS_SUMMARY: `${BASE_URL}/api/teacher/teaching/weakness-summary`,
+    TEACHING_QUESTION_COVERAGE: `${BASE_URL}/api/teacher/teaching/question-coverage`,
   },
 
   // Tests

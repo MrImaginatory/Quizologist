@@ -3,9 +3,17 @@ import TeacherAssignment from "./teacherAssignment.model";
 import Teacher from "../teacher/teacher.model";
 import Course from "../course/course.model";
 import Subject from "../subject/subject.model";
+import Topic from "../topic/topic.model";
 import Enrollment from "../enrollment/enrollment.model";
 import TestSession from "../testSession/testSession.model";
+import TestAnswer from "../testAnswer/testAnswer.model";
+import Question from "../question/question.model";
 import { ApiError } from "../../utils/ApiError";
+import {
+  GetTopStudentsInput,
+  GetWeaknessSummaryInput,
+  GetQuestionCoverageInput,
+} from "./teacherAssignment.validation";
 
 interface AssignCourseInput {
   teacher_id: string;
@@ -654,6 +662,325 @@ export class TeacherAssignmentService {
         limit,
         totalPages: Math.ceil(total / limit),
       },
+    };
+  }
+
+  static async getTopStudents(data: GetTopStudentsInput & { teacherId: string }): Promise<any> {
+    const { teacherId, course_id, subject_id, limit } = data;
+
+    const whereConditions: any = { teacher_id: teacherId };
+    if (course_id) whereConditions.course_id = course_id;
+    if (subject_id) whereConditions.subject_id = subject_id;
+
+    const assignments = await TeacherAssignment.findAll({
+      where: whereConditions,
+      attributes: ["course_id", "subject_id"],
+      raw: true,
+    });
+
+    if (assignments.length === 0) {
+      return { students: [] };
+    }
+
+    const courseSubjectPairs = assignments.map((a) => ({
+      course_id: a.course_id,
+      subject_id: a.subject_id,
+    }));
+
+    const enrollmentConditions: any[] = [];
+    for (const pair of courseSubjectPairs) {
+      const condition: any = { course_id: pair.course_id };
+      if (pair.subject_id) {
+        condition.subject_id = pair.subject_id;
+      }
+      enrollmentConditions.push(condition);
+    }
+
+    const enrollments = await Enrollment.findAll({
+      where: { [Op.or]: enrollmentConditions },
+      attributes: ["student_id"],
+      raw: true,
+    });
+
+    const studentIds = [...new Set(enrollments.map((e) => e.student_id))];
+
+    if (studentIds.length === 0) {
+      return { students: [] };
+    }
+
+    const testSessions = await TestSession.findAll({
+      where: {
+        student_id: { [Op.in]: studentIds },
+        status: "completed",
+      },
+      attributes: ["student_id", "score", "correct", "incorrect"],
+      raw: true,
+    });
+
+    // Group by student and calculate averages
+    const studentStats = new Map<string, { totalScore: number; totalCorrect: number; totalIncorrect: number; count: number }>();
+
+    for (const test of testSessions) {
+      const existing = studentStats.get(test.student_id) || { totalScore: 0, totalCorrect: 0, totalIncorrect: 0, count: 0 };
+      existing.totalScore += Number(test.score) || 0;
+      existing.totalCorrect += test.correct || 0;
+      existing.totalIncorrect += test.incorrect || 0;
+      existing.count += 1;
+      studentStats.set(test.student_id, existing);
+    }
+
+    const studentIdsWithTests = [...studentStats.keys()];
+
+    const students = await Teacher.findAll({
+      where: {
+        id: { [Op.in]: studentIdsWithTests },
+        role: "student",
+      },
+      attributes: ["id", "fname", "lname", "email"],
+      raw: true,
+    });
+
+    const studentMap = new Map(students.map((s) => [s.id, s]));
+
+    const result = studentIdsWithTests.map((studentId) => {
+      const stats = studentStats.get(studentId)!;
+      const student = studentMap.get(studentId);
+      return {
+        id: studentId,
+        fname: student?.fname || "",
+        lname: student?.lname || "",
+        email: student?.email || "",
+        totalTests: stats.count,
+        avgScore: Math.round((stats.totalScore / stats.count) * 100) / 100,
+        avgCorrect: Math.round(stats.totalCorrect / stats.count),
+        avgIncorrect: Math.round(stats.totalIncorrect / stats.count),
+      };
+    });
+
+    // Sort by avg score descending and take top N
+    result.sort((a, b) => b.avgScore - a.avgScore);
+
+    return {
+      students: result.slice(0, limit),
+    };
+  }
+
+  static async getWeaknessSummary(data: GetWeaknessSummaryInput & { teacherId: string }): Promise<any> {
+    const { teacherId, course_id, threshold } = data;
+
+    const whereConditions: any = { teacher_id: teacherId };
+    if (course_id) whereConditions.course_id = course_id;
+
+    const assignments = await TeacherAssignment.findAll({
+      where: whereConditions,
+      attributes: ["course_id", "subject_id"],
+      raw: true,
+    });
+
+    if (assignments.length === 0) {
+      return { weakTopics: [] };
+    }
+
+    const courseSubjectPairs = assignments.map((a) => ({
+      course_id: a.course_id,
+      subject_id: a.subject_id,
+    }));
+
+    const enrollmentConditions: any[] = [];
+    for (const pair of courseSubjectPairs) {
+      const condition: any = { course_id: pair.course_id };
+      if (pair.subject_id) {
+        condition.subject_id = pair.subject_id;
+      }
+      enrollmentConditions.push(condition);
+    }
+
+    const enrollments = await Enrollment.findAll({
+      where: { [Op.or]: enrollmentConditions },
+      attributes: ["student_id"],
+      raw: true,
+    });
+
+    const studentIds = [...new Set(enrollments.map((e) => e.student_id))];
+
+    if (studentIds.length === 0) {
+      return { weakTopics: [] };
+    }
+
+    // Get test sessions with their answers to calculate per-topic accuracy
+    const completedTests = await TestSession.findAll({
+      where: {
+        student_id: { [Op.in]: studentIds },
+        status: "completed",
+      },
+      attributes: ["id", "student_id"],
+      raw: true,
+    });
+
+    if (completedTests.length === 0) {
+      return { weakTopics: [] };
+    }
+
+    const testIds = completedTests.map((t) => t.id);
+
+    // Get all answers with question topic info
+    const answers = await TestAnswer.findAll({
+      where: { test_session_id: { [Op.in]: testIds } },
+      include: [
+        {
+          model: Question,
+          as: "question",
+          attributes: ["id", "topic_id", "subject_id", "course_id"],
+          include: [
+            { model: Topic, as: "topic", attributes: ["id", "name"] },
+            { model: Subject, as: "subject", attributes: ["id", "name"] },
+            { model: Course, as: "course", attributes: ["id", "name"] },
+          ],
+        },
+      ],
+      raw: true,
+      nest: true,
+    });
+
+    // Group by topic and calculate accuracy per student
+    const topicStudentAccuracy = new Map<string, Map<string, { correct: number; total: number }>>();
+
+    for (const answer of answers as any[]) {
+      const question = answer.question;
+      if (!question || !question.topic) continue;
+
+      const topicId = question.topic_id;
+      const studentId = completedTests.find((t) => t.id === answer.test_session_id)?.student_id;
+      if (!studentId) continue;
+
+      if (!topicStudentAccuracy.has(topicId)) {
+        topicStudentAccuracy.set(topicId, new Map());
+      }
+
+      const studentMap = topicStudentAccuracy.get(topicId)!;
+      const existing = studentMap.get(studentId) || { correct: 0, total: 0 };
+      existing.total += 1;
+      if (answer.is_correct || answer.selected_answer === question.correctAnswer) {
+        existing.correct += 1;
+      }
+      studentMap.set(studentId, existing);
+    }
+
+    // Calculate weak topics (topics where many students are below threshold)
+    const weakTopics: any[] = [];
+
+    for (const [topicId, studentMap] of topicStudentAccuracy) {
+      let weakCount = 0;
+      let totalAccuracy = 0;
+      let studentCount = 0;
+
+      for (const [, stats] of studentMap) {
+        const accuracy = (stats.correct / stats.total) * 100;
+        totalAccuracy += accuracy;
+        studentCount += 1;
+        if (accuracy < threshold) {
+          weakCount += 1;
+        }
+      }
+
+      if (weakCount > 0) {
+        // Get topic details from the first answer
+        const sampleAnswer = (answers as any[]).find((a) => a.question?.topic_id === topicId);
+        const topic = sampleAnswer?.question?.topic;
+        const subject = sampleAnswer?.question?.subject;
+        const course = sampleAnswer?.question?.course;
+
+        weakTopics.push({
+          topicId,
+          topicName: topic?.name || "",
+          subjectName: subject?.name || "",
+          courseName: course?.name || "",
+          weakStudentCount: weakCount,
+          totalStudents: studentCount,
+          avgAccuracy: Math.round(totalAccuracy / studentCount),
+        });
+      }
+    }
+
+    // Sort by weak student count descending
+    weakTopics.sort((a, b) => b.weakStudentCount - a.weakStudentCount);
+
+    return { weakTopics };
+  }
+
+  static async getQuestionCoverage(data: GetQuestionCoverageInput & { teacherId: string }): Promise<any> {
+    const { teacherId, course_id, subject_id, limit } = data;
+
+    const whereConditions: any = { teacher_id: teacherId };
+    if (course_id) whereConditions.course_id = course_id;
+    if (subject_id) whereConditions.subject_id = subject_id;
+
+    const assignments = await TeacherAssignment.findAll({
+      where: whereConditions,
+      attributes: ["course_id", "subject_id"],
+      raw: true,
+    });
+
+    if (assignments.length === 0) {
+      return { topics: [] };
+    }
+
+    const courseIds = [...new Set(assignments.map((a) => a.course_id))];
+    const subjectIds = assignments.filter((a) => a.subject_id).map((a) => a.subject_id);
+
+    // Build question where conditions - only questions added by this teacher
+    const questionWhere: any = {
+      questionAddedBy: teacherId,
+    };
+
+    if (subjectIds.length > 0) {
+      questionWhere[Op.or] = [
+        { course_id: { [Op.in]: courseIds }, subject_id: { [Op.in]: subjectIds } },
+        { course_id: { [Op.in]: courseIds }, subject_id: null },
+      ];
+    } else {
+      questionWhere.course_id = { [Op.in]: courseIds };
+    }
+
+    const questions = await Question.findAll({
+      where: questionWhere,
+      attributes: ["id", "topic_id"],
+      include: [
+        { model: Topic, as: "topic", attributes: ["id", "name"] },
+        { model: Subject, as: "subject", attributes: ["id", "name"] },
+        { model: Course, as: "course", attributes: ["id", "name"] },
+      ],
+      raw: true,
+      nest: true,
+    });
+
+    // Group by topic and count questions
+    const topicCounts = new Map<string, { topicName: string; subjectName: string; courseName: string; count: number }>();
+
+    for (const q of questions as any[]) {
+      const topicId = q.topic_id;
+      if (!topicId) continue;
+
+      const existing = topicCounts.get(topicId) || {
+        topicName: q.topic?.name || "",
+        subjectName: q.subject?.name || "",
+        courseName: q.course?.name || "",
+        count: 0,
+      };
+      existing.count += 1;
+      topicCounts.set(topicId, existing);
+    }
+
+    const result = [...topicCounts.entries()].map(([topicId, data]) => ({
+      topicId,
+      ...data,
+    }));
+
+    // Sort by question count descending and take top N
+    result.sort((a, b) => b.count - a.count);
+
+    return {
+      topics: result.slice(0, limit),
     };
   }
 }

@@ -12,5 +12,8 @@ router.get("/teacher-enrollment", TeacherAssignmentController.getAssignments);
 router.get("/teacher/:teacherId", TeacherAssignmentController.getTeacherAssignments);
 router.get("/teaching/students", TeacherAssignmentController.getTeachingStudents);
 router.get("/teaching/tests", TeacherAssignmentController.getTeachingTests);
+router.get("/teaching/top-students", TeacherAssignmentController.getTopStudents);
+router.get("/teaching/weakness-summary", TeacherAssignmentController.getWeaknessSummary);
+router.get("/teaching/question-coverage", TeacherAssignmentController.getQuestionCoverage);
 
 export default router;

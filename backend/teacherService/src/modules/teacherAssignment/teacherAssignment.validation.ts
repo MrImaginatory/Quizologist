@@ -56,3 +56,24 @@ export type GetAssignmentsInput = z.infer<typeof getAssignmentsSchema>;
 export type GetTeacherAssignmentsInput = z.infer<typeof getTeacherAssignmentsSchema>;
 export type GetTeachingStudentsInput = z.infer<typeof getTeachingStudentsSchema>;
 export type GetTeachingTestsInput = z.infer<typeof getTeachingTestsSchema>;
+
+export const getTopStudentsSchema = z.object({
+  course_id: uuidSchema.optional(),
+  subject_id: uuidSchema.optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(10),
+});
+
+export const getWeaknessSummarySchema = z.object({
+  course_id: uuidSchema.optional(),
+  threshold: z.coerce.number().min(0).max(100).default(50),
+});
+
+export const getQuestionCoverageSchema = z.object({
+  course_id: uuidSchema.optional(),
+  subject_id: uuidSchema.optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(10),
+});
+
+export type GetTopStudentsInput = z.infer<typeof getTopStudentsSchema>;
+export type GetWeaknessSummaryInput = z.infer<typeof getWeaknessSummarySchema>;
+export type GetQuestionCoverageInput = z.infer<typeof getQuestionCoverageSchema>;
