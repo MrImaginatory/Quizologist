@@ -3,9 +3,17 @@
   "version": "1.0.0",
   "description": "Backend services runner",
   "scripts": {
-    "start": "concurrently \"cd apiGateway && pnpm start\" \"cd contentService && pnpm start\" \"cd questionService && pnpm start\" \"cd studentService && pnpm start\" \"cd teacherService && pnpm start\" \"cd testService && pnpm start\" \"cd userService && pnpm start\" \"cd dashboardService && pnpm start\"",
     "dev": "concurrently \"cd apiGateway && pnpm dev\" \"cd contentService && pnpm dev\" \"cd questionService && pnpm dev\" \"cd studentService && pnpm dev\" \"cd teacherService && pnpm dev\" \"cd testService && pnpm dev\" \"cd userService && pnpm dev\" \"cd dashboardService && pnpm dev\"",
-    "install:all": "concurrently \"cd apiGateway && pnpm install\" \"cd contentService && pnpm install\" \"cd questionService && pnpm install\" \"cd studentService && pnpm install\" \"cd teacherService && pnpm install\" \"cd testService && pnpm install\" \"cd userService && pnpm install\" \"cd dashboardService && pnpm install\""
+    "start": "concurrently \"cd apiGateway && pnpm start\" \"cd contentService && pnpm start\" \"cd questionService && pnpm start\" \"cd studentService && pnpm start\" \"cd teacherService && pnpm start\" \"cd testService && pnpm start\" \"cd userService && pnpm start\" \"cd dashboardService && pnpm start\"",
+    "install:all": "concurrently \"cd apiGateway && pnpm install\" \"cd contentService && pnpm install\" \"cd questionService && pnpm install\" \"cd studentService && pnpm install\" \"cd teacherService && pnpm install\" \"cd testService && pnpm install\" \"cd userService && pnpm install\" \"cd dashboardService && pnpm install\"",
+    "build": "concurrently \"cd apiGateway && pnpm build\" \"cd contentService && pnpm build\" \"cd questionService && pnpm build\" \"cd studentService && pnpm build\" \"cd teacherService && pnpm build\" \"cd testService && pnpm build\" \"cd userService && pnpm build\" \"cd dashboardService && pnpm build\"",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop ecosystem.config.js",
+    "pm2:restart": "pm2 restart ecosystem.config.js",
+    "pm2:delete": "pm2 delete ecosystem.config.js",
+    "pm2:logs": "pm2 logs",
+    "pm2:status": "pm2 status",
+    "build:all": "pnpm build && echo 'Build complete!'"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

@@ -19,8 +19,6 @@ Subject.hasMany(TeacherAssignment, { foreignKey: "subject_id", as: "teacherAssig
 Enrollment.belongsTo(Course, { foreignKey: "course_id", as: "course" });
 Enrollment.belongsTo(Subject, { foreignKey: "subject_id", as: "subject" });
 
-TestSession.belongsTo(Enrollment, { foreignKey: "student_id", targetKey: "student_id", as: "enrollment" });
-
 TestAnswer.belongsTo(TestSession, { foreignKey: "test_session_id", as: "testSession" });
 TestAnswer.belongsTo(Question, { foreignKey: "question_id", as: "question" });
 
