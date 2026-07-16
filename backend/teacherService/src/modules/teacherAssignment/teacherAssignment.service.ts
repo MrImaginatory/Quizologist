@@ -1,8 +1,10 @@
-import { fn, col } from "sequelize";
+import { fn, col, Op } from "sequelize";
 import TeacherAssignment from "./teacherAssignment.model";
 import Teacher from "../teacher/teacher.model";
 import Course from "../course/course.model";
 import Subject from "../subject/subject.model";
+import Enrollment from "../enrollment/enrollment.model";
+import TestSession from "../testSession/testSession.model";
 import { ApiError } from "../../utils/ApiError";
 
 interface AssignCourseInput {
@@ -16,9 +18,32 @@ interface AssignSubjectInput {
   subject_id: string;
 }
 
+interface BulkAssignSubjectsInput {
+  teacher_id: string;
+  course_id: string;
+  subject_ids?: string[];
+}
+
 interface GetAssignmentsInput {
   teacher_id?: string;
   course_id?: string;
+  page: number;
+  limit: number;
+}
+
+interface GetTeachingStudentsInput {
+  teacherId: string;
+  course_id?: string;
+  subject_id?: string;
+  page: number;
+  limit: number;
+}
+
+interface GetTeachingTestsInput {
+  teacherId: string;
+  course_id?: string;
+  subject_id?: string;
+  status?: string;
   page: number;
   limit: number;
 }
@@ -286,6 +311,291 @@ export class TeacherAssignmentService {
     return {
       teacher: teacher.toJSON(),
       assignments: Array.from(courseMap.values()),
+    };
+  }
+
+  static async bulkAssignSubjects(data: BulkAssignSubjectsInput): Promise<any> {
+    const { teacher_id, course_id, subject_ids } = data;
+
+    const teacher = await Teacher.findOne({
+      where: { id: teacher_id, role: "teacher" },
+    });
+
+    if (!teacher) {
+      throw ApiError.notFound("Teacher not found");
+    }
+
+    const course = await Course.findByPk(course_id);
+    if (!course) {
+      throw ApiError.notFound("Course not found");
+    }
+
+    let subjectsToAssign: string[];
+
+    if (subject_ids && subject_ids.length > 0) {
+      subjectsToAssign = subject_ids;
+    } else {
+      const allSubjects = await Subject.findAll({
+        where: { course_id },
+        attributes: ["id"],
+      });
+      subjectsToAssign = allSubjects.map((s) => s.id);
+    }
+
+    if (subjectsToAssign.length === 0) {
+      return {
+        total: 0,
+        created: 0,
+        skipped: 0,
+        assignments: [],
+      };
+    }
+
+    const existingAssignments = await TeacherAssignment.findAll({
+      where: {
+        teacher_id,
+        course_id,
+        subject_id: { [Op.in]: subjectsToAssign },
+      },
+      attributes: ["subject_id"],
+    });
+
+    const existingSubjectIds = new Set(
+      existingAssignments.map((a) => a.subject_id)
+    );
+
+    const created: any[] = [];
+    const skipped: string[] = [];
+
+    for (const subjectId of subjectsToAssign) {
+      if (existingSubjectIds.has(subjectId)) {
+        skipped.push(subjectId);
+        continue;
+      }
+
+      const subject = await Subject.findByPk(subjectId);
+      if (!subject || subject.course_id !== course_id) {
+        skipped.push(subjectId);
+        continue;
+      }
+
+      const assignment = await TeacherAssignment.create({
+        teacher_id,
+        course_id,
+        subject_id: subjectId,
+      });
+
+      created.push(assignment.toJSON());
+    }
+
+    return {
+      total: subjectsToAssign.length,
+      created: created.length,
+      skipped: skipped.length,
+      assignments: created,
+    };
+  }
+
+  static async getTeachingStudents(data: GetTeachingStudentsInput): Promise<any> {
+    const { teacherId, course_id, subject_id, page, limit } = data;
+    const offset = (page - 1) * limit;
+
+    const whereConditions: any = { teacher_id: teacherId };
+    if (course_id) whereConditions.course_id = course_id;
+    if (subject_id) whereConditions.subject_id = subject_id;
+
+    const assignments = await TeacherAssignment.findAll({
+      where: whereConditions,
+      attributes: ["course_id", "subject_id"],
+      raw: true,
+    });
+
+    if (assignments.length === 0) {
+      return {
+        students: [],
+        pagination: { total: 0, page, limit, totalPages: 0 },
+      };
+    }
+
+    const courseSubjectPairs = assignments.map((a) => ({
+      course_id: a.course_id,
+      subject_id: a.subject_id,
+    }));
+
+    const enrollmentConditions: any[] = [];
+    for (const pair of courseSubjectPairs) {
+      const condition: any = { course_id: pair.course_id };
+      if (pair.subject_id) {
+        condition.subject_id = pair.subject_id;
+      }
+      enrollmentConditions.push(condition);
+    }
+
+    const enrollments = await Enrollment.findAndCountAll({
+      where: {
+        [Op.or]: enrollmentConditions,
+      },
+      attributes: ["student_id", "course_id", "subject_id"],
+      group: ["student_id", "course_id", "subject_id"],
+      limit,
+      offset,
+      raw: true,
+    });
+
+    const studentIds = [...new Set(enrollments.rows.map((e) => e.student_id))];
+
+    if (studentIds.length === 0) {
+      return {
+        students: [],
+        pagination: { total: 0, page, limit, totalPages: 0 },
+      };
+    }
+
+    const students = await Teacher.findAll({
+      where: {
+        id: { [Op.in]: studentIds },
+        role: "student",
+      },
+      attributes: ["id", "fname", "lname", "email"],
+      raw: true,
+    });
+
+    const studentMap = new Map(students.map((s) => [s.id, s]));
+
+    const result = enrollments.rows.map((enrollment) => {
+      const student = studentMap.get(enrollment.student_id);
+      return {
+        id: enrollment.student_id,
+        fname: student?.fname || "",
+        lname: student?.lname || "",
+        email: student?.email || "",
+        course_id: enrollment.course_id,
+        subject_id: enrollment.subject_id,
+      };
+    });
+
+    const totalCount = Array.isArray(enrollments.count)
+      ? enrollments.count.length
+      : Number(enrollments.count);
+
+    return {
+      students: result,
+      pagination: {
+        total: totalCount,
+        page,
+        limit,
+        totalPages: Math.ceil(totalCount / limit),
+      },
+    };
+  }
+
+  static async getTeachingTests(data: GetTeachingTestsInput): Promise<any> {
+    const { teacherId, course_id, subject_id, status, page, limit } = data;
+    const offset = (page - 1) * limit;
+
+    const whereConditions: any = { teacher_id: teacherId };
+    if (course_id) whereConditions.course_id = course_id;
+    if (subject_id) whereConditions.subject_id = subject_id;
+
+    const assignments = await TeacherAssignment.findAll({
+      where: whereConditions,
+      attributes: ["course_id", "subject_id"],
+      raw: true,
+    });
+
+    if (assignments.length === 0) {
+      return {
+        tests: [],
+        pagination: { total: 0, page, limit, totalPages: 0 },
+      };
+    }
+
+    const courseSubjectPairs = assignments.map((a) => ({
+      course_id: a.course_id,
+      subject_id: a.subject_id,
+    }));
+
+    const enrollmentConditions: any[] = [];
+    for (const pair of courseSubjectPairs) {
+      const condition: any = { course_id: pair.course_id };
+      if (pair.subject_id) {
+        condition.subject_id = pair.subject_id;
+      }
+      enrollmentConditions.push(condition);
+    }
+
+    const enrollments = await Enrollment.findAll({
+      where: {
+        [Op.or]: enrollmentConditions,
+      },
+      attributes: ["student_id"],
+      raw: true,
+    });
+
+    const studentIds = [...new Set(enrollments.map((e) => e.student_id))];
+
+    if (studentIds.length === 0) {
+      return {
+        tests: [],
+        pagination: { total: 0, page, limit, totalPages: 0 },
+      };
+    }
+
+    const testConditions: any = {
+      student_id: { [Op.in]: studentIds },
+    };
+    if (status) testConditions.status = status;
+
+    const { rows: tests, count: total } = await TestSession.findAndCountAll({
+      where: testConditions,
+      order: [["createdAt", "DESC"]],
+      limit,
+      offset,
+    });
+
+    const testStudentIds = [...new Set(tests.map((t) => t.student_id))];
+    const testStudents = await Teacher.findAll({
+      where: {
+        id: { [Op.in]: testStudentIds },
+      },
+      attributes: ["id", "fname", "lname", "email"],
+      raw: true,
+    });
+
+    const studentMap = new Map(testStudents.map((s) => [s.id, s]));
+
+    const result = tests.map((test) => {
+      const student = studentMap.get(test.student_id);
+      return {
+        id: test.id,
+        test_id: test.test_id,
+        student: {
+          id: test.student_id,
+          fname: student?.fname || "",
+          lname: student?.lname || "",
+          email: student?.email || "",
+        },
+        status: test.status,
+        subject_id: test.subject_id,
+        topic_id: test.topic_id,
+        total_questions: test.total_questions,
+        attempted: test.attempted,
+        correct: test.correct,
+        incorrect: test.incorrect,
+        score: test.score,
+        started_at: test.started_at,
+        completed_at: test.completed_at,
+      };
+    });
+
+    return {
+      tests: result,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
     };
   }
 }

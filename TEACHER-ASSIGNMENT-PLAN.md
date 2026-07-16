@@ -2,9 +2,9 @@
 
 ## Feature 1: Bulk Subject Assignment
 
-### New Endpoint: `POST /api/teacher/assign/bulk-subjects`
+### Endpoint: `POST /api/teacher/assign/bulk-subjects`
 
-Assign multiple subjects (or all subjects in a course) to a teacher in one call.
+Assign multiple subjects (or all subjects in a course) to a teacher in one call. **Admin and Teacher.**
 
 **Request Body:**
 ```json
@@ -43,16 +43,16 @@ Assign multiple subjects (or all subjects in a course) to a teacher in one call.
 }
 ```
 
-### Files to Change
+### Files Changed
 
 | File | Change |
 |------|--------|
-| `teacherAssignment.service.ts` | Add `bulkAssignSubjects()` method |
-| `teacherAssignment.controller.ts` | Add `bulkAssignSubjects` handler |
-| `teacherAssignment.validation.ts` | Add `bulkAssignSubjectsSchema` |
-| `teacherAssignment.routes.ts` | Add `POST /assign/bulk-subjects` |
-| `teacherService/API.md` | Document new endpoint |
-| `apiGateway/routes.ts` | Add route proxy |
+| `teacherAssignment.service.ts` | Added `bulkAssignSubjects()` method |
+| `teacherAssignment.controller.ts` | Added `bulkAssignSubjects` handler |
+| `teacherAssignment.validation.ts` | Added `bulkAssignSubjectsSchema` |
+| `teacherAssignment.routes.ts` | Added `POST /assign/bulk-subjects` |
+| `teacherService/API.md` | Documented new endpoint |
+| `apiGateway/routes.ts` | Added route proxy (admin + teacher) |
 
 ---
 
@@ -60,9 +60,9 @@ Assign multiple subjects (or all subjects in a course) to a teacher in one call.
 
 Let teachers query students, test results, and enrollments filtered by the courses/subjects they teach.
 
-### New Endpoint: `GET /api/teacher/teaching/students`
+### Endpoint: `GET /api/teacher/teaching/students`
 
-Get all students enrolled in the teacher's assigned courses/subjects.
+Get all students enrolled in the teacher's assigned courses/subjects. **Admin and Teacher.**
 
 **Query Params:**
 
@@ -89,8 +89,8 @@ Get all students enrolled in the teacher's assigned courses/subjects.
         "fname": "john",
         "lname": "doe",
         "email": "john@doe.com",
-        "course": { "id": "...", "name": "Computer Science" },
-        "subject": { "id": "...", "name": "Data Structures" }
+        "course_id": "...",
+        "subject_id": "..."
       }
     ],
     "pagination": { "total": 50, "page": 1, "limit": 10, "totalPages": 5 }
@@ -98,9 +98,9 @@ Get all students enrolled in the teacher's assigned courses/subjects.
 }
 ```
 
-### New Endpoint: `GET /api/teacher/teaching/tests`
+### Endpoint: `GET /api/teacher/teaching/tests`
 
-Get test results for students in the teacher's courses/subjects.
+Get test results for students in the teacher's courses/subjects. **Admin and Teacher.**
 
 **Query Params:**
 
@@ -118,62 +118,53 @@ Get test results for students in the teacher's courses/subjects.
 3. Find test sessions for those students
 4. Return test data with student info
 
-### Implementation Approach
-
-Two options:
-
-**Option A: New endpoints in teacherService (Recommended)**
-- Add `/teaching/students` and `/teaching/tests` to teacherService
-- teacherService queries enrollment + test tables directly
-- Pro: Clean separation, teacher-specific logic in one place
-- Con: Cross-service data access (teacherService reads enrollment/test tables)
-
-**Option B: Proxy through existing services**
-- Add query params to existing student/test endpoints
-- Gateway passes teacher context, downstream services filter
-- Pro: No cross-service reads
-- Con: More complex, changes existing endpoints
-
-**Recommendation: Option A** — simpler to implement, self-contained.
-
-### Files to Change (Option A)
+### Files Changed
 
 | File | Change |
 |------|--------|
-| `teacherAssignment.service.ts` | Add `getTeachingStudents()` and `getTeachingTests()` |
-| `teacherAssignment.controller.ts` | Add handlers |
-| `teacherAssignment.routes.ts` | Add `GET /teaching/students`, `GET /teaching/tests` |
-| `teacherService/API.md` | Document new endpoints |
-| `apiGateway/routes.ts` | Add route proxies |
+| `teacherAssignment.service.ts` | Added `getTeachingStudents()` and `getTeachingTests()` |
+| `teacherAssignment.controller.ts` | Added handlers |
+| `teacherAssignment.validation.ts` | Added validation schemas |
+| `teacherAssignment.routes.ts` | Added `GET /teaching/students`, `GET /teaching/tests` |
+| `teacherService/API.md` | Documented new endpoints |
+| `apiGateway/routes.ts` | Added route proxy (admin + teacher) |
+
+---
+
+## Feature 3: Teacher Enrollment Route Rename
+
+Renamed `GET /` to `GET /teacher-enrollment` for clarity.
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| `teacherAssignment.routes.ts` | Renamed route to `/teacher-enrollment` |
+| `apiGateway/routes.ts` | Updated proxy path |
+| `teacherService/API.md` | Updated documentation |
+
+---
+
+## Route Summary
+
+| Method | Gateway Path | Service Path | Roles |
+|--------|-------------|--------------|-------|
+| GET | `/teacher/list` | `/api/teacher/list` | admin |
+| POST | `/teacher/assign/course` | `/api/teacher/assign/course` | admin |
+| POST | `/teacher/assign/subject` | `/api/teacher/assign/subject` | admin |
+| POST | `/teacher/assign/bulk-subjects` | `/api/teacher/assign/bulk-subjects` | admin, teacher |
+| DELETE | `/teacher/unenroll/:id` | `/api/teacher/unenroll/:id` | admin |
+| GET | `/teacher/teacher-enrollment` | `/api/teacher/teacher-enrollment` | admin |
+| GET | `/teacher/teacher/:teacherId` | `/api/teacher/teacher/:teacherId` | admin, teacher |
+| GET | `/teacher/teaching/students` | `/api/teacher/teaching/students` | admin, teacher |
+| GET | `/teacher/teaching/tests` | `/api/teacher/teaching/tests` | admin, teacher |
 
 ---
 
 ## Execution Order
 
-1. Bulk subject assignment endpoint
-2. Teacher data access endpoints (students + tests)
-3. Update API.md for both
-4. Update gateway routes
-5. Test end-to-end
-
----
-
-## Gateway Routes to Add
-
-```typescript
-// Bulk assign subjects
-{
-  path: "/teacher/assign/bulk-subjects",
-  target: `${env.TEACHER_SERVICE_URL}/api/teacher/assign/bulk-subjects`,
-  auth: true,
-  roles: ["admin"],
-  methods: ["POST"],
-},
-// Teaching data — teacher sees their own students/tests
-{
-  path: "/teacher/teaching",
-  target: `${env.TEACHER_SERVICE_URL}/api/teacher/teaching`,
-  auth: true,
-  roles: ["admin", "teacher"],
-},
-```
+1. Bulk subject assignment endpoint ✅
+2. Teacher data access endpoints (students + tests) ✅
+3. Update API.md for both ✅
+4. Update gateway routes ✅
+5. Rename teacher-enrollment route ✅

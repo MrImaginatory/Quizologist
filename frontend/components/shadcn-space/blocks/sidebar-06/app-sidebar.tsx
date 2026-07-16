@@ -44,6 +44,7 @@ const studentNav: NavItem[] = [
 const teacherNav: NavItem[] = [
   { label: "Main", isSection: true },
   { title: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+  { title: "My Enrollments", icon: GraduationCap, href: "/dashboard/teacher-enrollments" },
   { title: "Manage Tests", icon: ClipboardList, href: "/dashboard/tests" },
   { title: "Question Bank", icon: FileQuestion, href: "/dashboard/questions" },
   { label: "Management", isSection: true },

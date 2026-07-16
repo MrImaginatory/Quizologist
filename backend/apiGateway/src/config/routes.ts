@@ -267,26 +267,42 @@ export const routes: RouteConfig[] = [
     roles: ["admin"],
     methods: ["POST"],
   },
+  // Bulk assign subjects — admin and teacher
+  {
+    path: "/teacher/assign/bulk-subjects",
+    target: `${env.TEACHER_SERVICE_URL}/api/teacher/assign/bulk-subjects`,
+    auth: true,
+    roles: ["admin", "teacher"],
+    methods: ["POST"],
+  },
   // Remove assignment — admin only
   {
-    path: "/teacher",
-    target: `${env.TEACHER_SERVICE_URL}/api/teacher`,
+    path: "/teacher/unenroll",
+    target: `${env.TEACHER_SERVICE_URL}/api/teacher/unenroll`,
     auth: true,
-    roles: ["admin"],
+    roles: ["admin", "teacher"],
     methods: ["DELETE"],
   },
   // Get all assignments — admin only
   {
-    path: "/teacher",
-    target: `${env.TEACHER_SERVICE_URL}/api/teacher`,
+    path: "/teacher/teacher-enrollment",
+    target: `${env.TEACHER_SERVICE_URL}/api/teacher/teacher-enrollment`,
     auth: true,
-    roles: ["admin"],
+    roles: ["admin", "teacher"],
     methods: ["GET"],
   },
   // Get teacher assignments — admin and teacher
   {
     path: "/teacher/teacher",
     target: `${env.TEACHER_SERVICE_URL}/api/teacher/teacher`,
+    auth: true,
+    roles: ["admin", "teacher"],
+    methods: ["GET"],
+  },
+  // Teaching data — teacher sees their own students/tests
+  {
+    path: "/teacher/teaching",
+    target: `${env.TEACHER_SERVICE_URL}/api/teacher/teaching`,
     auth: true,
     roles: ["admin", "teacher"],
     methods: ["GET"],

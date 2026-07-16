@@ -504,6 +504,151 @@ export const enrollmentsApi = {
     apiRequest(API_ROUTES.ENROLLMENTS.BY_ID(id), { method: "DELETE", token }),
 };
 
+export interface TeacherAssignment {
+  id: string;
+  teacher_id: string;
+  course_id: string;
+  subject_id: string | null;
+  course?: { id: string; name: string };
+  subject?: { id: string; name: string } | null;
+  teacher?: { id: string; fname: string; lname: string; email: string };
+}
+
+export interface TeacherAssignmentsResponse {
+  success: boolean;
+  message: string;
+  data: {
+    teacher: {
+      id: string;
+      fname: string;
+      lname: string;
+      email: string;
+      role: string;
+    };
+    assignments: {
+      id: string;
+      name: string;
+      subjects: { id: string; name: string }[];
+    }[];
+  };
+}
+
+export interface BulkSubjectPayload {
+  teacher_id: string;
+  course_id: string;
+  subject_ids?: string[];
+}
+
+export interface BulkSubjectResponse {
+  success: boolean;
+  message: string;
+  data: {
+    total: number;
+    created: number;
+    skipped: number;
+    assignments: TeacherAssignment[];
+  };
+}
+
+export interface TeacherListResponse {
+  success: boolean;
+  message: string;
+  data: {
+    teachers: {
+      id: string;
+      fname: string;
+      lname: string;
+      email: string;
+      mobileNumber: string;
+      createdAt: string;
+      courseCount: number;
+      subjectCount: number;
+      totalAssignments: number;
+    }[];
+    pagination: Pagination;
+  };
+}
+
+export interface TeacherEnrollmentItem {
+  id: string;
+  teacher: { id: string; fname: string; lname: string; email: string };
+  course: { id: string; name: string };
+  subject: { id: string; name: string } | null;
+}
+
+export interface TeacherEnrollmentResponse {
+  success: boolean;
+  message: string;
+  data: {
+    assignments: TeacherEnrollmentItem[];
+    pagination: Pagination;
+  };
+}
+
+export const teachersApi = {
+  list: (page = 1, limit = 10, token?: string) =>
+    apiRequest<TeacherListResponse>(`${API_ROUTES.TEACHERS.BASE}/list?page=${page}&limit=${limit}`, { token }),
+  getAssignments: (teacherId: string, token?: string) =>
+    apiRequest<TeacherAssignmentsResponse>(API_ROUTES.TEACHERS.BY_ID(teacherId), { token }),
+  getTeacherEnrollments: (params: { teacher_id?: string; course_id?: string; page?: number; limit?: number }, token?: string) => {
+    const searchParams = new URLSearchParams();
+    if (params.teacher_id) searchParams.set("teacher_id", params.teacher_id);
+    if (params.course_id) searchParams.set("course_id", params.course_id);
+    if (params.page) searchParams.set("page", params.page.toString());
+    if (params.limit) searchParams.set("limit", params.limit.toString());
+    const query = searchParams.toString();
+    return apiRequest<TeacherEnrollmentResponse>(`${API_ROUTES.TEACHERS.TEACHER_ENROLLMENT}${query ? `?${query}` : ""}`, { token });
+  },
+  assignCourse: (teacherId: string, courseId: string, token?: string) =>
+    apiRequest<{ success: boolean; message: string; data: TeacherAssignment }>(
+      API_ROUTES.TEACHERS.ASSIGN_COURSE,
+      {
+        method: "POST",
+        body: JSON.stringify({ teacher_id: teacherId, course_id: courseId }),
+        token,
+      }
+    ),
+  assignSubject: (teacherId: string, courseId: string, subjectId: string, token?: string) =>
+    apiRequest<{ success: boolean; message: string; data: TeacherAssignment }>(
+      API_ROUTES.TEACHERS.ASSIGN_SUBJECT,
+      {
+        method: "POST",
+        body: JSON.stringify({ teacher_id: teacherId, course_id: courseId, subject_id: subjectId }),
+        token,
+      }
+    ),
+  bulkAssignSubjects: (payload: BulkSubjectPayload, token?: string) =>
+    apiRequest<BulkSubjectResponse>(API_ROUTES.TEACHERS.ASSIGN_BULK_SUBJECTS, {
+      method: "POST",
+      body: JSON.stringify(payload),
+      token,
+    }),
+  unenroll: (assignmentId: string, token?: string) =>
+    apiRequest<{ success: boolean; message: string; data: { message: string } }>(
+      API_ROUTES.TEACHERS.UNENROLL(assignmentId),
+      { method: "DELETE", token }
+    ),
+  getTeachingStudents: (params: { course_id?: string; subject_id?: string; page?: number; limit?: number }, token?: string) => {
+    const searchParams = new URLSearchParams();
+    if (params.course_id) searchParams.set("course_id", params.course_id);
+    if (params.subject_id) searchParams.set("subject_id", params.subject_id);
+    if (params.page) searchParams.set("page", params.page.toString());
+    if (params.limit) searchParams.set("limit", params.limit.toString());
+    const query = searchParams.toString();
+    return apiRequest(`${API_ROUTES.TEACHERS.TEACHING_STUDENTS}${query ? `?${query}` : ""}`, { token });
+  },
+  getTeachingTests: (params: { course_id?: string; subject_id?: string; status?: string; page?: number; limit?: number }, token?: string) => {
+    const searchParams = new URLSearchParams();
+    if (params.course_id) searchParams.set("course_id", params.course_id);
+    if (params.subject_id) searchParams.set("subject_id", params.subject_id);
+    if (params.status) searchParams.set("status", params.status);
+    if (params.page) searchParams.set("page", params.page.toString());
+    if (params.limit) searchParams.set("limit", params.limit.toString());
+    const query = searchParams.toString();
+    return apiRequest(`${API_ROUTES.TEACHERS.TEACHING_TESTS}${query ? `?${query}` : ""}`, { token });
+  },
+};
+
 export interface TestHistory {
   id: string;
   test_id: string;
