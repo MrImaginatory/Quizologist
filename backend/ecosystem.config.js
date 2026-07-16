@@ -101,8 +101,18 @@ module.exports = {
       max_memory_restart: "256M",
       env: {
         NODE_ENV: "production",
-        PORT: 3007,
+        PORT: 3017,
       },
     },
+    {
+      name: 'quizologist-frontend',
+      script: 'npm',
+      args: 'start',
+      cwd: '/home/quizo/Quizologist/frontend',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 5002
+      }
+    }
   ],
 };
