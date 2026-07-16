@@ -10,7 +10,7 @@ module.exports = {
       max_memory_restart: "256M",
       env: {
         NODE_ENV: "production",
-        PORT: 3000,
+        PORT: 5001,
       },
     },
     {
@@ -23,7 +23,7 @@ module.exports = {
       max_memory_restart: "256M",
       env: {
         NODE_ENV: "production",
-        PORT: 3001,
+        PORT: 3011,
       },
     },
     {
@@ -36,7 +36,7 @@ module.exports = {
       max_memory_restart: "256M",
       env: {
         NODE_ENV: "production",
-        PORT: 3002,
+        PORT: 3012,
       },
     },
     {
@@ -49,7 +49,7 @@ module.exports = {
       max_memory_restart: "256M",
       env: {
         NODE_ENV: "production",
-        PORT: 3003,
+        PORT: 3013,
       },
     },
     {
@@ -62,7 +62,7 @@ module.exports = {
       max_memory_restart: "256M",
       env: {
         NODE_ENV: "production",
-        PORT: 3004,
+        PORT: 3014,
       },
     },
     {
@@ -75,7 +75,7 @@ module.exports = {
       max_memory_restart: "256M",
       env: {
         NODE_ENV: "production",
-        PORT: 3005,
+        PORT: 3015,
       },
     },
     {
@@ -88,7 +88,7 @@ module.exports = {
       max_memory_restart: "256M",
       env: {
         NODE_ENV: "production",
-        PORT: 3006,
+        PORT: 3016,
       },
     },
     {
