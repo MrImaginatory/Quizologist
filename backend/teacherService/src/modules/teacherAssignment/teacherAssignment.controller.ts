@@ -116,6 +116,8 @@ export class TeacherAssignmentController {
         teacherId,
         course_id: validatedData.course_id,
         subject_id: validatedData.subject_id,
+        student_id: validatedData.student_id,
+        search: validatedData.search,
         page: validatedData.page,
         limit: validatedData.limit,
       });
@@ -142,6 +144,8 @@ export class TeacherAssignmentController {
         teacherId,
         course_id: validatedData.course_id,
         subject_id: validatedData.subject_id,
+        student_id: validatedData.student_id,
+        search: validatedData.search,
         status: validatedData.status,
         page: validatedData.page,
         limit: validatedData.limit,

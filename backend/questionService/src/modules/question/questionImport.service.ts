@@ -1,9 +1,11 @@
+import { Op } from "sequelize";
 import ExcelJS from "exceljs";
 import { ApiError } from "../../utils/ApiError";
 import Question from "./question.model";
 import Course from "../course/course.model";
 import Subject from "../subject/subject.model";
 import Topic from "../topic/topic.model";
+import TeacherAssignment from "../teacherAssignment/teacherAssignment.model";
 
 const TEMPLATE_HEADERS = [
   "Course Name",
@@ -42,10 +44,59 @@ export interface BulkImportResult {
 }
 
 export class QuestionImportService {
-  static async generateTemplate(): Promise<Buffer> {
-    const courses = await Course.findAll({ attributes: ["id", "name"] });
-    const subjects = await Subject.findAll({ attributes: ["id", "name", "course_id"] });
-    const topics = await Topic.findAll({ attributes: ["id", "name", "subject_id"] });
+  static async generateTemplate(user?: { userId: string; role: string }): Promise<Buffer> {
+    let courseIds: string[] | null = null;
+    let subjectIds: string[] | null = null;
+
+    // If teacher, only include assigned courses/subjects
+    if (user && user.role === "teacher") {
+      const assignments = await TeacherAssignment.findAll({
+        where: { teacher_id: user.userId },
+        attributes: ["course_id", "subject_id"],
+        raw: true,
+      });
+
+      if (assignments.length === 0) {
+        throw ApiError.badRequest("You are not assigned to any courses or subjects");
+      }
+
+      courseIds = [...new Set(assignments.map((a) => a.course_id))];
+      subjectIds = assignments
+        .filter((a) => a.subject_id !== null)
+        .map((a) => a.subject_id as string);
+    }
+
+    // Build where conditions for courses
+    const courseWhere: any = {};
+    if (courseIds) {
+      courseWhere.id = { [Op.in]: courseIds };
+    }
+
+    // Build where conditions for subjects
+    const subjectWhere: any = {};
+    if (courseIds) {
+      subjectWhere.course_id = { [Op.in]: courseIds };
+    }
+    if (subjectIds && subjectIds.length > 0) {
+      subjectWhere.id = { [Op.in]: subjectIds };
+    }
+
+    const courses = await Course.findAll({ where: courseWhere, attributes: ["id", "name"] });
+    const subjects = await Subject.findAll({ where: subjectWhere, attributes: ["id", "name", "course_id"] });
+
+    // Build topic where conditions
+    const topicWhere: any = {};
+    if (subjectIds && subjectIds.length > 0) {
+      topicWhere.subject_id = { [Op.in]: subjectIds };
+    } else if (courseIds) {
+      // If teacher has course-level assignments (no specific subjects), include all topics for those courses
+      const courseSubjectIds = subjects.map((s) => s.id);
+      if (courseSubjectIds.length > 0) {
+        topicWhere.subject_id = { [Op.in]: courseSubjectIds };
+      }
+    }
+
+    const topics = await Topic.findAll({ where: topicWhere, attributes: ["id", "name", "subject_id"] });
 
     const subjectByCourse = new Map<string, string[]>();
     for (const s of subjects) {
@@ -136,10 +187,25 @@ export class QuestionImportService {
 
   static async bulkCreate(
     questions: BulkQuestionInput[],
-    defaultUserId: string
+    defaultUserId: string,
+    user?: { userId: string; role: string }
   ): Promise<BulkImportResult> {
     const errors: { row: number; reason: string }[] = [];
     let imported = 0;
+
+    // If teacher, fetch their allowed course/subject pairs
+    let allowedPairs: Set<string> | null = null;
+    if (user && user.role === "teacher") {
+      const assignments = await TeacherAssignment.findAll({
+        where: { teacher_id: user.userId },
+        attributes: ["course_id", "subject_id"],
+        raw: true,
+      });
+
+      allowedPairs = new Set(
+        assignments.map((a) => `${a.course_id}|${a.subject_id || ""}`)
+      );
+    }
 
     // Pre-fetch all existing questions for duplicate check
     const existingQuestions = await Question.findAll({
@@ -153,6 +219,18 @@ export class QuestionImportService {
     for (let i = 0; i < questions.length; i++) {
       const row = i + 2; // Excel rows are 1-indexed, header is row 1
       const q = questions[i];
+
+      // If teacher, validate course/subject assignment
+      if (allowedPairs) {
+        const pairKey = `${q.course_id}|${q.subject_id || ""}`;
+        if (!allowedPairs.has(pairKey)) {
+          errors.push({
+            row,
+            reason: "You are not assigned to this course/subject combination",
+          });
+          continue;
+        }
+      }
 
       // Validate choices count
       const validChoices = q.choices.filter((c) => c && c.trim() !== "");

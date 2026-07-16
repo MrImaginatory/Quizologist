@@ -437,6 +437,12 @@ export const questionsApi = {
   },
   getById: (id: string, token?: string) =>
     apiRequest(API_ROUTES.QUESTIONS.BY_ID(id), { token }),
+  update: (id: string, data: Partial<Omit<Question, "id">>, token?: string) =>
+    apiRequest<{ success: boolean; message: string; data: Question }>(API_ROUTES.QUESTIONS.BY_ID(id), {
+      method: "PUT",
+      body: JSON.stringify(data),
+      token,
+    }),
   delete: (id: string, token?: string) =>
     apiRequest(API_ROUTES.QUESTIONS.BY_ID(id), { method: "DELETE", token }),
   getTemplate: async (token?: string): Promise<Blob> => {
@@ -628,26 +634,78 @@ export const teachersApi = {
       API_ROUTES.TEACHERS.UNENROLL(assignmentId),
       { method: "DELETE", token }
     ),
-  getTeachingStudents: (params: { course_id?: string; subject_id?: string; page?: number; limit?: number }, token?: string) => {
+  getTeachingStudents: (params: { course_id?: string; subject_id?: string; student_id?: string; search?: string; page?: number; limit?: number }, token?: string) => {
     const searchParams = new URLSearchParams();
     if (params.course_id) searchParams.set("course_id", params.course_id);
     if (params.subject_id) searchParams.set("subject_id", params.subject_id);
+    if (params.student_id) searchParams.set("student_id", params.student_id);
+    if (params.search) searchParams.set("search", params.search);
     if (params.page) searchParams.set("page", params.page.toString());
     if (params.limit) searchParams.set("limit", params.limit.toString());
     const query = searchParams.toString();
-    return apiRequest(`${API_ROUTES.TEACHERS.TEACHING_STUDENTS}${query ? `?${query}` : ""}`, { token });
+    return apiRequest<TeachingStudentsResponse>(`${API_ROUTES.TEACHERS.TEACHING_STUDENTS}${query ? `?${query}` : ""}`, { token });
   },
-  getTeachingTests: (params: { course_id?: string; subject_id?: string; status?: string; page?: number; limit?: number }, token?: string) => {
+  getTeachingTests: (params: { course_id?: string; subject_id?: string; student_id?: string; search?: string; status?: string; page?: number; limit?: number }, token?: string) => {
     const searchParams = new URLSearchParams();
     if (params.course_id) searchParams.set("course_id", params.course_id);
     if (params.subject_id) searchParams.set("subject_id", params.subject_id);
+    if (params.student_id) searchParams.set("student_id", params.student_id);
+    if (params.search) searchParams.set("search", params.search);
     if (params.status) searchParams.set("status", params.status);
     if (params.page) searchParams.set("page", params.page.toString());
     if (params.limit) searchParams.set("limit", params.limit.toString());
     const query = searchParams.toString();
-    return apiRequest(`${API_ROUTES.TEACHERS.TEACHING_TESTS}${query ? `?${query}` : ""}`, { token });
+    return apiRequest<TeachingTestsResponse>(`${API_ROUTES.TEACHERS.TEACHING_TESTS}${query ? `?${query}` : ""}`, { token });
   },
 };
+
+export interface TeachingTest {
+  id: string;
+  test_id: string;
+  student: {
+    id: string;
+    fname: string;
+    lname: string;
+    email: string;
+  };
+  status: string;
+  subject_id: string | null;
+  topic_id: string | null;
+  total_questions: number;
+  attempted: number;
+  correct: number;
+  incorrect: number;
+  score: number;
+  started_at: string;
+  completed_at: string | null;
+}
+
+export interface TeachingTestsResponse {
+  success: boolean;
+  message: string;
+  data: {
+    tests: TeachingTest[];
+    pagination: Pagination;
+  };
+}
+
+export interface TeachingStudent {
+  id: string;
+  fname: string;
+  lname: string;
+  email: string;
+  course_id: string;
+  subject_id: string;
+}
+
+export interface TeachingStudentsResponse {
+  success: boolean;
+  message: string;
+  data: {
+    students: TeachingStudent[];
+    pagination: Pagination;
+  };
+}
 
 export interface TestHistory {
   id: string;

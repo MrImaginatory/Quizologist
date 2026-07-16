@@ -33,6 +33,8 @@ export const getTeacherAssignmentsSchema = z.object({
 export const getTeachingStudentsSchema = z.object({
   course_id: uuidSchema.optional(),
   subject_id: uuidSchema.optional(),
+  student_id: uuidSchema.optional(),
+  search: z.string().optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(10),
 });
@@ -40,6 +42,8 @@ export const getTeachingStudentsSchema = z.object({
 export const getTeachingTestsSchema = z.object({
   course_id: uuidSchema.optional(),
   subject_id: uuidSchema.optional(),
+  student_id: uuidSchema.optional(),
+  search: z.string().optional(),
   status: z.enum(["pending", "in_progress", "completed", "abandoned"]).optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(10),

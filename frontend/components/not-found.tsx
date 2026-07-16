@@ -64,10 +64,12 @@ export function NotFound() {
           variants={itemVariants}
           className="mt-8 flex flex-col sm:flex-row gap-3"
         >
-          <Button size="lg" render={<Link href="/" />}>
-            <Home className="mr-2 h-4 w-4" />
-            Go to Home
-          </Button>
+          <Link href="/">
+            <Button size="lg">
+              <Home className="mr-2 h-4 w-4" />
+              Go to Home
+            </Button>
+          </Link>
           <Button variant="outline" size="lg" onClick={() => router.back()}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Go Back

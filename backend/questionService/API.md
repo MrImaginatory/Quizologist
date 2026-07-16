@@ -199,6 +199,16 @@ Get all questions under a specific topic.
 
 Download an Excel template with pre-filled course/subject/topic names.
 
+**Behavior based on role:**
+- **Admin**: Template contains ALL courses, subjects, and topics
+- **Teacher**: Template contains ONLY courses, subjects, and topics they are assigned to
+- **Student**: Returns error (not allowed)
+
+**Headers:**
+```
+Authorization: Bearer <jwt_token>
+```
+
 **Response:** Binary Excel file (`.xlsx`)
 
 **Headers:**
@@ -218,9 +228,15 @@ Course Name | Subject Name | Topic Name | Question | Option 1 | Option 2 | Optio
 
 Import multiple questions from an array. Each question is validated independently — valid ones are inserted, invalid ones are skipped with error reasons.
 
+**Behavior based on role:**
+- **Admin**: Can import questions for ANY course/subject
+- **Teacher**: Can ONLY import questions for courses/subjects they are assigned to
+- **Student**: Not allowed
+
 **Headers:**
 ```
 Content-Type: application/json
+Authorization: Bearer <jwt_token>
 x-user-id: <uuid>
 ```
 
@@ -385,6 +401,8 @@ Soft delete a question.
 
 | Status | Message |
 |--------|---------|
+| 400 | You are not assigned to any courses or subjects |
+| 400 | You are not assigned to this course/subject combination |
 | 400 | Topic not found or has been deleted |
 | 400 | Subject not found or has been deleted |
 | 400 | Course not found or has been deleted |

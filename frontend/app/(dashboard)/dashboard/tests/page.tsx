@@ -4,12 +4,33 @@ import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { DataTable } from "@/components/data-table";
 import { useAllTests } from "@/hooks/use-all-tests";
+import { useTeachingTests } from "@/hooks/use-teaching-tests";
+import { useTeachingStudents } from "@/hooks/use-teaching-students";
 import { useUsers } from "@/hooks/use-users";
-import { TestHistory } from "@/lib/api";
+import { useCourses } from "@/hooks/use-courses";
+import { useSubjects } from "@/hooks/use-subjects";
+import { useAuth } from "@/contexts/auth-context";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BookOpen } from "lucide-react";
 import { TestFilters } from "@/components/filters/test-filters";
+import { capitalize } from "@/lib/utils";
+
+interface TestRow {
+  id: string;
+  test_id: string;
+  status: string;
+  score: number;
+  correct: number;
+  total_questions: number;
+  started_at: string;
+  student?: {
+    id: string;
+    fname: string;
+    lname: string;
+    email: string;
+  };
+}
 
 const statusColors: Record<string, string> = {
   completed: "bg-green-500/10 text-green-500 border-green-500/20",
@@ -20,18 +41,29 @@ const statusColors: Record<string, string> = {
 
 export default function TestsPage() {
   const router = useRouter();
+  const { user } = useAuth();
+  const isTeacher = user?.role === "teacher";
+
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [status, setStatus] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [studentId, setStudentId] = useState("");
+  const [courseId, setCourseId] = useState("");
+  const [subjectId, setSubjectId] = useState("");
 
-  const { users: students, isLoading: studentsLoading } = useUsers({ role: "student", limit: 100 });
+  const { users: adminStudents, isLoading: adminStudentsLoading } = useUsers({ role: "student", limit: 100 });
+  const { students: teachingStudents, isLoading: teachingStudentsLoading } = useTeachingStudents({ limit: 100 });
+  const { courses, isLoading: coursesLoading } = useCourses({ limit: 100 });
+  const { subjects, isLoading: subjectsLoading } = useSubjects({ limit: 100 });
+
+  const students = isTeacher ? teachingStudents : adminStudents;
+  const studentsLoading = isTeacher ? teachingStudentsLoading : adminStudentsLoading;
 
   const hasStudentSelected = studentId && studentId !== "all";
 
-  const { tests, total, totalPages, isLoading, error, refetch } = useAllTests({
+  const { tests: allTests, total: allTotal, totalPages: allTotalPages, isLoading: allLoading, error: allError, refetch: allRefetch } = useAllTests({
     page,
     limit,
     status: status === "all" ? "" : status,
@@ -40,11 +72,49 @@ export default function TestsPage() {
     dateTo: dateTo || undefined,
   });
 
+  const { tests: teachingTests, total: teachingTotal, totalPages: teachingTotalPages, isLoading: teachingLoading, error: teachingError, refetch: teachingRefetch } = useTeachingTests({
+    page,
+    limit,
+    status: status === "all" ? "" : status,
+    course_id: courseId || undefined,
+    subject_id: subjectId || undefined,
+    student_id: hasStudentSelected ? studentId : undefined,
+  });
+
+  const normalizedTests: TestRow[] = isTeacher
+    ? teachingTests.map((t) => ({
+        id: t.id,
+        test_id: t.test_id,
+        status: t.status,
+        score: t.score,
+        correct: t.correct,
+        total_questions: t.total_questions,
+        started_at: t.started_at,
+        student: t.student,
+      }))
+    : allTests.map((t) => ({
+        id: t.id,
+        test_id: t.test_id,
+        status: t.status,
+        score: parseFloat(String(t.score)) || 0,
+        correct: t.correct,
+        total_questions: t.total_questions,
+        started_at: t.started_at,
+      }));
+
+  const total = isTeacher ? teachingTotal : allTotal;
+  const totalPages = isTeacher ? teachingTotalPages : allTotalPages;
+  const isLoading = isTeacher ? teachingLoading : allLoading;
+  const error = isTeacher ? teachingError : allError;
+  const refetch = isTeacher ? teachingRefetch : allRefetch;
+
   const handleClearFilters = useCallback(() => {
     setStatus("");
     setDateFrom("");
     setDateTo("");
     setStudentId("");
+    setCourseId("");
+    setSubjectId("");
     setPage(1);
   }, []);
 
@@ -68,19 +138,44 @@ export default function TestsPage() {
     setPage(1);
   }, []);
 
+  const handleCourseChange = useCallback((value: string) => {
+    setCourseId(value);
+    setSubjectId("");
+    setPage(1);
+  }, []);
+
+  const handleSubjectChange = useCallback((value: string) => {
+    setSubjectId(value);
+    setPage(1);
+  }, []);
+
   const columns = [
-    { key: "sno", header: "#", render: (_t: TestHistory, index: number) => index + 1 },
+    { key: "sno", header: "#", render: (_t: TestRow, index: number) => index + 1 },
     {
       key: "test_id",
       header: "Test ID",
-      render: (t: TestHistory) => (
+      render: (t: TestRow) => (
         <span className="font-mono text-sm">{t.test_id}</span>
       ),
     },
+    ...(isTeacher
+      ? [
+          {
+            key: "student",
+            header: "Student",
+            render: (t: TestRow) => (
+              <div>
+                <p className="font-medium">{capitalize(t.student?.fname || "")} {capitalize(t.student?.lname || "")}</p>
+                <p className="text-xs text-muted-foreground">{t.student?.email}</p>
+              </div>
+            ),
+          },
+        ]
+      : []),
     {
       key: "status",
       header: "Status",
-      render: (t: TestHistory) => (
+      render: (t: TestRow) => (
         <Badge variant="outline" className={statusColors[t.status] || ""}>
           {t.status === "completed"
             ? "Completed"
@@ -97,8 +192,8 @@ export default function TestsPage() {
     {
       key: "score",
       header: "Score",
-      render: (t: TestHistory) => {
-        const score = parseFloat(String(t.score)) || 0;
+      render: (t: TestRow) => {
+        const score = Number(t.score) || 0;
         return (
           <span
             className={`font-medium ${
@@ -117,7 +212,7 @@ export default function TestsPage() {
     {
       key: "correct",
       header: "Correct",
-      render: (t: TestHistory) => (
+      render: (t: TestRow) => (
         <span>
           {t.correct || 0} / {t.total_questions}
         </span>
@@ -126,7 +221,7 @@ export default function TestsPage() {
     {
       key: "started_at",
       header: "Date",
-      render: (t: TestHistory) => {
+      render: (t: TestRow) => {
         if (!t.started_at) return <span>-</span>;
         const date = new Date(t.started_at);
         if (isNaN(date.getTime())) return <span>-</span>;
@@ -138,7 +233,7 @@ export default function TestsPage() {
           {
             key: "actions",
             header: "Actions",
-            render: (t: TestHistory) => {
+            render: (t: TestRow) => {
               if (t.status === "completed") {
                 return (
                   <Button
@@ -162,8 +257,14 @@ export default function TestsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">All Tests</h1>
-        <p className="text-muted-foreground">View and manage all tests across the system</p>
+        <h1 className="text-3xl font-bold">
+          {isTeacher ? "Teaching Tests" : "All Tests"}
+        </h1>
+        <p className="text-muted-foreground">
+          {isTeacher
+            ? "View test results for students in your courses"
+            : "View and manage all tests across the system"}
+        </p>
       </div>
 
       <TestFilters
@@ -171,19 +272,30 @@ export default function TestsPage() {
         dateFrom={dateFrom}
         dateTo={dateTo}
         studentId={studentId}
+        courseId={courseId}
+        subjectId={subjectId}
         students={students}
+        courses={courses}
+        subjects={subjects}
         studentsLoading={studentsLoading}
+        coursesLoading={coursesLoading}
+        subjectsLoading={subjectsLoading}
+        showStudentFilter={true}
+        showCourseFilter={isTeacher}
+        showSubjectFilter={isTeacher}
         onStatusChange={handleStatusChange}
         onDateFromChange={handleDateFromChange}
         onDateToChange={handleDateToChange}
         onStudentChange={handleStudentChange}
+        onCourseChange={handleCourseChange}
+        onSubjectChange={handleSubjectChange}
         onClear={handleClearFilters}
       />
 
       <DataTable
-        title="Tests"
+        title={isTeacher ? "Teaching Tests" : "Tests"}
         columns={columns}
-        data={tests}
+        data={normalizedTests}
         isLoading={isLoading}
         error={error}
         keyExtractor={(t) => t.id}

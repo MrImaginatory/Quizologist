@@ -35,6 +35,8 @@ interface GetTeachingStudentsInput {
   teacherId: string;
   course_id?: string;
   subject_id?: string;
+  student_id?: string;
+  search?: string;
   page: number;
   limit: number;
 }
@@ -43,6 +45,8 @@ interface GetTeachingTestsInput {
   teacherId: string;
   course_id?: string;
   subject_id?: string;
+  student_id?: string;
+  search?: string;
   status?: string;
   page: number;
   limit: number;
@@ -397,7 +401,7 @@ export class TeacherAssignmentService {
   }
 
   static async getTeachingStudents(data: GetTeachingStudentsInput): Promise<any> {
-    const { teacherId, course_id, subject_id, page, limit } = data;
+    const { teacherId, course_id, subject_id, student_id, search, page, limit } = data;
     const offset = (page - 1) * limit;
 
     const whereConditions: any = { teacher_id: teacherId };
@@ -431,18 +435,23 @@ export class TeacherAssignmentService {
       enrollmentConditions.push(condition);
     }
 
+    const enrollmentWhere: any = {
+      [Op.or]: enrollmentConditions,
+    };
+
+    // Filter by specific student
+    if (student_id) {
+      enrollmentWhere.student_id = student_id;
+    }
+
     const enrollments = await Enrollment.findAndCountAll({
-      where: {
-        [Op.or]: enrollmentConditions,
-      },
+      where: enrollmentWhere,
       attributes: ["student_id", "course_id", "subject_id"],
       group: ["student_id", "course_id", "subject_id"],
-      limit,
-      offset,
       raw: true,
     });
 
-    const studentIds = [...new Set(enrollments.rows.map((e) => e.student_id))];
+    let studentIds = [...new Set(enrollments.rows.map((e) => e.student_id))];
 
     if (studentIds.length === 0) {
       return {
@@ -451,18 +460,36 @@ export class TeacherAssignmentService {
       };
     }
 
+    // Build student where conditions
+    const studentWhere: any = {
+      id: { [Op.in]: studentIds },
+      role: "student",
+    };
+
+    // Search by name or email
+    if (search) {
+      studentWhere[Op.or] = [
+        { fname: { [Op.iLike]: `%${search}%` } },
+        { lname: { [Op.iLike]: `%${search}%` } },
+        { email: { [Op.iLike]: `%${search}%` } },
+      ];
+    }
+
     const students = await Teacher.findAll({
-      where: {
-        id: { [Op.in]: studentIds },
-        role: "student",
-      },
+      where: studentWhere,
       attributes: ["id", "fname", "lname", "email"],
       raw: true,
     });
 
+    // Filter studentIds to only those that match search
+    const matchedStudentIds = new Set(students.map((s) => s.id));
+    const filteredEnrollments = enrollments.rows.filter((e) =>
+      matchedStudentIds.has(e.student_id)
+    );
+
     const studentMap = new Map(students.map((s) => [s.id, s]));
 
-    const result = enrollments.rows.map((enrollment) => {
+    const result = filteredEnrollments.map((enrollment) => {
       const student = studentMap.get(enrollment.student_id);
       return {
         id: enrollment.student_id,
@@ -474,23 +501,22 @@ export class TeacherAssignmentService {
       };
     });
 
-    const totalCount = Array.isArray(enrollments.count)
-      ? enrollments.count.length
-      : Number(enrollments.count);
+    // Paginate results
+    const paginatedResult = result.slice(offset, offset + limit);
 
     return {
-      students: result,
+      students: paginatedResult,
       pagination: {
-        total: totalCount,
+        total: result.length,
         page,
         limit,
-        totalPages: Math.ceil(totalCount / limit),
+        totalPages: Math.ceil(result.length / limit),
       },
     };
   }
 
   static async getTeachingTests(data: GetTeachingTestsInput): Promise<any> {
-    const { teacherId, course_id, subject_id, status, page, limit } = data;
+    const { teacherId, course_id, subject_id, student_id, search, status, page, limit } = data;
     const offset = (page - 1) * limit;
 
     const whereConditions: any = { teacher_id: teacherId };
@@ -524,21 +550,53 @@ export class TeacherAssignmentService {
       enrollmentConditions.push(condition);
     }
 
+    const enrollmentWhere: any = {
+      [Op.or]: enrollmentConditions,
+    };
+
+    // Filter by specific student
+    if (student_id) {
+      enrollmentWhere.student_id = student_id;
+    }
+
     const enrollments = await Enrollment.findAll({
-      where: {
-        [Op.or]: enrollmentConditions,
-      },
+      where: enrollmentWhere,
       attributes: ["student_id"],
       raw: true,
     });
 
-    const studentIds = [...new Set(enrollments.map((e) => e.student_id))];
+    let studentIds = [...new Set(enrollments.map((e) => e.student_id))];
 
     if (studentIds.length === 0) {
       return {
         tests: [],
         pagination: { total: 0, page, limit, totalPages: 0 },
       };
+    }
+
+    // If searching by student name/email, filter student IDs first
+    if (search) {
+      const matchingStudents = await Teacher.findAll({
+        where: {
+          id: { [Op.in]: studentIds },
+          role: "student",
+          [Op.or]: [
+            { fname: { [Op.iLike]: `%${search}%` } },
+            { lname: { [Op.iLike]: `%${search}%` } },
+            { email: { [Op.iLike]: `%${search}%` } },
+          ],
+        },
+        attributes: ["id"],
+        raw: true,
+      });
+      studentIds = matchingStudents.map((s) => s.id);
+
+      if (studentIds.length === 0) {
+        return {
+          tests: [],
+          pagination: { total: 0, page, limit, totalPages: 0 },
+        };
+      }
     }
 
     const testConditions: any = {

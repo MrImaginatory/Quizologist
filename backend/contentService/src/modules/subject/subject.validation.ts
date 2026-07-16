@@ -26,12 +26,12 @@ export const subjectIdParamSchema = z.object({
 export const getSubjectsByCourseSchema = z.object({
   courseId: z.string().uuid("Invalid course ID format"),
   page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(100).default(10),
+  limit: z.coerce.number().int().min(1).max(1000).default(10),
 });
 
 export const getAllSubjectsSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(100).default(10),
+  limit: z.coerce.number().int().min(1).max(1000).default(10),
 });
 
 export type CreateSubjectInput = z.infer<typeof createSubjectSchema>;

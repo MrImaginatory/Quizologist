@@ -334,10 +334,12 @@ When called by a teacher, automatically uses their user ID from the JWT token.
 | ---------- | ------ | -------- | ---------------------------------- |
 | course_id  | string | No       | Filter further by specific course  |
 | subject_id | string | No       | Filter further by specific subject |
+| student_id | string | No       | Filter by specific student UUID    |
+| search     | string | No       | Search by student name or email    |
 | page       | number | No       | Page number (default: 1)           |
 | limit      | number | No       | Items per page (default: 10)       |
 
-**Example:** `GET /api/teacher/teaching/students?course_id=abc-123&limit=20`
+**Example:** `GET /api/teacher/teaching/students?search=john&limit=20`
 
 **200 OK:**
 
@@ -386,11 +388,13 @@ When called by a teacher, automatically uses their user ID from the JWT token.
 | ---------- | ------ | -------- | ------------------------------------------------------------------ |
 | course_id  | string | No       | Filter by course                                                   |
 | subject_id | string | No       | Filter by subject                                                  |
+| student_id | string | No       | Filter by specific student UUID                                    |
+| search     | string | No       | Search by student name or email                                    |
 | status     | string | No       | Filter by test status (pending, in_progress, completed, abandoned) |
 | page       | number | No       | Page number (default: 1)                                           |
 | limit      | number | No       | Items per page (default: 10)                                       |
 
-**Example:** `GET /api/teacher/teaching/tests?status=completed&limit=20`
+**Example:** `GET /api/teacher/teaching/tests?search=jane&status=completed&limit=20`
 
 **200 OK:**
 

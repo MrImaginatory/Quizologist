@@ -11,6 +11,7 @@ import { Pencil, Trash2, Plus } from "lucide-react";
 import { QuestionFilters } from "@/components/filters/question-filters";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { AddQuestionDialog } from "@/components/dialogs/add-question-dialog";
+import { EditQuestionDialog } from "@/components/dialogs/edit-question-dialog";
 import { useDeleteWithUndo } from "@/hooks/use-delete-with-undo";
 import { useAuth } from "@/contexts/auth-context";
 
@@ -26,6 +27,8 @@ export default function QuestionsPage() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editTarget, setEditTarget] = useState<Question | null>(null);
   const [filters, setFilters] = useState({
     courseId: "",
     subjectId: "",
@@ -33,7 +36,7 @@ export default function QuestionsPage() {
   });
   const [deleteTarget, setDeleteTarget] = useState<Question | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const { questions, total, totalPages, isLoading, error } = useQuestions({
+  const { questions, total, totalPages, isLoading, error, refetch } = useQuestions({
     page,
     limit,
     courseId: filters.courseId || undefined,
@@ -44,7 +47,8 @@ export default function QuestionsPage() {
 
   const handleDelete = useCallback(async (id: string) => {
     await questionsApi.delete(id, token || undefined);
-  }, [token]);
+    refetch();
+  }, [token, refetch]);
 
   const { deleteWithUndo } = useDeleteWithUndo({
     type: "topic",
@@ -55,6 +59,11 @@ export default function QuestionsPage() {
     setFilters(newFilters);
     setPage(1);
   }, []);
+
+  const handleEditClick = (question: Question) => {
+    setEditTarget(question);
+    setShowEditDialog(true);
+  };
 
   const handleDeleteClick = (question: Question) => {
     setDeleteTarget(question);
@@ -91,7 +100,7 @@ export default function QuestionsPage() {
       header: "Actions",
       render: (q: Question) => (
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="h-8 w-8">
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditClick(q)}>
             <Pencil className="h-4 w-4" />
           </Button>
           <Button
@@ -135,6 +144,13 @@ export default function QuestionsPage() {
       />
 
       <AddQuestionDialog open={showAddDialog} onOpenChange={setShowAddDialog} />
+
+      <EditQuestionDialog
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        question={editTarget}
+        onSuccess={refetch}
+      />
 
       <ConfirmDialog
         open={showDeleteDialog}

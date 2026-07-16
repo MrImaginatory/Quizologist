@@ -9,11 +9,12 @@ const bulkQuestionSchema = z.object({
     .max(5, "At most 5 options allowed"),
   correctAnswer: z.string().min(1, "Correct answer is required"),
   explanation: z.string().optional(),
-  videoUrl: z.string().url().optional().or(z.literal("")).optional(),
+  videoUrl: z.string().optional(),
+  difficulty: z.string().optional(),
   topic_id: z.string().uuid("Invalid topic ID format"),
   subject_id: z.string().uuid("Invalid subject ID format"),
   course_id: z.string().uuid("Invalid course ID format"),
-  questionAddedBy: z.string().uuid().optional(),
+  questionAddedBy: z.string().optional(),
 });
 
 export const bulkQuestionsSchema = z.object({

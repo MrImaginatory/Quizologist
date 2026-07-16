@@ -44,10 +44,24 @@ const studentNav: NavItem[] = [
 const teacherNav: NavItem[] = [
   { label: "Main", isSection: true },
   { title: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
-  { title: "My Enrollments", icon: GraduationCap, href: "/dashboard/teacher-enrollments" },
-  { title: "Manage Tests", icon: ClipboardList, href: "/dashboard/tests" },
-  { title: "Question Bank", icon: FileQuestion, href: "/dashboard/questions" },
   { label: "Management", isSection: true },
+  { title: "My Enrollments", icon: GraduationCap, href: "/dashboard/teacher-enrollments" },
+  {
+    title: "Tests",
+    icon: ClipboardList,
+    children: [
+      { title: "View Tests", icon: ClipboardList, href: "/dashboard/tests" },
+      { title: "Manage Tests", icon: ClipboardList, href: "/dashboard/tests/manage" },
+    ],
+  },
+  {
+    title: "Questions",
+    icon: FileQuestion,
+    children: [
+      { title: "All Questions", icon: FileQuestion, href: "/dashboard/questions" },
+      { title: "Import Excel", icon: Upload, href: "/dashboard/questions/import" },
+    ],
+  },
   { title: "Students", icon: Users, href: "/dashboard/students" },
   { title: "Analytics", icon: BarChart3, href: "/dashboard/analytics" },
 ];

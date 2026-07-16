@@ -191,32 +191,13 @@ export function AddQuestionDialog({ open, onOpenChange, onSuccess }: AddQuestion
               </div>
             </div>
 
-            {/* Type and Difficulty */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Question Type *</Label>
-                <Select value={type} onValueChange={(value) => {
-                  if (value) {
-                    setType(value as "mcq" | "descriptive");
-                    setCorrectAnswer("");
-                  }
-                }}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue>{type === "mcq" ? "Multiple Choice" : "Descriptive"}</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="mcq">Multiple Choice</SelectItem>
-                    <SelectItem value="descriptive">Descriptive</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Difficulty</Label>
-                <Select value={difficulty} onValueChange={(value) => { if (value) setDifficulty(value); }}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue>{capitalize(difficulty)}</SelectValue>
-                  </SelectTrigger>
+            {/* Difficulty */}
+            <div className="space-y-2">
+              <Label>Difficulty</Label>
+              <Select value={difficulty} onValueChange={(value) => { if (value) setDifficulty(value); }}>
+                <SelectTrigger className="w-full">
+                  <SelectValue>{capitalize(difficulty)}</SelectValue>
+                </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="beginner">Beginner</SelectItem>
                     <SelectItem value="normal">Normal</SelectItem>
@@ -226,7 +207,6 @@ export function AddQuestionDialog({ open, onOpenChange, onSuccess }: AddQuestion
                   </SelectContent>
                 </Select>
               </div>
-            </div>
 
             {/* Question */}
             <div className="space-y-2">
@@ -249,68 +229,51 @@ export function AddQuestionDialog({ open, onOpenChange, onSuccess }: AddQuestion
             </div>
 
             {/* MCQ Choices */}
-            {type === "mcq" && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label>Choices *</Label>
-                  {choices.length < 5 && (
-                    <Button type="button" variant="ghost" size="sm" onClick={addChoice}>
-                      <Plus className="h-4 w-4 mr-1" />
-                      Add Choice
-                    </Button>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  {choices.map((choice, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="correctAnswer"
-                        checked={correctAnswer === choice && choice !== ""}
-                        onChange={() => setCorrectAnswer(choice)}
-                        disabled={!choice}
-                        className="h-4 w-4"
-                      />
-                      <Input
-                        value={choice}
-                        onChange={(e) => handleChoiceChange(index, e.target.value)}
-                        placeholder={`Option ${index + 1}`}
-                        className="flex-1"
-                      />
-                      {choices.length > 2 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 shrink-0"
-                          onClick={() => removeChoice(index)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Select the radio button next to the correct answer
-                </p>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>Choices *</Label>
+                {choices.length < 5 && (
+                  <Button type="button" variant="ghost" size="sm" onClick={addChoice}>
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Choice
+                  </Button>
+                )}
               </div>
-            )}
-
-            {/* Correct Answer for Descriptive */}
-            {type === "descriptive" && (
               <div className="space-y-2">
-                <Label>Correct Answer *</Label>
-                <textarea
-                  value={correctAnswer}
-                  onChange={(e) => setCorrectAnswer(e.target.value)}
-                  placeholder="Enter the correct answer"
-                  rows={2}
-                  className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
-                  required
-                />
+                {choices.map((choice, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="correctAnswer"
+                      checked={correctAnswer === choice && choice !== ""}
+                      onChange={() => setCorrectAnswer(choice)}
+                      disabled={!choice}
+                      className="h-4 w-4"
+                    />
+                    <Input
+                      value={choice}
+                      onChange={(e) => handleChoiceChange(index, e.target.value)}
+                      placeholder={`Option ${index + 1}`}
+                      className="flex-1"
+                    />
+                    {choices.length > 2 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 shrink-0"
+                        onClick={() => removeChoice(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
               </div>
-            )}
+              <p className="text-xs text-muted-foreground">
+                Select the radio button next to the correct answer
+              </p>
+            </div>
 
             {/* Explanation */}
             <div className="space-y-2">

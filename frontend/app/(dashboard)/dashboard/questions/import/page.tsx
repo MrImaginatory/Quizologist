@@ -74,9 +74,9 @@ interface ImportResult {
 
 export default function ImportQuestionsPage() {
   const { token } = useAuth();
-  const { courses } = useCourses({ limit: 100 });
-  const { subjects } = useSubjects({ limit: 100 });
-  const { topics } = useTopics({ limit: 100 });
+  const { courses } = useCourses({ limit: 1000 });
+  const { subjects } = useSubjects({ limit: 1000 });
+  const { topics } = useTopics({ limit: 1000 });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [step, setStep] = useState<ImportStep>("upload");
@@ -100,13 +100,22 @@ export default function ImportQuestionsPage() {
     }
   };
 
+  // Helper to normalize names for matching (lowercase, trim, collapse spaces)
+  const normalizeName = (name: string): string => {
+    return name
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, " ") // collapse multiple spaces
+      .replace(/\u00A0/g, " "); // replace non-breaking spaces
+  };
+
   const resolveRow = useCallback(
     (row: ParsedQuestion): ResolvedQuestion => {
-      const courseMap = new Map(courses.map((c: Course) => [c.name.toLowerCase(), c]));
-      const subjectMap = new Map(subjects.map((s: Subject) => [`${s.name.toLowerCase()}|${s.course_id}`, s]));
-      const topicMap = new Map(topics.map((t: Topic) => [`${t.name.toLowerCase()}|${t.subject_id}`, t]));
+      const courseMap = new Map(courses.map((c: Course) => [normalizeName(c.name), c]));
+      const subjectMap = new Map(subjects.map((s: Subject) => [`${normalizeName(s.name)}|${s.course_id}`, s]));
+      const topicMap = new Map(topics.map((t: Topic) => [`${normalizeName(t.name)}|${t.subject_id}`, t]));
 
-      const course = courseMap.get(row.courseName.toLowerCase().trim());
+      const course = courseMap.get(normalizeName(row.courseName));
       if (!course) {
         return {
           type: "mcq",
@@ -124,7 +133,7 @@ export default function ImportQuestionsPage() {
         };
       }
 
-      const subjectKey = `${row.subjectName.toLowerCase().trim()}|${course.id}`;
+      const subjectKey = `${normalizeName(row.subjectName)}|${course.id}`;
       const subject = subjectMap.get(subjectKey);
       if (!subject) {
         return {
@@ -143,7 +152,7 @@ export default function ImportQuestionsPage() {
         };
       }
 
-      const topicKey = `${row.topicName.toLowerCase().trim()}|${subject.id}`;
+      const topicKey = `${normalizeName(row.topicName)}|${subject.id}`;
       const topic = topicMap.get(topicKey);
       if (!topic) {
         return {
@@ -224,27 +233,46 @@ export default function ImportQuestionsPage() {
     try {
       const data = await file.arrayBuffer();
       const workbook = XLSX.read(data, { type: "array" });
-      const sheetName = workbook.SheetNames[0];
+
+      // Try to find the "Questions" sheet first, otherwise use the first sheet
+      let sheetName = workbook.SheetNames.find(
+        (name) => name.toLowerCase() === "questions"
+      );
+      if (!sheetName) {
+        sheetName = workbook.SheetNames[0];
+      }
+
       const sheet = workbook.Sheets[sheetName];
       const raw = XLSX.utils.sheet_to_json(sheet);
 
       const parsed: ParsedQuestion[] = raw
         .map((row: unknown) => {
           const r = row as Record<string, string>;
+
+          // Support multiple column name variations
+          const getFieldValue = (possibleNames: string[]): string => {
+            for (const name of possibleNames) {
+              if (r[name] !== undefined && r[name] !== "") {
+                return String(r[name]);
+              }
+            }
+            return "";
+          };
+
           return {
-            courseName: r["Course Name"] || "",
-            subjectName: r["Subject Name"] || "",
-            topicName: r["Topic Name"] || "",
-            question: r["Question"] || "",
-            option1: r["Option 1"] || "",
-            option2: r["Option 2"] || "",
-            option3: r["Option 3"] || "",
-            option4: r["Option 4"] || "",
-            option5: r["Option 5"] || "",
-            correctAnswer: r["Correct Answer"] || "",
-            explanation: r["Explanation"] || "",
-            videoUrl: r["Video URL"] || "",
-            questionAddedBy: r["Question Added By"] || "",
+            courseName: getFieldValue(["Course Name", "Course", "course_name", "course"]),
+            subjectName: getFieldValue(["Subject Name", "Subject", "subject_name", "subject"]),
+            topicName: getFieldValue(["Topic Name", "Topic", "topic_name", "topic"]),
+            question: getFieldValue(["Question", "question", "Question Text", "question_text"]),
+            option1: getFieldValue(["Option 1", "Option1", "option1", "Choice 1", "Choice1"]),
+            option2: getFieldValue(["Option 2", "Option2", "option2", "Choice 2", "Choice2"]),
+            option3: getFieldValue(["Option 3", "Option3", "option3", "Choice 3", "Choice3"]),
+            option4: getFieldValue(["Option 4", "Option4", "option4", "Choice 4", "Choice4"]),
+            option5: getFieldValue(["Option 5", "Option5", "option5", "Choice 5", "Choice5"]),
+            correctAnswer: getFieldValue(["Correct Answer", "Correct", "correct_answer", "answer"]),
+            explanation: getFieldValue(["Explanation", "explanation", "Note", "note"]),
+            videoUrl: getFieldValue(["Video URL", "Video", "video_url", "video"]),
+            questionAddedBy: getFieldValue(["Question Added By", "Added By", "added_by"]),
           };
         })
         .filter((row) => row.question.trim() !== "");
@@ -313,7 +341,7 @@ export default function ImportQuestionsPage() {
         totalRows: parsedQuestions.length,
         imported: result.imported,
         failed: result.failed,
-        errors: result.errors,
+        errors: result.errors || [],
       });
       setStep("result");
     } catch (error) {
@@ -539,7 +567,7 @@ export default function ImportQuestionsPage() {
               </div>
             </div>
 
-            {importResult.errors.length > 0 && (
+            {importResult.errors && importResult.errors.length > 0 && (
               <div className="mt-4">
                 <h4 className="font-medium mb-2">Errors:</h4>
                 <ul className="space-y-1 text-sm text-muted-foreground">

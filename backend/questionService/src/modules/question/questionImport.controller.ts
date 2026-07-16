@@ -7,7 +7,7 @@ import { bulkQuestionsSchema } from "./questionImport.validation";
 export class QuestionImportController {
   static async downloadTemplate(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const buffer = await QuestionImportService.generateTemplate();
+      const buffer = await QuestionImportService.generateTemplate(req.user);
 
       res.setHeader(
         "Content-Type",
@@ -29,7 +29,8 @@ export class QuestionImportController {
       const data = bulkQuestionsSchema.parse(req.body);
       const result = await QuestionImportService.bulkCreate(
         data.questions,
-        req.user!.userId
+        req.user!.userId,
+        req.user
       );
 
       return ApiResponse.success(
