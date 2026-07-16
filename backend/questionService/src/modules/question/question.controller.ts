@@ -33,7 +33,7 @@ export class QuestionController {
   static async getAll(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const data = getAllQuestionsSchema.parse(req.query);
-      const result = await QuestionService.getAll(data);
+      const result = await QuestionService.getAll(data, req.user);
 
       return ApiResponse.success(
         res,
@@ -78,7 +78,7 @@ export class QuestionController {
   static async filter(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const data = filterQuestionsSchema.parse(req.query);
-      const result = await QuestionService.filter(data);
+      const result = await QuestionService.filter(data, req.user);
 
       return ApiResponse.success(
         res,

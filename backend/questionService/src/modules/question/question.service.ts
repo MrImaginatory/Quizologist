@@ -5,6 +5,7 @@ import Question from "./question.model";
 import Topic from "../topic/topic.model";
 import Subject from "../subject/subject.model";
 import Course from "../course/course.model";
+import TeacherAssignment from "../teacherAssignment/teacherAssignment.model";
 import {
   CreateQuestionInput,
   UpdateQuestionInput,
@@ -73,11 +74,46 @@ export class QuestionService {
     return created!.toJSON();
   }
 
-  static async getAll(data: GetAllQuestionsInput) {
+  static async getAll(data: GetAllQuestionsInput, user?: { userId: string; role: string }) {
     const { page, limit } = data;
     const offset = (page - 1) * limit;
 
+    const where: any = {};
+
+    // If teacher, filter by their assigned courses/subjects
+    if (user && user.role === "teacher") {
+      const assignments = await TeacherAssignment.findAll({
+        where: { teacher_id: user.userId },
+        attributes: ["course_id", "subject_id"],
+        raw: true,
+      });
+
+      if (assignments.length === 0) {
+        return {
+          questions: [],
+          pagination: { total: 0, page, limit, totalPages: 0 },
+        };
+      }
+
+      const courseIds = [...new Set(assignments.map((a) => a.course_id))];
+      const subjectIds = assignments
+        .filter((a) => a.subject_id)
+        .map((a) => a.subject_id);
+
+      // If teacher has subject-specific assignments, filter by those
+      // Otherwise, filter by course only
+      if (subjectIds.length > 0) {
+        where[Op.or] = [
+          { course_id: { [Op.in]: courseIds }, subject_id: { [Op.in]: subjectIds } },
+          { course_id: { [Op.in]: courseIds }, subject_id: null },
+        ];
+      } else {
+        where.course_id = { [Op.in]: courseIds };
+      }
+    }
+
     const { rows, count } = await Question.findAndCountAll({
+      where,
       attributes: TIMESTAMP_EXCLUDE,
       include: ALL_INCLUDES,
       limit,
@@ -159,7 +195,7 @@ export class QuestionService {
     };
   }
 
-  static async filter(data: FilterQuestionsInput) {
+  static async filter(data: FilterQuestionsInput, user?: { userId: string; role: string }) {
     const { course_id, subject_id, topic_id, page, limit } = data;
     const offset = (page - 1) * limit;
 
@@ -167,6 +203,38 @@ export class QuestionService {
     if (course_id) where.course_id = course_id;
     if (subject_id) where.subject_id = subject_id;
     if (topic_id) where.topic_id = topic_id;
+
+    // If teacher, filter by their assigned courses/subjects
+    if (user && user.role === "teacher") {
+      const assignments = await TeacherAssignment.findAll({
+        where: { teacher_id: user.userId },
+        attributes: ["course_id", "subject_id"],
+        raw: true,
+      });
+
+      if (assignments.length === 0) {
+        return {
+          questions: [],
+          pagination: { total: 0, page, limit, totalPages: 0 },
+        };
+      }
+
+      const courseIds = [...new Set(assignments.map((a) => a.course_id))];
+      const subjectIds = assignments
+        .filter((a) => a.subject_id)
+        .map((a) => a.subject_id);
+
+      // If teacher has subject-specific assignments, filter by those
+      // Otherwise, filter by course only
+      if (subjectIds.length > 0) {
+        where[Op.or] = [
+          { course_id: { [Op.in]: courseIds }, subject_id: { [Op.in]: subjectIds } },
+          { course_id: { [Op.in]: courseIds }, subject_id: null },
+        ];
+      } else {
+        where.course_id = { [Op.in]: courseIds };
+      }
+    }
 
     const { rows, count } = await Question.findAndCountAll({
       where,

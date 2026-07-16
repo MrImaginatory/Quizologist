@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -48,7 +48,10 @@ export function TeacherEnrollDialog({
   const { courses, isLoading: isLoadingCourses } = useCourses({ limit: 100 });
   const { subjects, isLoading: isLoadingSubjects } = useSubjects({ limit: 100 });
 
-  const availableSubjects = subjects.filter((s) => s.course_id === selectedCourseId);
+  const availableSubjects = useMemo(
+    () => subjects.filter((s) => s.course_id === selectedCourseId),
+    [subjects, selectedCourseId]
+  );
 
   useEffect(() => {
     if (selectedCourseId) {
@@ -56,14 +59,6 @@ export function TeacherEnrollDialog({
       setSelectAll(false);
     }
   }, [selectedCourseId]);
-
-  useEffect(() => {
-    if (selectAll && availableSubjects.length > 0) {
-      setSelectedSubjectIds(availableSubjects.map((s) => s.id));
-    } else if (!selectAll) {
-      setSelectedSubjectIds([]);
-    }
-  }, [selectAll, availableSubjects]);
 
   const handleSubjectToggle = (subjectId: string) => {
     setSelectedSubjectIds((prev) => {
@@ -176,7 +171,13 @@ export function TeacherEnrollDialog({
                       <Checkbox
                         id="select-all"
                         checked={selectAll}
-                        onCheckedChange={(checked) => setSelectAll(checked === true)}
+                        onCheckedChange={(checked) => {
+                          const isSelectedAll = checked === true;
+                          setSelectAll(isSelectedAll);
+                          setSelectedSubjectIds(
+                            isSelectedAll ? availableSubjects.map((s) => s.id) : []
+                          );
+                        }}
                       />
                       <label
                         htmlFor="select-all"

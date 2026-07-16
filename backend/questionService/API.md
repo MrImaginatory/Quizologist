@@ -80,7 +80,18 @@ x-user-id: <uuid>
 
 ## GET / — Get All Questions
 
-Get all questions with pagination.
+Get all questions with pagination. Results are filtered based on user role:
+
+- **Admin**: Returns ALL questions
+- **Teacher**: Returns only questions for their assigned courses/subjects
+- **Student**: Returns ALL questions (no filtering)
+
+**Headers:**
+```
+Content-Type: application/json
+x-user-id: <uuid>
+x-user-role: <admin|teacher|student>
+```
 
 **Query Params:**
 
@@ -143,7 +154,18 @@ Search questions by text (case-insensitive).
 
 ## GET /filter — Filter Questions
 
-Filter questions by course, subject, and/or topic.
+Filter questions by course, subject, and/or topic. Results are filtered based on user role:
+
+- **Admin**: Returns all matching questions
+- **Teacher**: Returns only questions for their assigned courses/subjects
+- **Student**: Returns all matching questions (no filtering)
+
+**Headers:**
+```
+Content-Type: application/json
+x-user-id: <uuid>
+x-user-role: <admin|teacher|student>
+```
 
 **Query Params:**
 
