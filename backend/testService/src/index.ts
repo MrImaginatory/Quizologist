@@ -6,6 +6,7 @@ import { connectDatabase } from "./config/database";
 import "./config/associations";
 import { extractGatewayUser } from "./middlewares/gatewayUser.middleware";
 import testSessionRoutes from "./modules/testSession/testSession.routes";
+import predefinedTestRoutes from "./modules/predefinedTest/predefinedTest.routes";
 import { createSocketServer } from "./socket/socketServer";
 import { ApiError } from "./utils/ApiError";
 import { ApiResponse } from "./utils/ApiResponse";
@@ -20,6 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(requestLogger(logger));
 
 app.use("/api/test", extractGatewayUser, testSessionRoutes);
+app.use("/api/test/predefined", extractGatewayUser, predefinedTestRoutes);
 
 app.get("/health", (_req: Request, res: Response) => {
   ApiResponse.success(res, "Service is healthy", {
