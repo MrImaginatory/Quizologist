@@ -94,6 +94,17 @@ export const API_ROUTES = {
     STUDENT_RESULTS: (studentId: string) => `${BASE_URL}/api/test/student/${studentId}/results`,
   },
 
+  // Predefined Tests
+  PREDEFINED_TESTS: {
+    BASE: `${BASE_URL}/api/test/predefined`,
+    BY_ID: (id: string) => `${BASE_URL}/api/test/predefined/${id}`,
+    ACTIVATE: (id: string) => `${BASE_URL}/api/test/predefined/${id}/activate`,
+    DEACTIVATE: (id: string) => `${BASE_URL}/api/test/predefined/${id}/deactivate`,
+    START: (id: string) => `${BASE_URL}/api/test/predefined/${id}/start`,
+    PENDING: `${BASE_URL}/api/test/predefined/pending`,
+    JOIN: (token: string) => `${BASE_URL}/api/test/predefined/join/${token}`,
+  },
+
   // Dashboard
   DASHBOARD: {
     STATS: `${BASE_URL}/api/dashboard/stats`,

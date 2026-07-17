@@ -983,3 +983,123 @@ export const testsApi = {
       { token }
     ),
 };
+
+// Predefined Tests API
+export interface PredefinedTest {
+  id: string;
+  title: string;
+  description: string | null;
+  created_by: string;
+  status: "draft" | "active" | "inactive" | "archived";
+  is_scheduled: boolean;
+  start_time: string | null;
+  end_time: string | null;
+  timezone: string;
+  duration_minutes: number;
+  question_limit: number;
+  difficulty: string;
+  use_fixed_questions: boolean;
+  max_attempts: number;
+  course_ids: string[];
+  subject_ids: string[] | null;
+  topic_ids: string[] | null;
+  test_link_token: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PredefinedTestResponse {
+  success: boolean;
+  message: string;
+  data: {
+    tests: PredefinedTest[];
+    pagination: Pagination;
+  };
+}
+
+export interface PredefinedTestDetailResponse {
+  success: boolean;
+  message: string;
+  data: PredefinedTest;
+}
+
+export interface CreatePredefinedTestPayload {
+  title: string;
+  description?: string;
+  is_scheduled?: boolean;
+  start_time?: string;
+  end_time?: string;
+  timezone?: string;
+  duration_minutes: number;
+  question_limit: number;
+  difficulty?: string;
+  use_fixed_questions?: boolean;
+  max_attempts?: number;
+  course_ids: string[];
+  subject_ids?: string[];
+  topic_ids?: string[];
+  fixed_question_ids?: string[];
+  student_ids?: string[];
+}
+
+export interface PredefinedTestStartResponse {
+  success: boolean;
+  message: string;
+  data: {
+    id: string;
+    test_id: string;
+    status: string;
+    duration_minutes: number;
+    question_limit: number;
+    ends_at: string;
+    totalQuestions: number;
+    questions: {
+      index: number;
+      questionId: string;
+      question: string;
+      choices: string[];
+      difficulty: string;
+      topicName: string;
+      subjectName: string;
+      courseName: string;
+    }[];
+  };
+}
+
+export const predefinedTestsApi = {
+  create: (payload: CreatePredefinedTestPayload, token?: string) =>
+    apiRequest<PredefinedTestDetailResponse>(API_ROUTES.PREDEFINED_TESTS.BASE, {
+      method: "POST",
+      body: JSON.stringify(payload),
+      token,
+    }),
+  getAll: (params: { page?: number; limit?: number; status?: string; course_id?: string } = {}, token?: string) => {
+    const searchParams = new URLSearchParams();
+    if (params.page) searchParams.set("page", params.page.toString());
+    if (params.limit) searchParams.set("limit", params.limit.toString());
+    if (params.status) searchParams.set("status", params.status);
+    if (params.course_id) searchParams.set("course_id", params.course_id);
+    const query = searchParams.toString();
+    return apiRequest<PredefinedTestResponse>(`${API_ROUTES.PREDEFINED_TESTS.BASE}${query ? `?${query}` : ""}`, { token });
+  },
+  getById: (id: string, token?: string) =>
+    apiRequest<PredefinedTestDetailResponse>(API_ROUTES.PREDEFINED_TESTS.BY_ID(id), { token }),
+  update: (id: string, payload: Partial<CreatePredefinedTestPayload>, token?: string) =>
+    apiRequest<PredefinedTestDetailResponse>(API_ROUTES.PREDEFINED_TESTS.BY_ID(id), {
+      method: "PUT",
+      body: JSON.stringify(payload),
+      token,
+    }),
+  delete: (id: string, token?: string) =>
+    apiRequest(API_ROUTES.PREDEFINED_TESTS.BY_ID(id), { method: "DELETE", token }),
+  activate: (id: string, token?: string) =>
+    apiRequest<PredefinedTestDetailResponse>(API_ROUTES.PREDEFINED_TESTS.ACTIVATE(id), { method: "POST", token }),
+  deactivate: (id: string, token?: string) =>
+    apiRequest<PredefinedTestDetailResponse>(API_ROUTES.PREDEFINED_TESTS.DEACTIVATE(id), { method: "POST", token }),
+  getPending: (token?: string) =>
+    apiRequest(`${API_ROUTES.PREDEFINED_TESTS.PENDING}`, { token }),
+  getByToken: (token: string, authToken?: string) =>
+    apiRequest(`${API_ROUTES.PREDEFINED_TESTS.JOIN(token)}`, { token: authToken }),
+  start: (id: string, token?: string) =>
+    apiRequest<PredefinedTestStartResponse>(API_ROUTES.PREDEFINED_TESTS.START(id), { method: "POST", token }),
+};
