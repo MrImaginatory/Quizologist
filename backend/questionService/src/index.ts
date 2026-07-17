@@ -8,12 +8,15 @@ import Question from "./modules/question/question.model";
 import questionRoutes from "./modules/question/question.routes";
 import { ApiError } from "./utils/ApiError";
 import { ApiResponse } from "./utils/ApiResponse";
+import { createLogger, requestLogger } from "./utils/logger";
 
+const logger = createLogger("question-service");
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(requestLogger(logger));
 
 app.use("/api/question", extractGatewayUser, questionRoutes);
 
@@ -43,7 +46,7 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
     );
   }
 
-  console.error("Unhandled error:", err);
+  logger.error("Unhandled error", { error: err.message, stack: err.stack });
   return ApiResponse.error(res, "Internal server error", 500);
 });
 
@@ -51,8 +54,7 @@ const startServer = async () => {
   await connectDatabase();
 
   app.listen(env.PORT, () => {
-    console.log(`Question Service running on port ${env.PORT}`);
-    console.log(`Environment: ${env.NODE_ENV}`);
+    logger.info("Server started", { port: env.PORT, environment: env.NODE_ENV });
   });
 };
 
