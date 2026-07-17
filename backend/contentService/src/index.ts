@@ -8,12 +8,15 @@ import subjectRoutes from "./modules/subject/subject.routes";
 import topicRoutes from "./modules/topic/topic.routes";
 import { ApiError } from "./utils/ApiError";
 import { ApiResponse } from "./utils/ApiResponse";
+import { createLogger, requestLogger } from "./utils/logger";
 
+const logger = createLogger("content-service");
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(requestLogger(logger));
 
 app.use("/api/content/course", courseRoutes);
 app.use("/api/content/subject", subjectRoutes);
@@ -59,7 +62,7 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
     });
   }
 
-  console.error("Unhandled error:", err);
+  logger.error("Unhandled error", { error: err.message, stack: err.stack });
   return res.status(500).json({
     statusCode: 500,
     success: false,
@@ -72,8 +75,7 @@ const startServer = async () => {
   await connectDatabase();
 
   app.listen(env.PORT, () => {
-    console.log(`Content Service running on port ${env.PORT}`);
-    console.log(`Environment: ${env.NODE_ENV}`);
+    logger.info("Server started", { port: env.PORT, environment: env.NODE_ENV });
   });
 };
 
