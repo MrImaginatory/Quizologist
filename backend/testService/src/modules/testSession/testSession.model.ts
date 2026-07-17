@@ -7,6 +7,7 @@ interface TestSessionAttributes {
   test_id: string;
   student_id: string;
   status: TestStatus;
+  predefined_test_id: string | null;
   subject_id: string | null;
   topic_id: string | null;
   duration_minutes: number;
@@ -30,6 +31,7 @@ interface TestSessionAttributes {
 type TestSessionCreationAttributes = Optional<
   TestSessionAttributes,
   | "id"
+  | "predefined_test_id"
   | "subject_id"
   | "topic_id"
   | "ends_at"
@@ -54,6 +56,7 @@ class TestSession
   declare test_id: string;
   declare student_id: string;
   declare status: TestStatus;
+  declare predefined_test_id: string | null;
   declare subject_id: string | null;
   declare topic_id: string | null;
   declare duration_minutes: number;
@@ -94,6 +97,14 @@ TestSession.init(
       type: DataTypes.ENUM("pending", "in_progress", "completed", "abandoned"),
       allowNull: false,
       defaultValue: "pending",
+    },
+    predefined_test_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: "predefined_tests",
+        key: "id",
+      },
     },
     subject_id: {
       type: DataTypes.UUID,

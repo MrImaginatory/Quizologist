@@ -5,6 +5,9 @@ import Course from "../modules/course/course.model";
 import Subject from "../modules/subject/subject.model";
 import Topic from "../modules/topic/topic.model";
 import Question from "../modules/question/question.model";
+import PredefinedTest from "../modules/predefinedTest/predefinedTest.model";
+import PredefinedTestQuestion from "../modules/predefinedTest/predefinedTestQuestion.model";
+import PredefinedTestStudent from "../modules/predefinedTest/predefinedTestStudent.model";
 
 TestSession.hasMany(TestAnswer, { foreignKey: "test_session_id", as: "answers" });
 TestAnswer.belongsTo(TestSession, { foreignKey: "test_session_id", as: "testSession" });
@@ -24,3 +27,14 @@ TestSession.belongsTo(Topic, { foreignKey: "topic_id", as: "topic", constraints:
 Question.belongsTo(Topic, { foreignKey: "topic_id", as: "topic" });
 Question.belongsTo(Subject, { foreignKey: "subject_id", as: "subject" });
 Question.belongsTo(Course, { foreignKey: "course_id", as: "course" });
+
+// Predefined Test associations
+PredefinedTest.hasMany(PredefinedTestQuestion, { foreignKey: "predefined_test_id", as: "fixedQuestions" });
+PredefinedTestQuestion.belongsTo(PredefinedTest, { foreignKey: "predefined_test_id", as: "predefinedTest" });
+PredefinedTestQuestion.belongsTo(Question, { foreignKey: "question_id", as: "question" });
+
+PredefinedTest.hasMany(PredefinedTestStudent, { foreignKey: "predefined_test_id", as: "assignedStudents" });
+PredefinedTestStudent.belongsTo(PredefinedTest, { foreignKey: "predefined_test_id", as: "predefinedTest" });
+PredefinedTestStudent.belongsTo(TestSession, { foreignKey: "test_session_id", as: "testSession" });
+
+TestSession.belongsTo(PredefinedTest, { foreignKey: "predefined_test_id", as: "predefinedTest", constraints: false });
