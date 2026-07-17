@@ -17,7 +17,9 @@ interface PredefinedTestAttributes {
   duration_minutes: number;
   question_limit: number;
   difficulty: DifficultyLevel;
+  difficulty_ratio: { beginner?: number; normal?: number; mid?: number; hard?: number; expert?: number } | null;
   use_fixed_questions: boolean;
+  use_specific_students: boolean;
   max_attempts: number;
   course_ids: string[];
   subject_ids: string[] | null;
@@ -38,6 +40,7 @@ type PredefinedTestCreationAttributes = Optional<
   | "end_time"
   | "timezone"
   | "difficulty"
+  | "difficulty_ratio"
   | "use_fixed_questions"
   | "max_attempts"
   | "subject_ids"
@@ -64,7 +67,9 @@ class PredefinedTest
   declare duration_minutes: number;
   declare question_limit: number;
   declare difficulty: DifficultyLevel;
+  declare difficulty_ratio: { beginner?: number; normal?: number; mid?: number; hard?: number; expert?: number } | null;
   declare use_fixed_questions: boolean;
+  declare use_specific_students: boolean;
   declare max_attempts: number;
   declare course_ids: string[];
   declare subject_ids: string[] | null;
@@ -130,7 +135,16 @@ PredefinedTest.init(
       allowNull: false,
       defaultValue: "normal",
     },
+    difficulty_ratio: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+    },
     use_fixed_questions: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+    use_specific_students: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false,

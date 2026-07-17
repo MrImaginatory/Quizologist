@@ -10,7 +10,7 @@ import { setupSocketProxy } from "./middlewares/socketProxy.middleware";
 import { findMatchingRoute } from "./config/routes";
 import { ApiError } from "./utils/ApiError";
 import { ApiResponse } from "./utils/ApiResponse";
-import { logHealth, getServiceStatuses, getIncidents } from "./utils/healthMonitor";
+import { logHealth, getServiceStatuses, getIncidents, startHealthChecker } from "./utils/healthMonitor";
 import { createLogger, requestLogger } from "./utils/logger";
 
 const logger = createLogger("api-gateway");
@@ -127,6 +127,18 @@ const startServer = async () => {
 
   // Attach WebSocket proxy for /socket.io/ paths
   setupSocketProxy(server);
+
+  // Start background health checker
+  const serviceUrls = [
+    { name: "user-service", url: env.USER_SERVICE_URL },
+    { name: "content-service", url: env.CONTENT_SERVICE_URL },
+    { name: "question-service", url: env.QUESTION_SERVICE_URL },
+    { name: "student-service", url: env.STUDENT_SERVICE_URL },
+    { name: "test-service", url: env.TEST_SERVICE_URL },
+    { name: "teacher-service", url: env.TEACHER_SERVICE_URL },
+    { name: "dashboard-service", url: env.DASHBOARD_SERVICE_URL },
+  ];
+  startHealthChecker(serviceUrls);
 
   server.listen(env.PORT, () => {
     logger.info("Server started", { port: env.PORT, environment: env.NODE_ENV });

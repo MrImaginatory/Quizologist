@@ -13,7 +13,15 @@ export const createPredefinedTestSchema = z.object({
   duration_minutes: z.number().int().min(15).max(120),
   question_limit: z.number().int().min(1).max(200),
   difficulty: z.enum(["beginner", "normal", "mid", "hard", "expert", "mixed"]).default("normal"),
+  difficulty_ratio: z.object({
+    beginner: z.number().min(0).max(100).optional(),
+    normal: z.number().min(0).max(100).optional(),
+    mid: z.number().min(0).max(100).optional(),
+    hard: z.number().min(0).max(100).optional(),
+    expert: z.number().min(0).max(100).optional(),
+  }).optional(),
   use_fixed_questions: z.boolean().default(false),
+  use_specific_students: z.boolean().default(false),
   max_attempts: z.number().int().min(1).max(10).default(1),
   course_ids: z.array(uuidSchema).min(1, "At least one course is required"),
   subject_ids: z.array(uuidSchema).optional(),
@@ -38,12 +46,14 @@ export const createPredefinedTestSchema = z.object({
   { message: "start_time must be before end_time" }
 ).refine(
   (data) => {
-    if (data.use_fixed_questions) {
-      return data.fixed_question_ids && data.fixed_question_ids.length > 0;
+    if (data.difficulty_ratio) {
+      const values = Object.values(data.difficulty_ratio).filter((v) => v !== undefined);
+      const total = values.reduce((sum, v) => sum + (v || 0), 0);
+      return total === 100 || total === 0;
     }
     return true;
   },
-  { message: "fixed_question_ids are required when use_fixed_questions is true" }
+  { message: "difficulty_ratio percentages must sum to 100" }
 );
 
 // Update predefined test schema
@@ -57,7 +67,15 @@ export const updatePredefinedTestSchema = z.object({
   duration_minutes: z.number().int().min(15).max(120).optional(),
   question_limit: z.number().int().min(1).max(200).optional(),
   difficulty: z.enum(["beginner", "normal", "mid", "hard", "expert", "mixed"]).optional(),
+  difficulty_ratio: z.object({
+    beginner: z.number().min(0).max(100).optional(),
+    normal: z.number().min(0).max(100).optional(),
+    mid: z.number().min(0).max(100).optional(),
+    hard: z.number().min(0).max(100).optional(),
+    expert: z.number().min(0).max(100).optional(),
+  }).optional(),
   use_fixed_questions: z.boolean().optional(),
+  use_specific_students: z.boolean().optional(),
   max_attempts: z.number().int().min(1).max(10).optional(),
   course_ids: z.array(uuidSchema).min(1).optional(),
   subject_ids: z.array(uuidSchema).optional(),

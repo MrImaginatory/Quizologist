@@ -28,6 +28,7 @@ export function AppLogo({ className, size = "md", showName = true }: AppLogoProp
         width={icon}
         height={icon}
         className="shrink-0"
+        style={{ width: "auto", height: "auto" }}
       />
       {showName && (
         <span className={cn("font-bold text-foreground", text)}>

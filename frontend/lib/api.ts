@@ -998,7 +998,9 @@ export interface PredefinedTest {
   duration_minutes: number;
   question_limit: number;
   difficulty: string;
+  difficulty_ratio: { beginner?: number; normal?: number; mid?: number; hard?: number; expert?: number } | null;
   use_fixed_questions: boolean;
+  use_specific_students: boolean;
   max_attempts: number;
   course_ids: string[];
   subject_ids: string[] | null;
@@ -1033,7 +1035,9 @@ export interface CreatePredefinedTestPayload {
   duration_minutes: number;
   question_limit: number;
   difficulty?: string;
+  difficulty_ratio?: { beginner?: number; normal?: number; mid?: number; hard?: number; expert?: number };
   use_fixed_questions?: boolean;
+  use_specific_students?: boolean;
   max_attempts?: number;
   course_ids: string[];
   subject_ids?: string[];

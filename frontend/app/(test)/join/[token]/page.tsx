@@ -26,7 +26,10 @@ export default function JoinTestPage() {
   const router = useRouter();
   const params = useParams();
   const { token: authToken, isLoading: authLoading } = useAuth();
-  const token = params.token as string;
+  const rawToken = params.token as string;
+
+  // Extract the actual token from the URL format: test_name_start_end_uuid
+  const token = rawToken.includes("_") ? rawToken.split("_").pop() || rawToken : rawToken;
 
   const [testInfo, setTestInfo] = useState<TestInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);

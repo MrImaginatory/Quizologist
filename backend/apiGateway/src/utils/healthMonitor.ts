@@ -57,6 +57,39 @@ export function logHealth(service: string, status: "UP" | "DOWN", error?: string
   writeLog(records);
 }
 
+// Background health checker
+let healthCheckInterval: NodeJS.Timeout | null = null;
+
+export function startHealthChecker(serviceUrls: { name: string; url: string }[]): void {
+  if (healthCheckInterval) {
+    clearInterval(healthCheckInterval);
+  }
+
+  healthCheckInterval = setInterval(async () => {
+    for (const service of serviceUrls) {
+      try {
+        const response = await fetch(`${service.url}/health`, { signal: AbortSignal.timeout(5000) });
+        if (response.ok) {
+          logHealth(service.name, "UP");
+        } else {
+          logHealth(service.name, "DOWN", response.statusText);
+        }
+      } catch (error: any) {
+        logHealth(service.name, "DOWN", error.message);
+      }
+    }
+  }, 60000); // Check every 60 seconds
+
+  console.log("Health checker started - checking every 60 seconds");
+}
+
+export function stopHealthChecker(): void {
+  if (healthCheckInterval) {
+    clearInterval(healthCheckInterval);
+    healthCheckInterval = null;
+  }
+}
+
 export function getServiceStatuses(): ServiceStatus[] {
   const records = readLog();
   const services = [

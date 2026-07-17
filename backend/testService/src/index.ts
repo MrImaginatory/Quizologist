@@ -20,8 +20,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(requestLogger(logger));
 
-app.use("/api/test", extractGatewayUser, testSessionRoutes);
 app.use("/api/test/predefined", extractGatewayUser, predefinedTestRoutes);
+app.use("/api/test", extractGatewayUser, testSessionRoutes);
 
 app.get("/health", (_req: Request, res: Response) => {
   ApiResponse.success(res, "Service is healthy", {

@@ -257,14 +257,6 @@ export const routes: RouteConfig[] = [
     roles: ["student"],
     methods: ["GET"],
   },
-  // Get test by ID — student only
-  {
-    path: "/test",
-    target: `${env.TEST_SERVICE_URL}/api/test`,
-    auth: true,
-    roles: ["student"],
-    methods: ["GET"],
-  },
 
   // ==================== Predefined Test Service ====================
   // Create predefined test — admin and teacher
@@ -346,6 +338,15 @@ export const routes: RouteConfig[] = [
     auth: true,
     roles: ["student"],
     methods: ["POST"],
+  },
+
+  // Get test by ID — student only (MUST be AFTER /test/predefined routes)
+  {
+    path: "/test",
+    target: `${env.TEST_SERVICE_URL}/api/test`,
+    auth: true,
+    roles: ["student"],
+    methods: ["GET"],
   },
 
   // ==================== Teacher Service ====================
