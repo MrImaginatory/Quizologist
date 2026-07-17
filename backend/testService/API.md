@@ -609,3 +609,219 @@ socket.on("test_submitted", (data) => {
 | 409 | You already have an active test |
 | 409 | Please wait 5 minutes before creating another test |
 | 500 | Internal server error |
+
+---
+
+## Predefined Test Endpoints
+
+Base URL: `http://localhost:3005/api/test/predefined`
+
+---
+
+### POST / — Create Predefined Test
+
+Create a new predefined test. **Admin and Teacher only.**
+
+**Body:**
+```json
+{
+  "title": "Midterm Exam - Direct Tax Laws",
+  "description": "Covers chapters 1-5",
+  "is_scheduled": true,
+  "start_time": "2026-07-20T10:00:00Z",
+  "end_time": "2026-07-20T14:00:00Z",
+  "timezone": "Asia/Kolkata",
+  "duration_minutes": 30,
+  "question_limit": 30,
+  "difficulty": "mixed",
+  "use_fixed_questions": false,
+  "max_attempts": 1,
+  "course_ids": ["uuid1"],
+  "subject_ids": ["uuid2"],
+  "topic_ids": ["uuid3"],
+  "student_ids": ["student1"],
+  "fixed_question_ids": ["q1", "q2"]
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| title | string | Yes | Test name (max 255 chars) |
+| description | string | No | Optional description |
+| is_scheduled | boolean | No | Default: false |
+| start_time | datetime | No | Required if is_scheduled |
+| end_time | datetime | No | Required if is_scheduled, must be after start_time |
+| timezone | string | No | Default: "UTC" |
+| duration_minutes | number | Yes | 15-120 minutes |
+| question_limit | number | Yes | 1-200 questions |
+| difficulty | string | No | beginner, normal, mid, hard, expert, mixed (default: normal) |
+| use_fixed_questions | boolean | No | Default: false |
+| max_attempts | number | No | 1-10 (default: 1) |
+| course_ids | string[] | Yes | At least one course |
+| subject_ids | string[] | No | Filter subjects |
+| topic_ids | string[] | No | Filter topics |
+| student_ids | string[] | No | Specific students (optional) |
+| fixed_question_ids | string[] | No | Required if use_fixed_questions=true |
+
+**201 Created:**
+```json
+{
+  "success": true,
+  "message": "Predefined test created successfully",
+  "data": {
+    "id": "uuid",
+    "title": "Midterm Exam",
+    "status": "draft",
+    "test_link_token": "abc123...",
+    ...
+  }
+}
+```
+
+---
+
+### GET / — List Predefined Tests
+
+Get all predefined tests. **Admin sees all, Teacher sees own.**
+
+**Query Params:**
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| page | number | No | Default: 1 |
+| limit | number | No | Default: 10 |
+| status | string | No | draft, active, inactive, archived |
+| course_id | string | No | Filter by course |
+
+**200 OK:**
+```json
+{
+  "success": true,
+  "message": "Predefined tests retrieved successfully",
+  "data": {
+    "tests": [...],
+    "pagination": { "total": 25, "page": 1, "limit": 10, "totalPages": 3 }
+  }
+}
+```
+
+---
+
+### GET /pending — Get Pending Tests (Student)
+
+Get tests available to the current student. **Student only.**
+
+**200 OK:**
+```json
+{
+  "success": true,
+  "message": "Pending tests retrieved successfully",
+  "data": {
+    "tests": [
+      {
+        "id": "uuid",
+        "title": "Midterm Exam",
+        "duration_minutes": 30,
+        "question_limit": 30,
+        "status": "upcoming",
+        ...
+      }
+    ]
+  }
+}
+```
+
+---
+
+### GET /join/:token — Get Test Info by Link
+
+Get test information from a shareable link. **Student only (requires login).**
+
+**Path Params:** `token` — Shareable link token
+
+**200 OK:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid",
+    "title": "Midterm Exam",
+    "duration_minutes": 30,
+    "question_limit": 30,
+    "difficulty": "mixed"
+  }
+}
+```
+
+---
+
+### GET /:id — Get Predefined Test Details
+
+Get test details with questions and assigned students. **Admin, Teacher, Student.**
+
+---
+
+### PUT /:id — Update Predefined Test
+
+Update test configuration. **Admin and Teacher (draft/active only).**
+
+---
+
+### DELETE /:id — Delete Predefined Test
+
+Soft delete a test. **Admin and Teacher.**
+
+---
+
+### POST /:id/activate — Activate Test
+
+Change status from draft to active. **Admin and Teacher.**
+
+---
+
+### POST /:id/deactivate — Deactivate Test
+
+Change status from active to inactive. **Admin and Teacher.**
+
+---
+
+### POST /:id/start — Start Predefined Test
+
+Start a predefined test session. **Student only.**
+
+**201 Created:**
+```json
+{
+  "success": true,
+  "message": "Test started successfully",
+  "data": {
+    "id": "session-uuid",
+    "test_id": "PREDEFINED_abc123_...",
+    "status": "in_progress",
+    "duration_minutes": 30,
+    "ends_at": "2026-07-20T10:30:00Z",
+    "totalQuestions": 30,
+    "questions": [...]
+  }
+}
+```
+
+---
+
+### Predefined Test Error Responses
+
+| Status | Message |
+|--------|---------|
+| 400 | start_time and end_time are required when is_scheduled is true |
+| 400 | start_time must be before end_time |
+| 400 | fixed_question_ids are required when use_fixed_questions is true |
+| 400 | Test is not active |
+| 400 | Test has not started yet |
+| 400 | Test has ended |
+| 400 | Maximum attempts reached |
+| 400 | Can only activate tests in draft status |
+| 400 | Can only deactivate tests in active status |
+| 403 | You do not have permission to view/update/delete this test |
+| 404 | Predefined test not found |
+| 404 | Test not found or inactive |
+| 500 | Internal server error |
