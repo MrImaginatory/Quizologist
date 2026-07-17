@@ -478,6 +478,35 @@ export interface EnrollmentsResponse {
   };
 }
 
+export interface EnrolledCourse {
+  id: string;
+  name: string;
+}
+
+export interface EnrolledCoursesResponse {
+  success: boolean;
+  message: string;
+  data: {
+    courses: EnrolledCourse[];
+  };
+}
+
+export interface EnrolledSubjectsResponse {
+  success: boolean;
+  message: string;
+  data: {
+    subjects: { id: string; name: string }[];
+  };
+}
+
+export interface EnrolledTopicsResponse {
+  success: boolean;
+  message: string;
+  data: {
+    topics: { id: string; name: string }[];
+  };
+}
+
 export interface EnrollmentPayload {
   enrollments: {
     course_id: string;
@@ -508,6 +537,12 @@ export const enrollmentsApi = {
     }),
   unenroll: (id: string, token?: string) =>
     apiRequest(API_ROUTES.ENROLLMENTS.BY_ID(id), { method: "DELETE", token }),
+  getEnrolledCourses: (token?: string): Promise<EnrolledCoursesResponse> =>
+    apiRequest<EnrolledCoursesResponse>(API_ROUTES.ENROLLMENTS.ENROLLED_COURSES, { token }),
+  getEnrolledSubjects: (courseId: string, token?: string): Promise<EnrolledSubjectsResponse> =>
+    apiRequest<EnrolledSubjectsResponse>(API_ROUTES.ENROLLMENTS.ENROLLED_SUBJECTS(courseId), { token }),
+  getEnrolledTopics: (courseId: string, subjectId: string, token?: string): Promise<EnrolledTopicsResponse> =>
+    apiRequest<EnrolledTopicsResponse>(API_ROUTES.ENROLLMENTS.ENROLLED_TOPICS(courseId, subjectId), { token }),
 };
 
 export interface TeacherAssignment {

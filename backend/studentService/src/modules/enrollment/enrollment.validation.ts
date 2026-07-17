@@ -31,3 +31,15 @@ export type CreateEnrollmentInput = z.infer<typeof createEnrollmentSchema>;
 export type EnrollmentIdParam = z.infer<typeof enrollmentIdParamSchema>;
 export type StudentIdParam = z.infer<typeof studentIdParamSchema>;
 export type GetAllEnrollmentsInput = z.infer<typeof getAllEnrollmentsSchema>;
+
+export const getEnrolledSubjectsSchema = z.object({
+  course_id: z.string().uuid("Invalid course ID format"),
+});
+
+export const getEnrolledTopicsSchema = z.object({
+  course_id: z.string().uuid("Invalid course ID format"),
+  subject_id: z.string().uuid("Invalid subject ID format"),
+});
+
+export type GetEnrolledSubjectsInput = z.infer<typeof getEnrolledSubjectsSchema>;
+export type GetEnrolledTopicsInput = z.infer<typeof getEnrolledTopicsSchema>;

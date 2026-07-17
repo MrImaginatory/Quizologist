@@ -53,6 +53,9 @@ export const API_ROUTES = {
   ENROLLMENTS: {
     BASE: `${BASE_URL}/api/enrollment`,
     BY_ID: (id: string) => `${BASE_URL}/api/enrollment/${id}`,
+    ENROLLED_COURSES: `${BASE_URL}/api/enrollment/courses`,
+    ENROLLED_SUBJECTS: (courseId: string) => `${BASE_URL}/api/enrollment/subjects?course_id=${courseId}`,
+    ENROLLED_TOPICS: (courseId: string, subjectId: string) => `${BASE_URL}/api/enrollment/topics?course_id=${courseId}&subject_id=${subjectId}`,
   },
 
   // Students

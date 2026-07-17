@@ -8,6 +8,8 @@ import {
   enrollmentIdParamSchema,
   studentIdParamSchema,
   getAllEnrollmentsSchema,
+  getEnrolledSubjectsSchema,
+  getEnrolledTopicsSchema,
 } from "./enrollment.validation";
 
 export class EnrollmentController {
@@ -81,6 +83,50 @@ export class EnrollmentController {
       return ApiResponse.success(
         res,
         RESPONSE_MESSAGES.SUCCESS.ENROLLMENTS_FOUND,
+        result
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getEnrolledCourses(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const result = await EnrollmentService.getEnrolledCourses(req.user!.userId);
+
+      return ApiResponse.success(
+        res,
+        "Enrolled courses retrieved successfully",
+        result
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getEnrolledSubjects(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const data = getEnrolledSubjectsSchema.parse(req.query);
+      const result = await EnrollmentService.getEnrolledSubjects(req.user!.userId, data);
+
+      return ApiResponse.success(
+        res,
+        "Enrolled subjects retrieved successfully",
+        result
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getEnrolledTopics(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const data = getEnrolledTopicsSchema.parse(req.query);
+      const result = await EnrollmentService.getEnrolledTopics(req.user!.userId, data);
+
+      return ApiResponse.success(
+        res,
+        "Enrolled topics retrieved successfully",
         result
       );
     } catch (error) {

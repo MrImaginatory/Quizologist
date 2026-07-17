@@ -25,7 +25,7 @@ import { Loader2, Plus, X, Play, ChevronDown } from "lucide-react";
 import { useCourses } from "@/hooks/use-courses";
 import { useEnrollments } from "@/hooks/use-enrollments";
 import { useAuth } from "@/contexts/auth-context";
-import { testsApi, StartTestPayload, Subject, Topic, subjectsApi, topicsApi } from "@/lib/api";
+import { testsApi, StartTestPayload, Subject, Topic, enrollmentsApi } from "@/lib/api";
 import { capitalize } from "@/lib/utils";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -173,11 +173,11 @@ export function StartTestDialog({ open, onOpenChange, onStartTest }: StartTestDi
   const { courses } = useCourses({ limit: 100 });
 
   // State for fetched subjects per selection
-  const [subjectsMap, setSubjectsMap] = useState<Record<number, Subject[]>>({});
+  const [subjectsMap, setSubjectsMap] = useState<Record<number, { id: string; name: string }[]>>({});
   const [loadingSubjectsMap, setLoadingSubjectsMap] = useState<Record<number, boolean>>({});
 
   // State for fetched topics per selection
-  const [topicsMap, setTopicsMap] = useState<Record<number, Topic[]>>({});
+  const [topicsMap, setTopicsMap] = useState<Record<number, { id: string; name: string }[]>>({});
   const [loadingTopicsMap, setLoadingTopicsMap] = useState<Record<number, boolean>>({});
 
   const durationConfig = DURATION_OPTIONS.find((d) => d.value === duration);
@@ -194,57 +194,59 @@ export function StartTestDialog({ open, onOpenChange, onStartTest }: StartTestDi
     return courses.filter((c) => enrolledCourseIds.includes(c.id));
   }, [courses, enrolledCourseIds]);
 
-  // Fetch subjects when course is selected
+  // Fetch enrolled subjects when course is selected
   const fetchSubjectsForCourse = useCallback(async (index: number, courseId: string) => {
     if (!courseId) return;
     setLoadingSubjectsMap((prev) => ({ ...prev, [index]: true }));
     try {
-      const response = await subjectsApi.getByCourse(courseId, 1, 100, token || undefined);
+      const response = await enrollmentsApi.getEnrolledSubjects(courseId, token || undefined);
       setSubjectsMap((prev) => ({ ...prev, [index]: response.data.subjects }));
     } catch (err) {
-      console.error("Failed to fetch subjects:", err);
+      console.error("Failed to fetch enrolled subjects:", err);
       setSubjectsMap((prev) => ({ ...prev, [index]: [] }));
     } finally {
       setLoadingSubjectsMap((prev) => ({ ...prev, [index]: false }));
     }
   }, [token]);
 
-  // Fetch topics when subjects are selected
+  // Fetch enrolled topics when subjects are selected
   const fetchTopicsForSubject = useCallback(async (index: number, subjectId: string) => {
     if (!subjectId) return;
+    const courseId = selections[index]?.courseId;
+    if (!courseId) return;
     setLoadingTopicsMap((prev) => ({ ...prev, [index]: true }));
     try {
-      const response = await topicsApi.getBySubject(subjectId, 1, 100, token || undefined);
+      const response = await enrollmentsApi.getEnrolledTopics(courseId, subjectId, token || undefined);
       setTopicsMap((prev) => ({ ...prev, [index]: response.data.topics }));
     } catch (err) {
-      console.error("Failed to fetch topics:", err);
+      console.error("Failed to fetch enrolled topics:", err);
       setTopicsMap((prev) => ({ ...prev, [index]: [] }));
     } finally {
       setLoadingTopicsMap((prev) => ({ ...prev, [index]: false }));
     }
-  }, [token]);
+  }, [token, selections]);
 
-  const groupSubjectsByCourse = (subjects: Subject[]) => {
+  const groupSubjectsByCourse = (subjects: { id: string; name: string }[], courseName: string) => {
     const grouped: Record<string, { id: string; name: string }[]> = {};
     subjects.forEach((s) => {
-      const courseName = s.course?.name || "Unknown";
-      if (!grouped[courseName]) grouped[courseName] = [];
-      grouped[courseName].push({ id: s.id, name: s.name });
+      const name = courseName || "Enrolled";
+      if (!grouped[name]) grouped[name] = [];
+      grouped[name].push({ id: s.id, name: capitalize(s.name) });
     });
     return grouped;
   };
 
-  const groupTopicsBySubject = (topics: Topic[]) => {
+  const groupTopicsBySubject = (topics: { id: string; name: string }[], subjectNames: string[]) => {
     const grouped: Record<string, { id: string; name: string }[]> = {};
+    const groupName = subjectNames.length > 1 ? "All Selected Subjects" : (subjectNames[0] || "Enrolled");
     topics.forEach((t) => {
-      const subjectName = t.subject?.name || "Unknown";
-      if (!grouped[subjectName]) grouped[subjectName] = [];
-      grouped[subjectName].push({ id: t.id, name: t.name });
+      if (!grouped[groupName]) grouped[groupName] = [];
+      grouped[groupName].push({ id: t.id, name: capitalize(t.name) });
     });
     return grouped;
   };
 
-  const toggleSubject = (index: number, subjectId: string) => {
+  const toggleSubject = async (index: number, subjectId: string) => {
     const updated = [...selections];
     const current = updated[index].subjectIds;
     if (current.includes(subjectId)) {
@@ -255,9 +257,29 @@ export function StartTestDialog({ open, onOpenChange, onStartTest }: StartTestDi
     updated[index].topicIds = [];
     setSelections(updated);
     setSelectedSubjectIdsMap((prev) => ({ ...prev, [index]: updated[index].subjectIds }));
-    // Fetch topics for the newly selected subject
-    if (!current.includes(subjectId)) {
-      fetchTopicsForSubject(index, subjectId);
+
+    // Fetch topics for all selected subjects
+    if (updated[index].subjectIds.length > 0) {
+      setLoadingTopicsMap((prev) => ({ ...prev, [index]: true }));
+      try {
+        const allTopics: { id: string; name: string }[] = [];
+        const courseId = updated[index].courseId;
+        for (const sid of updated[index].subjectIds) {
+          const response = await enrollmentsApi.getEnrolledTopics(courseId, sid, token || undefined);
+          allTopics.push(...response.data.topics);
+        }
+        const uniqueTopics = allTopics.filter((topic, i, self) =>
+          i === self.findIndex((t) => t.id === topic.id)
+        );
+        setTopicsMap((prev) => ({ ...prev, [index]: uniqueTopics }));
+      } catch (err) {
+        console.error("Failed to fetch topics:", err);
+        setTopicsMap((prev) => ({ ...prev, [index]: [] }));
+      } finally {
+        setLoadingTopicsMap((prev) => ({ ...prev, [index]: false }));
+      }
+    } else {
+      setTopicsMap((prev) => ({ ...prev, [index]: [] }));
     }
   };
 
@@ -278,9 +300,10 @@ export function StartTestDialog({ open, onOpenChange, onStartTest }: StartTestDi
     if (updated[index].subjectIds.length > 0) {
       setLoadingTopicsMap((prev) => ({ ...prev, [index]: true }));
       try {
-        const allTopics: Topic[] = [];
+        const allTopics: { id: string; name: string }[] = [];
+        const courseId = updated[index].courseId;
         for (const subjectId of updated[index].subjectIds) {
-          const response = await topicsApi.getBySubject(subjectId, 1, 100, token || undefined);
+          const response = await enrollmentsApi.getEnrolledTopics(courseId, subjectId, token || undefined);
           allTopics.push(...response.data.topics);
         }
         // Remove duplicates by id
@@ -515,8 +538,11 @@ export function StartTestDialog({ open, onOpenChange, onStartTest }: StartTestDi
                 const loadingSubjects = loadingSubjectsMap[index] || false;
                 const loadingTopics = loadingTopicsMap[index] || false;
 
-                const groupedSubjects = groupSubjectsByCourse(subjects);
-                const groupedTopics = groupTopicsBySubject(topics);
+                const groupedSubjects = groupSubjectsByCourse(subjects, courses.find((c) => c.id === selection.courseId)?.name || "");
+                const selectedSubjectNames = subjects
+                  .filter((s) => selection.subjectIds.includes(s.id))
+                  .map((s) => s.name);
+                const groupedTopics = groupTopicsBySubject(topics, selectedSubjectNames);
 
                 const selectedSubjectCount = selection.subjectIds.length;
                 const selectedTopicCount = selection.topicIds.length;

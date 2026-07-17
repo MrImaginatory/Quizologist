@@ -9,6 +9,8 @@ import {
   CreateEnrollmentInput,
   EnrollmentIdParam,
   GetAllEnrollmentsInput,
+  GetEnrolledSubjectsInput,
+  GetEnrolledTopicsInput,
 } from "./enrollment.validation";
 
 const TIMESTAMP_EXCLUDE = {
@@ -22,9 +24,22 @@ const ALL_INCLUDES = [COURSE_INCLUDE, SUBJECT_INCLUDE, TOPIC_INCLUDE];
 
 function enrichEnrollment(enrollment: any) {
   const plain = enrollment.toJSON ? enrollment.toJSON() : enrollment;
-  if (!plain.topic && plain.subject) {
-    plain.topic = { id: null, name: "All Topics" };
+
+  // If subject is null, it means all subjects are selected
+  if (!plain.subject && plain.course) {
+    plain.subject = { id: null, name: "All Subjects", _all: true };
   }
+
+  // If topic is null but subject exists, all topics are selected
+  if (!plain.topic && plain.subject && !plain.subject._all) {
+    plain.topic = { id: null, name: "All Topics", _all: true };
+  }
+
+  // If topic is null and subject is all, topic is also all
+  if (!plain.topic && plain.subject && plain.subject._all) {
+    plain.topic = { id: null, name: "All Topics", _all: true };
+  }
+
   return plain;
 }
 
@@ -175,5 +190,120 @@ export class EnrollmentService {
         totalPages: Math.ceil(count / limit),
       },
     };
+  }
+
+  static async getEnrolledCourses(studentId: string) {
+    const enrollments = await Enrollment.findAll({
+      where: { student_id: studentId },
+      attributes: ["course_id"],
+      include: [{ model: Course, as: "course", attributes: ["id", "name"] }],
+      group: ["course_id", "course.id", "course.name"],
+      raw: true,
+      nest: true,
+    });
+
+    const courses = enrollments
+      .map((e: any) => e.course)
+      .filter((c: any) => c && c.id);
+
+    // Deduplicate by id
+    const uniqueCourses = Array.from(
+      new Map(courses.map((c: any) => [c.id, c])).values()
+    );
+
+    return { courses: uniqueCourses };
+  }
+
+  static async getEnrolledSubjects(studentId: string, data: GetEnrolledSubjectsInput) {
+    const { course_id } = data;
+
+    const enrollments = await Enrollment.findAll({
+      where: { student_id: studentId, course_id },
+      attributes: ["subject_id"],
+      raw: true,
+    });
+
+    // Check if any enrollment has null subject_id (means all subjects)
+    const hasAllSubjects = enrollments.some((e) => !e.subject_id);
+
+    if (hasAllSubjects) {
+      // Return all subjects for the course
+      const allSubjects = await Subject.findAll({
+        where: { course_id },
+        attributes: ["id", "name"],
+        raw: true,
+      });
+      return { subjects: allSubjects };
+    }
+
+    // Return only enrolled subjects
+    const subjectIds = enrollments
+      .map((e) => e.subject_id)
+      .filter((id): id is string => id !== null);
+
+    if (subjectIds.length === 0) {
+      return { subjects: [] };
+    }
+
+    const subjects = await Subject.findAll({
+      where: { id: subjectIds },
+      attributes: ["id", "name"],
+      raw: true,
+    });
+
+    return { subjects };
+  }
+
+  static async getEnrolledTopics(studentId: string, data: GetEnrolledTopicsInput) {
+    const { course_id, subject_id } = data;
+
+    const enrollments = await Enrollment.findAll({
+      where: { student_id: studentId, course_id },
+      attributes: ["subject_id", "topic_id"],
+      raw: true,
+    });
+
+    // Find enrollment for this specific subject
+    const subjectEnrollment = enrollments.find(
+      (e) => e.subject_id === subject_id
+    );
+
+    // Also check if there's a course-level enrollment (subject_id = null)
+    const hasAllSubjects = enrollments.some((e) => !e.subject_id);
+
+    if (!subjectEnrollment && !hasAllSubjects) {
+      return { topics: [] };
+    }
+
+    // Check if enrollment has null topic_id (means all topics)
+    const hasAllTopics = subjectEnrollment && !subjectEnrollment.topic_id;
+
+    if (hasAllTopics || hasAllSubjects) {
+      // Return all topics for the subject
+      const allTopics = await Topic.findAll({
+        where: { subject_id },
+        attributes: ["id", "name"],
+        raw: true,
+      });
+      return { topics: allTopics };
+    }
+
+    // Return only enrolled topics
+    const topicIds = enrollments
+      .filter((e) => e.subject_id === subject_id && e.topic_id)
+      .map((e) => e.topic_id)
+      .filter((id): id is string => id !== null);
+
+    if (topicIds.length === 0) {
+      return { topics: [] };
+    }
+
+    const topics = await Topic.findAll({
+      where: { id: topicIds },
+      attributes: ["id", "name"],
+      raw: true,
+    });
+
+    return { topics };
   }
 }

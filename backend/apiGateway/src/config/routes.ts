@@ -151,6 +151,30 @@ export const routes: RouteConfig[] = [
     roles: ["student"],
     methods: ["GET"],
   },
+  // Get enrolled courses — student only
+  {
+    path: "/enrollment/courses",
+    target: `${env.STUDENT_SERVICE_URL}/api/enrollment/courses`,
+    auth: true,
+    roles: ["student"],
+    methods: ["GET"],
+  },
+  // Get enrolled subjects for a course — student only
+  {
+    path: "/enrollment/subjects",
+    target: `${env.STUDENT_SERVICE_URL}/api/enrollment/subjects`,
+    auth: true,
+    roles: ["student"],
+    methods: ["GET"],
+  },
+  // Get enrolled topics for a subject — student only
+  {
+    path: "/enrollment/topics",
+    target: `${env.STUDENT_SERVICE_URL}/api/enrollment/topics`,
+    auth: true,
+    roles: ["student"],
+    methods: ["GET"],
+  },
   // View enrollments by student ID — admin and teacher
   {
     path: "/enrollment/student",

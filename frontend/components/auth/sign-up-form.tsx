@@ -122,7 +122,9 @@ export function SignUpForm({ onSwitch }: SignUpFormProps) {
                 }}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select your role" />
+                  <SelectValue placeholder="Select your role">
+                    {formData.role === "student" ? "Student" : formData.role === "teacher" ? "Teacher" : "Select your role"}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="student">Student</SelectItem>
