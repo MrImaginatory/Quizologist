@@ -10,6 +10,7 @@ import { setupSocketProxy } from "./middlewares/socketProxy.middleware";
 import { findMatchingRoute } from "./config/routes";
 import { ApiError } from "./utils/ApiError";
 import { ApiResponse } from "./utils/ApiResponse";
+import { logHealth, getServiceStatuses, getIncidents } from "./utils/healthMonitor";
 
 const app = express();
 
@@ -46,11 +47,14 @@ app.get("/api/internal/status", async (_req: Request, res: Response) => {
       try {
         const response = await fetch(`${service.url}/health`);
         if (response.ok) {
+          logHealth(service.name, "UP");
           return { name: service.name, status: "UP", url: service.url };
         } else {
+          logHealth(service.name, "DOWN", response.statusText);
           return { name: service.name, status: "DOWN", url: service.url, error: response.statusText };
         }
       } catch (error: any) {
+        logHealth(service.name, "DOWN", error.message);
         return { name: service.name, status: "DOWN", url: service.url, error: error.message };
       }
     })
@@ -63,6 +67,20 @@ app.get("/api/internal/status", async (_req: Request, res: Response) => {
     success: allUp,
     message: allUp ? "All services are running" : "Some services are down",
     data: statuses,
+  });
+});
+
+app.get("/api/internal/status/history", (_req: Request, res: Response) => {
+  const statuses = getServiceStatuses();
+  const incidents = getIncidents();
+
+  res.json({
+    success: true,
+    data: {
+      services: statuses,
+      incidents,
+      lastUpdated: new Date().toISOString(),
+    },
   });
 });
 

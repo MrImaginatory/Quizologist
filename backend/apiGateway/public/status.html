@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,61 +9,40 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    /* ---- Theme: Light ---- */
-    :root {
-      --bg-page: #F9FAFB;
-      --bg-surface: #FFFFFF;
-      --bg-surface-hover: #F3F4F6;
-      --text-primary: #111827;
+    :root,
+    [data-theme="light"] {
+      --bg: #FFFFFF;
+      --surface: #F8F9FA;
+      --text: #1A1A2E;
       --text-secondary: #6B7280;
       --border: #E5E7EB;
-      --border-strong: #D1D5DB;
-      --green: #10B981;
-      --green-soft: #D1FAE5;
-      --green-border: #A7F3D0;
-      --red: #EF4444;
-      --red-soft: #FEE2E2;
-      --red-border: #FECACA;
-      --amber: #F59E0B;
-      --amber-soft: #FEF3C7;
-      --amber-border: #FDE68A;
-      --primary: #6366F1;
-      --primary-soft: #EEF2FF;
-      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-      --shadow-base: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-      --radius-sm: 0.25rem;
-      --radius-base: 0.375rem;
-      --radius-md: 0.5rem;
-      --radius-lg: 0.75rem;
-      --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --green: #00C853;
+      --green-bg: #E8F5E9;
+      --red: #FF5252;
+      --red-bg: #FFEBEE;
+      --yellow: #FFB300;
+      --yellow-bg: #FFF8E1;
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --toggle-bg: #E5E7EB;
+      --toggle-knob: #FFFFFF;
+      --toggle-icon: #6B7280;
     }
 
-    /* ---- Theme: Dark ---- */
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg-page: #0F1117;
-        --bg-surface: #1A1D27;
-        --bg-surface-hover: #242836;
-        --text-primary: #F3F4F6;
-        --text-secondary: #9CA3AF;
-        --border: #2D3244;
-        --border-strong: #3E4458;
-        --green: #34D399;
-        --green-soft: rgba(16, 185, 129, 0.12);
-        --green-border: rgba(52, 211, 153, 0.25);
-        --red: #F87171;
-        --red-soft: rgba(239, 68, 68, 0.12);
-        --red-border: rgba(248, 113, 113, 0.25);
-        --amber: #FBBF24;
-        --amber-soft: rgba(245, 158, 11, 0.12);
-        --amber-border: rgba(251, 191, 36, 0.25);
-        --primary: #818CF8;
-        --primary-soft: rgba(99, 102, 241, 0.1);
-        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.2);
-        --shadow-base: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.25);
-        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.25);
-      }
+    [data-theme="dark"] {
+      --bg: #0F1117;
+      --surface: #1A1D27;
+      --text: #F3F4F6;
+      --text-secondary: #9CA3AF;
+      --border: #2D3244;
+      --green: #4CAF50;
+      --green-bg: rgba(76, 175, 80, 0.1);
+      --red: #F44336;
+      --red-bg: rgba(244, 67, 54, 0.1);
+      --yellow: #FFC107;
+      --yellow-bg: rgba(255, 193, 7, 0.1);
+      --toggle-bg: #374151;
+      --toggle-knob: #1F2937;
+      --toggle-icon: #FBBF24;
     }
 
     * {
@@ -73,209 +53,318 @@
 
     body {
       font-family: var(--font);
-      background-color: var(--bg-page);
-      color: var(--text-primary);
+      background: var(--bg);
+      color: var(--text);
       min-height: 100vh;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
     }
 
-    .page {
-      max-width: 640px;
+    .container {
+      max-width: 720px;
       margin: 0 auto;
-      padding: 4rem 1.5rem 3rem;
+      padding: 3rem 1.5rem;
     }
 
     /* Header */
     .header {
-      margin-bottom: 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
     }
 
-    .header h1 {
-      font-size: 1.875rem;
-      font-weight: 700;
-      letter-spacing: -0.025em;
-      margin-bottom: 0.25rem;
-    }
-
-    .header p {
-      font-size: 0.9375rem;
-      color: var(--text-secondary);
-    }
-
-    /* Banner */
-    .banner {
+    .logo {
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      padding: 0.875rem 1.125rem;
-      border-radius: var(--radius-lg);
-      margin-bottom: 2rem;
-      transition: background 200ms ease, border-color 200ms ease;
     }
 
-    .banner.operational {
-      background: var(--green-soft);
-      border: 1px solid var(--green-border);
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #6366F1, #8B5CF6);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 1.25rem;
     }
 
-    .banner.degraded {
-      background: var(--red-soft);
-      border: 1px solid var(--red-border);
+    .logo-text {
+      font-size: 1.5rem;
+      font-weight: 700;
     }
 
-    .banner.checking {
-      background: var(--amber-soft);
-      border: 1px solid var(--amber-border);
+    /* Theme Toggle */
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
 
-    .banner-dot {
-      width: 10px;
-      height: 10px;
+    .toggle-btn {
+      position: relative;
+      width: 56px;
+      height: 28px;
+      background: var(--toggle-bg);
+      border-radius: 14px;
+      cursor: pointer;
+      border: none;
+      padding: 0;
+      transition: background 0.3s ease;
+    }
+
+    .toggle-btn:focus {
+      outline: 2px solid #6366F1;
+      outline-offset: 2px;
+    }
+
+    .toggle-knob {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 22px;
+      height: 22px;
+      background: var(--toggle-knob);
       border-radius: 50%;
-      flex-shrink: 0;
+      transition: transform 0.3s ease, background 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
     }
 
-    .banner.operational .banner-dot {
-      background: var(--green);
-      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
+    [data-theme="dark"] .toggle-knob {
+      transform: translateX(28px);
     }
 
-    .banner.degraded .banner-dot {
-      background: var(--red);
-      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18);
+    .toggle-icon {
+      font-size: 12px;
+      line-height: 1;
     }
 
-    .banner.checking .banner-dot {
-      background: var(--amber);
-      animation: pulse 1.8s ease-in-out infinite;
+    [data-theme="light"] .toggle-icon::after {
+      content: "☀️";
     }
 
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.35; }
+    [data-theme="dark"] .toggle-icon::after {
+      content: "🌙";
     }
 
-    .banner-text {
-      font-size: 0.9375rem;
+    /* Status Banner */
+    .status-banner {
+      padding: 1rem 1.25rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 1rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .status-banner.operational {
+      background: var(--green-bg);
+      color: var(--green);
+      border: 1px solid var(--green);
+    }
+
+    .status-banner.degraded {
+      background: var(--red-bg);
+      color: var(--red);
+      border: 1px solid var(--red);
+    }
+
+    .status-banner.checking {
+      background: var(--yellow-bg);
+      color: var(--yellow);
+      border: 1px solid var(--yellow);
+    }
+
+    /* Uptime Section */
+    .uptime-section {
+      margin-bottom: 2.5rem;
+    }
+
+    .uptime-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .uptime-link {
+      color: #6366F1;
+      text-decoration: none;
       font-weight: 500;
     }
 
-    /* Service list */
-    .services {
-      display: flex;
-      flex-direction: column;
-      background: var(--bg-surface);
+    .uptime-link:hover {
+      text-decoration: underline;
+    }
+
+    /* Service Card */
+    .service-card {
       border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-sm);
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
       overflow: hidden;
     }
 
-    .service-row {
+    .service-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 1rem 1.25rem;
-      border-bottom: 1px solid var(--border);
-      opacity: 0;
-      transform: translateY(6px);
-      animation: fadeUp 0.35s ease forwards;
+      cursor: pointer;
+      transition: background 0.15s;
     }
 
-    .service-row:last-child {
-      border-bottom: none;
-    }
-
-    @keyframes fadeUp {
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .service-left {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .service-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-
-    .service-dot.up {
-      background: var(--green);
-    }
-
-    .service-dot.down {
-      background: var(--red);
-    }
-
-    .service-dot.loading {
-      background: var(--amber);
-      animation: pulse 1.8s ease-in-out infinite;
+    .service-header:hover {
+      background: var(--surface);
     }
 
     .service-name {
-      font-size: 0.9375rem;
       font-weight: 500;
-      text-transform: capitalize;
+      font-size: 0.9375rem;
     }
 
     .service-status {
       font-size: 0.8125rem;
       font-weight: 600;
-      letter-spacing: 0.01em;
     }
 
-    .service-status.up {
+    .service-status.operational {
       color: var(--green);
     }
 
-    .service-status.down {
+    .service-status.degraded {
       color: var(--red);
     }
 
-    .service-error {
-      padding: 0.5rem 0.75rem;
-      margin: 0 1.25rem 0.75rem;
-      background: var(--red-soft);
-      border-left: 2px solid var(--red);
+    /* Uptime Bar */
+    .uptime-bar-container {
+      padding: 0 1.25rem 1rem;
+    }
+
+    .uptime-bar {
+      display: flex;
+      gap: 2px;
+      height: 24px;
+      align-items: flex-end;
+    }
+
+    .uptime-day {
+      flex: 1;
+      border-radius: 2px;
+      min-height: 1.5rem;
+      cursor: pointer;
+      position: relative;
+      transition: opacity 0.15s;
+    }
+
+    .uptime-day:hover {
+      opacity: 0.8;
+    }
+
+    .uptime-day.up {
+      background: var(--green);
+    }
+
+    .uptime-day.down {
+      background: var(--red);
+    }
+
+    .uptime-day:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--text);
+      color: var(--bg);
+      padding: 0.375rem 0.625rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      white-space: nowrap;
+      z-index: 10;
+      margin-bottom: 4px;
+    }
+
+    .uptime-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 0.5rem;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    .uptime-percent {
+      font-weight: 500;
+    }
+
+    /* Incidents Section */
+    .incidents-section {
+      margin-top: 2.5rem;
+    }
+
+    .incidents-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+    }
+
+    .incident-date {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .incident-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.75rem 0;
+      font-size: 0.875rem;
+    }
+
+    .incident-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--red);
+      margin-top: 0.375rem;
+      flex-shrink: 0;
+    }
+
+    .incident-content {
+      flex: 1;
+    }
+
+    .incident-service {
+      font-weight: 500;
+    }
+
+    .incident-time {
+      color: var(--text-secondary);
+      font-size: 0.8125rem;
+    }
+
+    .incident-error {
       color: var(--red);
       font-size: 0.8125rem;
-      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      margin-top: 0.25rem;
     }
 
-    /* Loader */
-    .loader {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 3rem 0;
-      gap: 0.75rem;
-    }
-
-    .loader-ring {
-      width: 24px;
-      height: 24px;
-      border: 2.5px solid var(--border);
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      animation: spin 0.75s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .loader-text {
-      font-size: 0.875rem;
+    .no-incidents {
       color: var(--text-secondary);
+      font-size: 0.875rem;
+      padding: 1rem 0;
     }
 
     /* Footer */
@@ -301,32 +390,37 @@
       height: 6px;
       border-radius: 50%;
       background: var(--green);
+      animation: pulse 2s infinite;
     }
 
-    /* Error state */
-    .error-state {
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.4;
+      }
+    }
+
+    /* Loading */
+    .loading {
       text-align: center;
-      padding: 3rem 1.5rem;
-    }
-
-    .error-state h3 {
-      font-size: 1rem;
-      font-weight: 600;
-      margin-bottom: 0.375rem;
-    }
-
-    .error-state p {
-      font-size: 0.875rem;
+      padding: 3rem;
       color: var(--text-secondary);
     }
 
     @media (max-width: 480px) {
-      .page {
-        padding: 2.5rem 1rem 2rem;
+      .container {
+        padding: 2rem 1rem;
       }
 
-      .header h1 {
-        font-size: 1.5rem;
+      .header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
       }
 
       .footer {
@@ -337,27 +431,45 @@
     }
   </style>
 </head>
+
 <body>
-  <div class="page">
+  <div class="container">
     <div class="header">
-      <h1>Status</h1>
-      <p>Service health at a glance</p>
+      <div class="logo">
+        <div class="logo-icon">Q</div>
+        <span class="logo-text">QuizNew</span>
+      </div>
+      <div class="theme-toggle">
+        <button class="toggle-btn" id="themeToggle" aria-label="Toggle theme">
+          <div class="toggle-knob">
+            <span class="toggle-icon"></span>
+          </div>
+        </button>
+      </div>
     </div>
 
-    <div class="banner checking" id="banner">
-      <div class="banner-dot"></div>
-      <span class="banner-text">Checking systems&hellip;</span>
+    <div class="status-banner checking" id="statusBanner">
+      <span id="bannerText">Checking systems...</span>
     </div>
 
-    <div id="services-list" class="services">
-      <div class="loader">
-        <div class="loader-ring"></div>
-        <span class="loader-text">Loading&hellip;</span>
+    <div class="uptime-section">
+      <div class="uptime-header">
+        <span>Uptime over the past 90 days</span>
+      </div>
+      <div id="servicesList">
+        <div class="loading">Loading...</div>
+      </div>
+    </div>
+
+    <div class="incidents-section">
+      <h2 class="incidents-title">Past Incidents</h2>
+      <div id="incidentsList">
+        <div class="loading">Loading...</div>
       </div>
     </div>
 
     <div class="footer">
-      <span>Updated <span id="last-updated">never</span></span>
+      <span>Updated <span id="lastUpdated">never</span></span>
       <div class="auto-refresh">
         <div class="auto-refresh-dot"></div>
         <span>Auto-refresh 30s</span>
@@ -366,65 +478,118 @@
   </div>
 
   <script>
+    // Theme Toggle
+    const themeToggle = document.getElementById('themeToggle');
+    const html = document.documentElement;
+
+    // Load saved theme or default to light
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    html.setAttribute('data-theme', savedTheme);
+
+    themeToggle.addEventListener('click', () => {
+      const currentTheme = html.getAttribute('data-theme');
+      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+      html.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+    });
+
+    function formatDate(dateStr) {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function formatDateTime(dateStr) {
+      const d = new Date(dateStr);
+      return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function renderUptimeBar(history) {
+      return history.map(day => {
+        const status = day.status === 'UP' ? 'up' : 'down';
+        const tooltip = `${formatDate(day.date)}: ${day.status}`;
+        return `<div class="uptime-day ${status}" data-tooltip="${tooltip}"></div>`;
+      }).join('');
+    }
+
     async function fetchStatus() {
-      const list = document.getElementById('services-list');
-      const banner = document.getElementById('banner');
-      const lastUpdated = document.getElementById('last-updated');
+      const banner = document.getElementById('statusBanner');
+      const bannerText = document.getElementById('bannerText');
+      const servicesList = document.getElementById('servicesList');
+      const incidentsList = document.getElementById('incidentsList');
+      const lastUpdated = document.getElementById('lastUpdated');
 
       try {
-        const res = await fetch('/api/internal/status');
+        const res = await fetch('/api/internal/status/history');
         const data = await res.json();
-        const isAllUp = data.success;
 
-        banner.className = `banner ${isAllUp ? 'operational' : 'degraded'}`;
-        banner.innerHTML = `
-          <div class="banner-dot"></div>
-          <span class="banner-text">${data.message || (isAllUp ? 'All systems operational' : 'Some systems are down')}</span>
-        `;
+        if (!data.success) throw new Error('Failed to fetch status');
 
-        if (data.data && Array.isArray(data.data)) {
-          list.innerHTML = data.data.map((service, i) => {
-            const isUp = service.status === 'UP';
-            const name = service.name.replace(/-/g, ' ');
+        const { services, incidents } = data.data;
 
-            let errorHtml = '';
-            if (!isUp && service.error) {
-              errorHtml = `<div class="service-error">${service.error}</div>`;
-            }
+        // Update banner
+        const allOperational = services.every(s => s.currentStatus === 'UP');
+        banner.className = `status-banner ${allOperational ? 'operational' : 'degraded'}`;
+        bannerText.textContent = allOperational ? 'All Systems Operational' : 'Some Systems Are Down';
 
-            return `
-              <div class="service-row" style="animation-delay: ${i * 50}ms">
-                <div class="service-left">
-                  <div class="service-dot ${isUp ? 'up' : 'down'}"></div>
-                  <span class="service-name">${name}</span>
-                </div>
-                <span class="service-status ${isUp ? 'up' : 'down'}">${isUp ? 'Running' : 'Down'}</span>
+        // Render services
+        servicesList.innerHTML = services.map(service => {
+          const statusClass = service.currentStatus === 'UP' ? 'operational' : 'degraded';
+          const statusText = service.currentStatus === 'UP' ? 'Operational' : 'Degraded';
+
+          return `
+            <div class="service-card">
+              <div class="service-header">
+                <span class="service-name">${service.name}</span>
+                <span class="service-status ${statusClass}">${statusText}</span>
               </div>
-              ${errorHtml}
-            `;
-          }).join('');
+              <div class="uptime-bar-container">
+                <div class="uptime-bar">
+                  ${renderUptimeBar(service.history)}
+                </div>
+                <div class="uptime-labels">
+                  <span>90 days ago</span>
+                  <span class="uptime-percent">${service.uptime90d}% uptime</span>
+                  <span>Today</span>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        // Render incidents
+        if (incidents.length === 0) {
+          incidentsList.innerHTML = `
+            <div class="incident-date">${formatDate(new Date().toISOString())}</div>
+            <p class="no-incidents">No incidents reported today.</p>
+          `;
+        } else {
+          incidentsList.innerHTML = incidents.map(incident => `
+            <div class="incident-date">${formatDate(incident.date)}</div>
+            ${incident.services.map(s => `
+              <div class="incident-item">
+                <div class="incident-dot"></div>
+                <div class="incident-content">
+                  <div class="incident-service">${s.name}</div>
+                  <div class="incident-time">${s.time}</div>
+                  ${s.error ? `<div class="incident-error">${s.error}</div>` : ''}
+                </div>
+              </div>
+            `).join('')}
+          `).join('');
         }
 
+        lastUpdated.textContent = new Date().toLocaleTimeString();
+
       } catch (err) {
-        banner.className = 'banner degraded';
-        banner.innerHTML = `
-          <div class="banner-dot"></div>
-          <span class="banner-text">Cannot reach API Gateway</span>
-        `;
-
-        list.innerHTML = `
-          <div class="error-state">
-            <h3>Connection Error</h3>
-            <p>Could not fetch status data. Ensure the API Gateway is running.</p>
-          </div>
-        `;
+        banner.className = 'status-banner degraded';
+        bannerText.textContent = 'Cannot reach API Gateway';
+        servicesList.innerHTML = '<div class="loading">Connection error</div>';
       }
-
-      lastUpdated.textContent = new Date().toLocaleTimeString();
     }
 
     fetchStatus();
     setInterval(fetchStatus, 30000);
   </script>
 </body>
+
 </html>
