@@ -1,4 +1,5 @@
 import { Socket } from "socket.io";
+import winston from "winston";
 import { sessionManager } from "./sessionManager";
 import { TestSessionService } from "../modules/testSession/testSession.service";
 import TestSession from "../modules/testSession/testSession.model";
@@ -42,7 +43,8 @@ function getTimeRemaining(endsAt: Date | null): number {
 async function checkAndAutoSubmit(
   socket: Socket,
   session: any,
-  studentId: string
+  studentId: string,
+  logger: winston.Logger
 ): Promise<boolean> {
   if (!session.ends_at) return false;
 
@@ -59,15 +61,15 @@ async function checkAndAutoSubmit(
         reason: "timeout",
       });
       return true;
-    } catch (error) {
-      console.error("Auto-submit error:", error);
+    } catch (error: any) {
+      logger.error("Auto-submit error", { error: error.message, stack: error.stack });
     }
   }
 
   return false;
 }
 
-export function registerSocketHandlers(socket: Socket, studentId: string) {
+export function registerSocketHandlers(socket: Socket, studentId: string, logger: winston.Logger) {
   socket.on("join_test", async (payload: JoinTestPayload) => {
     try {
       const { testId } = payload;
@@ -103,7 +105,7 @@ export function registerSocketHandlers(socket: Socket, studentId: string) {
       const timeRemaining = getTimeRemaining(session.ends_at);
       if (timeRemaining <= 0 && session.status === "in_progress") {
         // Auto-submit expired test
-        await checkAndAutoSubmit(socket, session, studentId);
+        await checkAndAutoSubmit(socket, session, studentId, logger);
         return;
       }
 
@@ -129,8 +131,8 @@ export function registerSocketHandlers(socket: Socket, studentId: string) {
         timeRemaining,
         endsAt: session.ends_at,
       });
-    } catch (error) {
-      console.error("join_test error:", error);
+    } catch (error: any) {
+      logger.error("join_test error", { error: error.message, stack: error.stack });
       socket.emit("error", { message: "Failed to join test" });
     }
   });
@@ -150,7 +152,7 @@ export function registerSocketHandlers(socket: Socket, studentId: string) {
       }
 
       // Check if test has expired
-      const expired = await checkAndAutoSubmit(socket, session, studentId);
+      const expired = await checkAndAutoSubmit(socket, session, studentId, logger);
       if (expired) return;
 
       // Find existing answer record
@@ -190,8 +192,8 @@ export function registerSocketHandlers(socket: Socket, studentId: string) {
         success: true,
         timeRemaining,
       });
-    } catch (error) {
-      console.error("answer error:", error);
+    } catch (error: any) {
+      logger.error("answer error", { error: error.message, stack: error.stack });
       socket.emit("error", { message: "Failed to record answer" });
     }
   });
@@ -210,7 +212,7 @@ export function registerSocketHandlers(socket: Socket, studentId: string) {
       }
 
       // Check if test has expired
-      const expired = await checkAndAutoSubmit(socket, session, studentId);
+      const expired = await checkAndAutoSubmit(socket, session, studentId, logger);
       if (expired) return;
 
       const existingAnswer = await TestAnswer.findOne({
@@ -245,8 +247,8 @@ export function registerSocketHandlers(socket: Socket, studentId: string) {
         success: true,
         timeRemaining,
       });
-    } catch (error) {
-      console.error("skip error:", error);
+    } catch (error: any) {
+      logger.error("skip error", { error: error.message, stack: error.stack });
       socket.emit("error", { message: "Failed to skip question" });
     }
   });
@@ -263,7 +265,7 @@ export function registerSocketHandlers(socket: Socket, studentId: string) {
     });
 
     if (session) {
-      const expired = await checkAndAutoSubmit(socket, session, studentId);
+      const expired = await checkAndAutoSubmit(socket, session, studentId, logger);
       if (!expired) {
         const timeRemaining = getTimeRemaining(session.ends_at);
         socket.emit("time_update", { timeRemaining });
@@ -293,8 +295,8 @@ export function registerSocketHandlers(socket: Socket, studentId: string) {
       socket.leave(`test:${testId}`);
 
       socket.emit("test_submitted", { testId, result });
-    } catch (error) {
-      console.error("submit_test error:", error);
+    } catch (error: any) {
+      logger.error("submit_test error", { error: error.message, stack: error.stack });
       socket.emit("error", { message: "Failed to submit test" });
     }
   });

@@ -9,12 +9,15 @@ import testSessionRoutes from "./modules/testSession/testSession.routes";
 import { createSocketServer } from "./socket/socketServer";
 import { ApiError } from "./utils/ApiError";
 import { ApiResponse } from "./utils/ApiResponse";
+import { createLogger, requestLogger } from "./utils/logger";
 
+const logger = createLogger("test-service");
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(requestLogger(logger));
 
 app.use("/api/test", extractGatewayUser, testSessionRoutes);
 
@@ -44,7 +47,7 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
     );
   }
 
-  console.error("Unhandled error:", err);
+  logger.error("Unhandled error", { error: err.message, stack: err.stack });
   return ApiResponse.error(res, "Internal server error", 500);
 });
 
@@ -52,12 +55,11 @@ const startServer = async () => {
   await connectDatabase();
 
   const httpServer = http.createServer(app);
-  const io = createSocketServer(httpServer);
+  const io = createSocketServer(httpServer, logger);
 
   httpServer.listen(env.PORT, () => {
-    console.log(`Test Service running on port ${env.PORT}`);
-    console.log(`Socket.IO server attached`);
-    console.log(`Environment: ${env.NODE_ENV}`);
+    logger.info("Server started", { port: env.PORT, environment: env.NODE_ENV });
+    logger.info("Socket.IO server attached");
   });
 };
 

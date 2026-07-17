@@ -1,6 +1,7 @@
 import { Server as HttpServer } from "http";
 import { Server, Socket } from "socket.io";
 import jwt from "jsonwebtoken";
+import winston from "winston";
 import { env } from "../config/env";
 import { registerSocketHandlers } from "./socketHandler";
 import { sessionManager } from "./sessionManager";
@@ -11,7 +12,7 @@ interface DecodedToken {
   role: string;
 }
 
-export function createSocketServer(httpServer: HttpServer): Server {
+export function createSocketServer(httpServer: HttpServer, logger: winston.Logger): Server {
   const io = new Server(httpServer, {
     cors: {
       origin: "*",
@@ -24,6 +25,7 @@ export function createSocketServer(httpServer: HttpServer): Server {
     const token = socket.handshake.auth.token || socket.handshake.query.token;
 
     if (!token || typeof token !== "string") {
+      logger.warn("Socket auth failed: No token provided");
       return next(new Error("Authentication token required"));
     }
 
@@ -34,15 +36,16 @@ export function createSocketServer(httpServer: HttpServer): Server {
       (socket as any).userRole = decoded.role;
       next();
     } catch (error) {
+      logger.warn("Socket auth failed: Invalid token");
       next(new Error("Invalid or expired token"));
     }
   });
 
   io.on("connection", (socket: Socket) => {
     const userId = (socket as any).userId;
-    console.log(`Socket connected: ${socket.id} (user: ${userId})`);
+    logger.info("Socket connected", { socketId: socket.id, userId });
 
-    registerSocketHandlers(socket, userId);
+    registerSocketHandlers(socket, userId, logger);
   });
 
   // Start heartbeat checker
