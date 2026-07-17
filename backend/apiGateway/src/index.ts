@@ -11,12 +11,15 @@ import { findMatchingRoute } from "./config/routes";
 import { ApiError } from "./utils/ApiError";
 import { ApiResponse } from "./utils/ApiResponse";
 import { logHealth, getServiceStatuses, getIncidents } from "./utils/healthMonitor";
+import { createLogger, requestLogger } from "./utils/logger";
 
+const logger = createLogger("api-gateway");
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(requestLogger(logger));
 
 app.get("/health", (_req: Request, res: Response) => {
   ApiResponse.success(res, "Gateway is healthy", {
@@ -115,7 +118,7 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
     return ApiResponse.error(res, err.message, err.statusCode);
   }
 
-  console.error("Unhandled error:", err);
+  logger.error("Unhandled error", { error: err.message, stack: err.stack });
   return ApiResponse.error(res, "Internal server error", 500);
 });
 
@@ -126,9 +129,8 @@ const startServer = async () => {
   setupSocketProxy(server);
 
   server.listen(env.PORT, () => {
-    console.log(`API Gateway running on port ${env.PORT}`);
-    console.log(`Socket.IO proxy enabled for /socket.io/ → test-service`);
-    console.log(`Environment: ${env.NODE_ENV}`);
+    logger.info("Server started", { port: env.PORT, environment: env.NODE_ENV });
+    logger.info("Socket.IO proxy enabled", { target: "test-service" });
   });
 };
 

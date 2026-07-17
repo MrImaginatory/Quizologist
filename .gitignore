@@ -1,2 +1,4 @@
 .cron*
 health-logs
+*.log
+*.logs
