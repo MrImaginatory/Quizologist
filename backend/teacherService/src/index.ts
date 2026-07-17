@@ -7,12 +7,15 @@ import { extractGatewayUser } from "./middlewares/gatewayUser.middleware";
 import teacherAssignmentRoutes from "./modules/teacherAssignment/teacherAssignment.routes";
 import { ApiError } from "./utils/ApiError";
 import { ApiResponse } from "./utils/ApiResponse";
+import { createLogger, requestLogger } from "./utils/logger";
 
+const logger = createLogger("teacher-service");
 const app: Express = express();
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(requestLogger(logger));
 
 app.use("/api/teacher", extractGatewayUser, teacherAssignmentRoutes);
 
@@ -42,7 +45,7 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
     );
   }
 
-  console.error("Unhandled error:", err);
+  logger.error("Unhandled error", { error: err.message, stack: err.stack });
   return ApiResponse.error(res, "Internal server error", 500);
 });
 
@@ -50,8 +53,7 @@ const startServer = async () => {
   await connectDatabase();
 
   app.listen(env.PORT, () => {
-    console.log(`Teacher Service running on port ${env.PORT}`);
-    console.log(`Environment: ${env.NODE_ENV}`);
+    logger.info("Server started", { port: env.PORT, environment: env.NODE_ENV });
   });
 };
 
