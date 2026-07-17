@@ -266,6 +266,88 @@ export const routes: RouteConfig[] = [
     methods: ["GET"],
   },
 
+  // ==================== Predefined Test Service ====================
+  // Create predefined test — admin and teacher
+  {
+    path: "/test/predefined",
+    target: `${env.TEST_SERVICE_URL}/api/test/predefined`,
+    auth: true,
+    roles: ["admin", "teacher"],
+    methods: ["POST"],
+  },
+  // Get all predefined tests — admin and teacher
+  {
+    path: "/test/predefined",
+    target: `${env.TEST_SERVICE_URL}/api/test/predefined`,
+    auth: true,
+    roles: ["admin", "teacher"],
+    methods: ["GET"],
+  },
+  // Get pending tests — student only
+  {
+    path: "/test/predefined/pending",
+    target: `${env.TEST_SERVICE_URL}/api/test/predefined/pending`,
+    auth: true,
+    roles: ["student"],
+    methods: ["GET"],
+  },
+  // Join test by token — student only
+  {
+    path: "/test/predefined/join",
+    target: `${env.TEST_SERVICE_URL}/api/test/predefined/join`,
+    auth: true,
+    roles: ["student"],
+    methods: ["GET"],
+  },
+  // Get predefined test by ID — admin, teacher, student
+  {
+    path: "/test/predefined",
+    target: `${env.TEST_SERVICE_URL}/api/test/predefined`,
+    auth: true,
+    roles: ["admin", "teacher", "student"],
+    methods: ["GET"],
+  },
+  // Update predefined test — admin and teacher
+  {
+    path: "/test/predefined",
+    target: `${env.TEST_SERVICE_URL}/api/test/predefined`,
+    auth: true,
+    roles: ["admin", "teacher"],
+    methods: ["PUT"],
+  },
+  // Delete predefined test — admin and teacher
+  {
+    path: "/test/predefined",
+    target: `${env.TEST_SERVICE_URL}/api/test/predefined`,
+    auth: true,
+    roles: ["admin", "teacher"],
+    methods: ["DELETE"],
+  },
+  // Activate predefined test — admin and teacher
+  {
+    path: "/test/predefined",
+    target: `${env.TEST_SERVICE_URL}/api/test/predefined`,
+    auth: true,
+    roles: ["admin", "teacher"],
+    methods: ["POST"],
+  },
+  // Deactivate predefined test — admin and teacher
+  {
+    path: "/test/predefined",
+    target: `${env.TEST_SERVICE_URL}/api/test/predefined`,
+    auth: true,
+    roles: ["admin", "teacher"],
+    methods: ["POST"],
+  },
+  // Start predefined test — student only
+  {
+    path: "/test/predefined",
+    target: `${env.TEST_SERVICE_URL}/api/test/predefined`,
+    auth: true,
+    roles: ["student"],
+    methods: ["POST"],
+  },
+
   // ==================== Teacher Service ====================
   // Get teachers with assignment counts — admin only
   {
