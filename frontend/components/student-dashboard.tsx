@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
@@ -13,8 +15,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useStudentDashboard } from "@/hooks/use-student-dashboard";
+import { usePendingTests } from "@/hooks/use-pending-tests";
 import { capitalize } from "@/lib/utils";
-import { Loader2, Target, BookOpen, CheckCircle, TrendingUp } from "lucide-react";
+import { Loader2, Target, BookOpen, CheckCircle, Play, Clock, TrendingUp } from "lucide-react";
 import { ViewToggle } from "@/components/dashboard/view-toggle";
 import { PerformanceTrendChart } from "@/components/charts/performance-trend-chart";
 import { SubjectRadarChart } from "@/components/charts/subject-radar-chart";
@@ -27,6 +30,7 @@ const statusColors: Record<string, string> = {
 };
 
 export function StudentDashboard() {
+  const router = useRouter();
   const {
     stats,
     topicPerformance,
@@ -37,6 +41,8 @@ export function StudentDashboard() {
     isLoading,
     error,
   } = useStudentDashboard();
+
+  const { tests: pendingTests, isLoading: pendingLoading } = usePendingTests();
 
   const [trendsView, setTrendsView] = useState<"table" | "chart">("table");
   const [subjectView, setSubjectView] = useState<"table" | "chart">("table");
@@ -101,6 +107,57 @@ export function StudentDashboard() {
           </Card>
         ))}
       </div>
+
+      {/* Pending Tests */}
+      {!pendingLoading && pendingTests.length > 0 && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Play className="h-5 w-5" />
+              Pending Tests
+            </CardTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.push("/dashboard/tests/pending")}
+            >
+              View All
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+              {pendingTests.slice(0, 3).map((test) => (
+                <div
+                  key={test.id}
+                  className="p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
+                  onClick={() => router.push("/dashboard/tests/pending")}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <p className="font-medium text-sm line-clamp-1">{test.title}</p>
+                    <Badge
+                      variant="outline"
+                      className={
+                        test.status === "upcoming"
+                          ? "bg-blue-500/10 text-blue-500"
+                          : "bg-green-500/10 text-green-500"
+                      }
+                    >
+                      {test.status === "upcoming" ? "Upcoming" : "Available"}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {test.duration_minutes} min
+                    </span>
+                    <span>{test.question_limit} questions</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Performance Trends */}
       <Card>
