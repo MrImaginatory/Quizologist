@@ -39,7 +39,15 @@ export function SignInForm({ onSwitch }: SignInFormProps) {
     try {
       const response = await authApi.login({ email, password });
       login(response.data.token, response.data.user);
-      router.push("/dashboard");
+      
+      // Check if there's a redirect URL stored
+      const redirectUrl = sessionStorage.getItem("redirectAfterLogin");
+      if (redirectUrl) {
+        sessionStorage.removeItem("redirectAfterLogin");
+        router.push(redirectUrl);
+      } else {
+        router.push("/dashboard");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {

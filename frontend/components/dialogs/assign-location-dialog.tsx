@@ -136,7 +136,7 @@ export function AssignLocationDialog({ open, onOpenChange, user, onSuccess }: As
                 onValueChange={(value) => setSelectedLocationId(value || "")}
                 disabled={locationsLoading}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue>
                     {selectedLocationId
                       ? locations.find((loc) => loc.id === selectedLocationId)

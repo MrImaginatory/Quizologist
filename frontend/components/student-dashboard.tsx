@@ -110,50 +110,64 @@ export function StudentDashboard() {
 
       {/* Pending Tests */}
       {!pendingLoading && pendingTests.length > 0 && (
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Play className="h-5 w-5" />
+        <Card className="overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Play className="h-5 w-5 text-primary" />
               Pending Tests
             </CardTitle>
             <Button
-              variant="ghost"
+              variant="link"
               size="sm"
+              className="text-primary h-auto p-0"
               onClick={() => router.push("/dashboard/tests/pending")}
             >
               View All
             </Button>
           </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-              {pendingTests.slice(0, 3).map((test) => (
-                <div
-                  key={test.id}
-                  className="p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
-                  onClick={() => router.push("/dashboard/tests/pending")}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <p className="font-medium text-sm line-clamp-1">{test.title}</p>
-                    <Badge
-                      variant="outline"
-                      className={
-                        test.status === "upcoming"
-                          ? "bg-blue-500/10 text-blue-500"
-                          : "bg-green-500/10 text-green-500"
-                      }
-                    >
-                      {test.status === "upcoming" ? "Upcoming" : "Available"}
-                    </Badge>
+          <CardContent className="p-0">
+            <div className="divide-y">
+              {pendingTests.slice(0, 3).map((test) => {
+                const testStatus = test.status === "upcoming" ? "upcoming" : "available";
+                return (
+                  <div
+                    key={test.id}
+                    className="flex items-center justify-between p-4 hover:bg-muted/50 cursor-pointer transition-colors"
+                    onClick={() => router.push("/dashboard/tests/pending")}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
+                        <Play className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm">{test.title}</p>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {test.duration_minutes} min
+                          </span>
+                          <span>•</span>
+                          <span>{test.question_limit} questions</span>
+                          <span>•</span>
+                          <span>{capitalize(test.difficulty)}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Badge
+                        variant="outline"
+                        className={
+                          testStatus === "upcoming"
+                            ? "bg-blue-500/10 text-blue-500 border-blue-500/20"
+                            : "bg-green-500/10 text-green-500 border-green-500/20"
+                        }
+                      >
+                        {testStatus === "upcoming" ? "Upcoming" : "Available"}
+                      </Badge>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {test.duration_minutes} min
-                    </span>
-                    <span>{test.question_limit} questions</span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>

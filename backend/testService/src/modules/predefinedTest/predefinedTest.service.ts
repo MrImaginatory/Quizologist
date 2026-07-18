@@ -395,16 +395,28 @@ export class PredefinedTestService {
       },
     });
 
-    // Check attempts
-    const existingSessions = await PredefinedTestStudent.findAll({
+    // Check attempts - count completed or abandoned tests
+    const existingStudentTests = await PredefinedTestStudent.findAll({
       where: {
         predefined_test_id: testId,
         student_id: studentId,
-        status: "completed",
       },
     });
 
-    if (existingSessions.length >= test.max_attempts) {
+    // Also check test_sessions for completed/abandoned status
+    const TestSession = require("../testSession/testSession.model").default;
+    const sessionCount = await TestSession.count({
+      where: {
+        predefined_test_id: testId,
+        student_id: studentId,
+        status: { [Op.in]: ["completed", "abandoned"] },
+      },
+    });
+
+    // Count total attempts (from predefined_test_students + test_sessions)
+    const totalAttempts = Math.max(existingStudentTests.length, sessionCount);
+
+    if (totalAttempts >= test.max_attempts) {
       throw ApiError.badRequest("Maximum attempts reached");
     }
 
@@ -501,7 +513,6 @@ export class PredefinedTestService {
     }
 
     // Create test session (reuse existing TestSession model)
-    const TestSession = require("../testSession/testSession.model").default;
     const TestAnswer = require("../testAnswer/testAnswer.model").default;
 
     const testSession = await TestSession.create({

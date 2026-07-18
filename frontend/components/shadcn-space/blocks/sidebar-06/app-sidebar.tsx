@@ -37,6 +37,7 @@ const studentNav: NavItem[] = [
   { title: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
   { title: "My Enrollments", icon: GraduationCap, href: "/dashboard/enrollments" },
   { title: "My Tests", icon: ClipboardList, href: "/dashboard/my-tests" },
+  { title: "Available Tests", icon: ClipboardList, href: "/dashboard/tests/pending" },
   { label: "Account", isSection: true },
   { title: "Profile", icon: Users, href: "/dashboard/profile" },
 ];

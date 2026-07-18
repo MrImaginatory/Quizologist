@@ -40,7 +40,10 @@ export default function JoinTestPage() {
     if (authLoading) return;
 
     if (!authToken) {
-      router.push("/login");
+      // Store the current URL to redirect back after login
+      const currentUrl = window.location.pathname;
+      sessionStorage.setItem("redirectAfterLogin", currentUrl);
+      router.push("/signin");
       return;
     }
 

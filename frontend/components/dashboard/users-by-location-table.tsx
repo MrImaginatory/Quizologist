@@ -30,7 +30,7 @@ export function UsersByLocationTable({ data }: UsersByLocationTableProps) {
     );
   }
 
-  const sortedData = [...data].sort((a, b) => b.user_count - a.user_count);
+  const sortedData = [...data].sort((a, b) => (Number(b.user_count) || 0) - (Number(a.user_count) || 0));
 
   return (
     <Table>
@@ -48,7 +48,7 @@ export function UsersByLocationTable({ data }: UsersByLocationTableProps) {
             <TableCell className="text-muted-foreground">{index + 1}</TableCell>
             <TableCell className="font-medium">{capitalize(location.city)}</TableCell>
             <TableCell>{capitalize(location.state)}</TableCell>
-            <TableCell className="text-right font-medium">{location.user_count}</TableCell>
+            <TableCell className="text-right font-medium">{Number(location.user_count) || 0}</TableCell>
           </TableRow>
         ))}
       </TableBody>

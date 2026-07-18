@@ -109,6 +109,8 @@ export function AdminDashboard() {
 
   const usersByLocation = stats?.usersByLocation || [];
 
+  const totalUsers = usersByLocation.reduce((sum, loc) => sum + (Number(loc.user_count) || 0), 0);
+
   return (
     <div className="space-y-6">
       <StatisticsCard stats={adminStats} />
@@ -120,7 +122,7 @@ export function AdminDashboard() {
             Users by Location
             {usersByLocation.length > 0 && (
               <span className="text-sm font-normal text-muted-foreground">
-                ({usersByLocation.reduce((sum, loc) => sum + loc.user_count, 0)} total users)
+                ({totalUsers} total users)
               </span>
             )}
           </CardTitle>

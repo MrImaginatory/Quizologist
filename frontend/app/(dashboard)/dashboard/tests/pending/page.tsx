@@ -7,16 +7,26 @@ import { predefinedTestsApi } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Clock, Play, Calendar } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Loader2, Clock, Play, Calendar, AlertCircle, CheckCircle, Timer } from "lucide-react";
 import { capitalize } from "@/lib/utils";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+
+type TestStatus = "available" | "upcoming" | "expired";
 
 export default function PendingTestsPage() {
   const router = useRouter();
   const { token } = useAuth();
   const { tests, isLoading, error } = usePendingTests();
   const [startingId, setStartingId] = useState<string | null>(null);
+  const [filterStatus, setFilterStatus] = useState<string>("all");
 
   const handleStartTest = async (testId: string) => {
     setStartingId(testId);
@@ -31,7 +41,7 @@ export default function PendingTestsPage() {
     }
   };
 
-  const getTestStatus = (test: any) => {
+  const getTestStatus = (test: any): TestStatus => {
     if (test.status === "upcoming") return "upcoming";
     if (test.is_scheduled && test.end_time) {
       const now = new Date();
@@ -41,11 +51,37 @@ export default function PendingTestsPage() {
     return "available";
   };
 
-  const statusColors: Record<string, string> = {
-    upcoming: "bg-blue-500/10 text-blue-500",
-    available: "bg-green-500/10 text-green-500",
-    expired: "bg-gray-500/10 text-gray-500",
+  const statusConfig: Record<TestStatus, { color: string; icon: React.ReactNode; label: string }> = {
+    upcoming: {
+      color: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+      icon: <Clock className="h-4 w-4" />,
+      label: "Upcoming",
+    },
+    available: {
+      color: "bg-green-500/10 text-green-500 border-green-500/20",
+      icon: <CheckCircle className="h-4 w-4" />,
+      label: "Available",
+    },
+    expired: {
+      color: "bg-gray-500/10 text-gray-500 border-gray-500/20",
+      icon: <AlertCircle className="h-4 w-4" />,
+      label: "Expired",
+    },
   };
+
+  const filteredTests = useMemo(() => {
+    if (filterStatus === "all") return tests;
+    return tests.filter((test) => getTestStatus(test) === filterStatus);
+  }, [tests, filterStatus]);
+
+  const statusCounts = useMemo(() => {
+    const counts = { available: 0, upcoming: 0, expired: 0 };
+    tests.forEach((test) => {
+      const status = getTestStatus(test);
+      counts[status]++;
+    });
+    return counts;
+  }, [tests]);
 
   if (isLoading) {
     return (
@@ -68,43 +104,110 @@ export default function PendingTestsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Pending Tests</h1>
+        <h1 className="text-3xl font-bold">Available Tests</h1>
         <p className="text-muted-foreground">
           Tests available for you to take
         </p>
       </div>
 
-      {tests.length === 0 ? (
+      {/* Stats Cards */}
+      <div className="grid grid-cols-3 gap-4">
+        <Card className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => setFilterStatus("available")}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Available</p>
+                <p className="text-2xl font-bold text-green-500">{statusCounts.available}</p>
+              </div>
+              <CheckCircle className="h-8 w-8 text-green-500/50" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => setFilterStatus("upcoming")}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Upcoming</p>
+                <p className="text-2xl font-bold text-blue-500">{statusCounts.upcoming}</p>
+              </div>
+              <Clock className="h-8 w-8 text-blue-500/50" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => setFilterStatus("expired")}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Expired</p>
+                <p className="text-2xl font-bold text-gray-500">{statusCounts.expired}</p>
+              </div>
+              <AlertCircle className="h-8 w-8 text-gray-500/50" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filter */}
+      <div className="flex items-center gap-4">
+        <Select value={filterStatus} onValueChange={(v) => { if (v) setFilterStatus(v); }}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Tests</SelectItem>
+            <SelectItem value="available">Available</SelectItem>
+            <SelectItem value="upcoming">Upcoming</SelectItem>
+            <SelectItem value="expired">Expired</SelectItem>
+          </SelectContent>
+        </Select>
+        <p className="text-sm text-muted-foreground">
+          {filteredTests.length} test(s) found
+        </p>
+      </div>
+
+      {/* Tests Grid */}
+      {filteredTests.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center">
-            <p className="text-muted-foreground">No pending tests available</p>
+            <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <p className="text-muted-foreground">
+              {filterStatus === "all"
+                ? "No tests available yet"
+                : `No ${filterStatus} tests`}
+            </p>
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {tests.map((test) => {
+          {filteredTests.map((test) => {
             const testStatus = getTestStatus(test);
             const isAvailable = testStatus === "available";
+            const config = statusConfig[testStatus];
 
             return (
-              <Card key={test.id} className="relative">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <CardTitle className="text-lg">{test.title}</CardTitle>
-                    <Badge className={statusColors[testStatus]}>
-                      {capitalize(testStatus)}
-                    </Badge>
-                  </div>
+              <Card key={test.id} className="relative overflow-hidden">
+                {/* Status Badge */}
+                <div className="absolute top-4 right-4">
+                  <Badge variant="outline" className={config.color}>
+                    <span className="mr-1">{config.icon}</span>
+                    {config.label}
+                  </Badge>
+                </div>
+
+                <CardHeader className="pr-24">
+                  <CardTitle className="text-lg">{test.title}</CardTitle>
                   {test.description && (
                     <p className="text-sm text-muted-foreground line-clamp-2">
                       {test.description}
                     </p>
                   )}
                 </CardHeader>
+
                 <CardContent className="space-y-4">
+                  {/* Test Info */}
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <Timer className="h-4 w-4 text-muted-foreground" />
                       <span>{test.duration_minutes} min</span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -113,11 +216,18 @@ export default function PendingTestsPage() {
                     </div>
                   </div>
 
+                  {/* Difficulty */}
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-muted-foreground">Difficulty:</span>
+                    <Badge variant="outline">{capitalize(test.difficulty)}</Badge>
+                  </div>
+
+                  {/* Schedule Info */}
                   {test.is_scheduled && (
-                    <div className="text-sm space-y-1">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">Scheduled</span>
+                    <div className="p-3 bg-muted rounded-lg text-sm space-y-1">
+                      <div className="flex items-center gap-2 font-medium">
+                        <Calendar className="h-4 w-4" />
+                        Scheduled Test
                       </div>
                       {test.start_time && (
                         <p className="text-xs pl-6">
@@ -132,6 +242,7 @@ export default function PendingTestsPage() {
                     </div>
                   )}
 
+                  {/* Start Button */}
                   <Button
                     className="w-full"
                     disabled={!isAvailable || startingId === test.id}
@@ -142,7 +253,11 @@ export default function PendingTestsPage() {
                     ) : (
                       <Play className="mr-2 h-4 w-4" />
                     )}
-                    {testStatus === "upcoming" ? "Not Started Yet" : "Start Test"}
+                    {testStatus === "upcoming"
+                      ? "Not Started Yet"
+                      : testStatus === "expired"
+                        ? "Test Expired"
+                        : "Start Test"}
                   </Button>
                 </CardContent>
               </Card>
@@ -151,5 +266,25 @@ export default function PendingTestsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+function BookOpen(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+      <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+    </svg>
   );
 }

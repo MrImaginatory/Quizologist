@@ -71,8 +71,8 @@ export default function PredefinedTestDetailPage() {
       const nameMap = new Map<string, string>();
       const promises = studentIds.map(async (id) => {
         try {
-          const res = await usersApi.getById(id, token || undefined);
-          if (res.data) {
+          const res = await usersApi.getById(id, token || undefined) as { data?: { fname: string; lname: string } };
+          if (res?.data) {
             nameMap.set(id, `${capitalize(res.data.fname)} ${capitalize(res.data.lname)}`);
           }
         } catch (e) {
