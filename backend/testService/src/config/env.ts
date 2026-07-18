@@ -14,4 +14,8 @@ export const env = {
   DB_DROP_TABLES: process.env.DB_DROP_TABLES === "true",
 
   JWT_SECRET: process.env.JWT_SECRET || "default_secret",
+
+  // Predefined test validation (in minutes)
+  PREDEFINED_TEST_MIN_STUDENT_ASSIGN_MINUTES: parseInt(process.env.PREDEFINED_TEST_MIN_STUDENT_ASSIGN_MINUTES || "15", 10),
+  PREDEFINED_TEST_MIN_DEACTIVATE_MINUTES: parseInt(process.env.PREDEFINED_TEST_MIN_DEACTIVATE_MINUTES || "15", 10),
 };

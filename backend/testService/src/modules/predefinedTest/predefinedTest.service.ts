@@ -8,6 +8,7 @@ import Course from "../course/course.model";
 import Subject from "../subject/subject.model";
 import Topic from "../topic/topic.model";
 import { ApiError } from "../../utils/ApiError";
+import { env } from "../../config/env";
 import {
   CreatePredefinedTestInput,
   UpdatePredefinedTestInput,
@@ -16,6 +17,30 @@ import {
 
 function generateToken(): string {
   return crypto.randomBytes(16).toString("hex");
+}
+
+// Helper: Check if test has any activity (started/completed students)
+async function checkTestActivity(predefinedTestId: string): Promise<boolean> {
+  // Check predefined_test_students for started/completed status
+  const studentActivity = await PredefinedTestStudent.findOne({
+    where: {
+      predefined_test_id: predefinedTestId,
+      status: { [Op.in]: ["started", "completed"] },
+    },
+  });
+
+  if (studentActivity) return true;
+
+  // Check test_sessions for this predefined test
+  const TestSession = require("../testSession/testSession.model").default;
+  const sessionActivity = await TestSession.findOne({
+    where: {
+      predefined_test_id: predefinedTestId,
+      status: { [Op.in]: ["in_progress", "completed", "abandoned"] },
+    },
+  });
+
+  return !!sessionActivity;
 }
 
 export class PredefinedTestService {
@@ -144,6 +169,14 @@ export class PredefinedTestService {
       throw ApiError.badRequest("Cannot update test in current status");
     }
 
+    // NEW: Check if questions can be edited (no activity)
+    if (data.fixed_question_ids !== undefined) {
+      const hasActivity = await checkTestActivity(id);
+      if (hasActivity) {
+        throw ApiError.badRequest("Cannot edit questions: students have already started or completed this test");
+      }
+    }
+
     // Update test fields
     if (data.title !== undefined) test.title = data.title;
     if (data.description !== undefined) test.description = data.description;
@@ -260,6 +293,23 @@ export class PredefinedTestService {
 
     if (test.status !== "active") {
       throw ApiError.badRequest("Can only deactivate tests in active status");
+    }
+
+    // NEW: Check if any student has started the test
+    const hasActivity = await checkTestActivity(id);
+    if (hasActivity) {
+      throw ApiError.badRequest("Cannot deactivate: students have already started this test");
+    }
+
+    // NEW: Check if test starts within configured minutes
+    if (test.is_scheduled && test.start_time) {
+      const now = new Date();
+      const startTime = new Date(test.start_time);
+      const minutesUntilStart = (startTime.getTime() - now.getTime()) / (1000 * 60);
+      
+      if (minutesUntilStart > 0 && minutesUntilStart <= env.PREDEFINED_TEST_MIN_DEACTIVATE_MINUTES) {
+        throw ApiError.badRequest(`Cannot deactivate: test starts within ${env.PREDEFINED_TEST_MIN_DEACTIVATE_MINUTES} minutes`);
+      }
     }
 
     test.status = "inactive";
