@@ -23,7 +23,10 @@ import { Loader2, Plus, X } from "lucide-react";
 import { useCourses } from "@/hooks/use-courses";
 import { useSubjects } from "@/hooks/use-subjects";
 import { useTopics } from "@/hooks/use-topics";
+import { questionsApi } from "@/lib/api";
+import { useAuth } from "@/contexts/auth-context";
 import { capitalize } from "@/lib/utils";
+import { toast } from "sonner";
 
 const MAX_QUESTION_LENGTH = 1000;
 const MAX_EXPLANATION_LENGTH = 2000;
@@ -35,6 +38,7 @@ interface AddQuestionDialogProps {
 }
 
 export function AddQuestionDialog({ open, onOpenChange, onSuccess }: AddQuestionDialogProps) {
+  const { token } = useAuth();
   const [type, setType] = useState<"mcq" | "descriptive">("mcq");
   const [question, setQuestion] = useState("");
   const [choices, setChoices] = useState<string[]>(["", "", "", ""]);
@@ -83,13 +87,31 @@ export function AddQuestionDialog({ open, onOpenChange, onSuccess }: AddQuestion
     setError("");
 
     try {
-      // TODO: Call API to create question
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const filteredChoices = choices.filter((c) => c.trim() !== "");
+
+      await questionsApi.create(
+        {
+          type: "mcq",
+          question: question.trim(),
+          choices: filteredChoices,
+          correctAnswer: correctAnswer.trim(),
+          explanation: explanation || undefined,
+          videoUrl: videoUrl || undefined,
+          difficulty,
+          topic_id: topicId,
+          subject_id: subjectId,
+          course_id: courseId,
+        },
+        token || undefined
+      );
+
+      toast.success("Question created successfully!");
       resetForm();
       onOpenChange(false);
       onSuccess?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create question");
+      toast.error(err instanceof Error ? err.message : "Failed to create question");
     } finally {
       setIsLoading(false);
     }

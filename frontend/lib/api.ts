@@ -417,7 +417,26 @@ export interface QuestionsResponse {
   };
 }
 
+export interface CreateQuestionPayload {
+  type: "mcq" | "descriptive";
+  question: string;
+  choices: string[] | null;
+  correctAnswer: string;
+  explanation?: string;
+  videoUrl?: string;
+  difficulty: string;
+  topic_id: string;
+  subject_id: string;
+  course_id: string;
+}
+
 export const questionsApi = {
+  create: (data: CreateQuestionPayload, token?: string) =>
+    apiRequest<{ success: boolean; message: string; data: Question }>(API_ROUTES.QUESTIONS.BASE, {
+      method: "POST",
+      body: JSON.stringify(data),
+      token,
+    }),
   getAll: (page = 1, limit = 10, token?: string) =>
     apiRequest<QuestionsResponse>(`${API_ROUTES.QUESTIONS.BASE}?page=${page}&limit=${limit}`, { token }),
   filter: (params: {
