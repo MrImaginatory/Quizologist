@@ -240,6 +240,7 @@ export default function CreatePredefinedTestPage() {
         end_time: isScheduled && endTime ? new Date(endTime).toISOString() : undefined,
         timezone: timezone || "UTC",
         use_fixed_questions: useFixedQuestions,
+        use_specific_students: useSpecificStudents,
         course_ids: selectedCourseIds || [],
         subject_ids: selectedSubjectIds && selectedSubjectIds.length > 0 ? selectedSubjectIds : undefined,
         topic_ids: selectedTopicIds && selectedTopicIds.length > 0 ? selectedTopicIds : undefined,

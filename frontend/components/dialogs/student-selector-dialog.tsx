@@ -48,10 +48,11 @@ export function StudentSelectorDialog({
   const fetchStudents = async () => {
     setIsLoading(true);
     try {
-      const response = await usersApi.getByRole("student", 1, 1000, token || undefined);
+      const response = await usersApi.getByRole("student", 1, 100, token || undefined);
       setStudents(response.data?.users || []);
     } catch (err) {
       console.error("Failed to fetch students:", err);
+      toast.error("Failed to load students");
     } finally {
       setIsLoading(false);
     }

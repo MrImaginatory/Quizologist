@@ -261,36 +261,47 @@ export function QuestionSelectorDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[900px] w-[95vw] max-h-[85vh]">
-        <DialogHeader>
+      <DialogContent className="max-w-[900px] w-[95vw] h-[85vh] flex flex-col p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <DialogTitle>Select Questions</DialogTitle>
           <p className="text-sm text-muted-foreground">
             Select up to {questionLimit} questions. {localSelected.size}/{questionLimit} selected.
           </p>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
           {/* Difficulty Ratio Counters - only show when ratio is set */}
           {hasRatio && (
-            <div className="p-3 bg-muted rounded-lg">
-              <p className="text-xs font-medium mb-2">Questions per Difficulty Level:</p>
-              <div className="flex flex-wrap gap-2">
+            <div className="p-4 bg-card border border-border rounded-xl">
+              <p className="text-sm font-medium mb-3 text-card-foreground">Questions per Difficulty Level:</p>
+              <div className="grid grid-cols-5 gap-3">
                 {Object.entries(requiredPerDifficulty).map(([level, required]) => {
                   const selected = selectedByDifficulty[level] || 0;
                   const isComplete = selected >= required;
+                  const progress = required > 0 ? (selected / required) * 100 : 0;
                   return (
                     <div
                       key={level}
-                      className={`p-2 rounded text-center text-xs min-w-[80px] ${
+                      className={`relative p-3 rounded-xl text-center border transition-all ${
                         isComplete
-                          ? "bg-green-500/10 border border-green-500/20"
-                          : "bg-background border border-border"
+                          ? "border-green-500/30 bg-green-500/5"
+                          : "border-border bg-secondary/50"
                       }`}
                     >
-                      <p className="font-medium">{capitalize(level)}</p>
-                      <p className={`${isComplete ? "text-green-500" : "text-muted-foreground"}`}>
+                      <p className="text-sm font-medium text-card-foreground">{capitalize(level)}</p>
+                      <p className={`text-lg font-bold ${
+                        isComplete ? "text-green-500" : "text-muted-foreground"
+                      }`}>
                         {selected}/{required}
                       </p>
+                      <div className="mt-2 h-1 bg-border rounded-full overflow-hidden">
+                        <div
+                          className={`h-full transition-all ${
+                            isComplete ? "bg-green-500" : "bg-primary"
+                          }`}
+                          style={{ width: `${Math.min(progress, 100)}%` }}
+                        />
+                      </div>
                     </div>
                   );
                 })}
@@ -367,30 +378,25 @@ export function QuestionSelectorDialog({
             <span className="text-sm text-muted-foreground">
               {filteredQuestions.length} questions available
             </span>
-            <Badge variant={localSelected.size >= questionLimit ? "destructive" : "default"}>
-              {localSelected.size}/{questionLimit} selected
-            </Badge>
-          </div>
-
-          {/* Selected count and clear */}
-          <div className="flex items-center gap-2">
-            <Badge variant={localSelected.size >= questionLimit ? "destructive" : "default"}>
-              {localSelected.size}/{questionLimit} selected
-            </Badge>
-            {localSelected.size > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setLocalSelected(new Set())}
-              >
-                <X className="h-4 w-4 mr-1" />
-                Clear All
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              <Badge variant={localSelected.size >= questionLimit ? "destructive" : "default"}>
+                {localSelected.size}/{questionLimit} selected
+              </Badge>
+              {localSelected.size > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setLocalSelected(new Set())}
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Clear All
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Questions list */}
-          <ScrollArea className="h-[400px]">
+          <div className="space-y-2">
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin" />
@@ -400,53 +406,51 @@ export function QuestionSelectorDialog({
                 No questions found
               </div>
             ) : (
-              <div className="space-y-2">
-                {filteredQuestions.map((q) => {
-                  const isSelected = localSelected.has(q.id);
-                  const canSelect = canSelectMore(q.difficulty);
-                  const required = requiredPerDifficulty[q.difficulty];
-                  const current = selectedByDifficulty[q.difficulty] || 0;
-                  const atLimit = !canSelect && !isSelected;
+              filteredQuestions.map((q) => {
+                const isSelected = localSelected.has(q.id);
+                const canSelect = canSelectMore(q.difficulty);
+                const required = requiredPerDifficulty[q.difficulty];
+                const current = selectedByDifficulty[q.difficulty] || 0;
+                const atLimit = !canSelect && !isSelected;
 
-                  return (
-                    <div
-                      key={q.id}
-                      className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                        isSelected
-                          ? "border-primary bg-primary/5"
-                          : atLimit
-                            ? "border-border opacity-50 cursor-not-allowed"
-                            : "border-border hover:bg-muted/50"
-                      }`}
-                      onClick={() => !atLimit && toggleQuestion(q)}
-                    >
-                      <Checkbox
-                        checked={isSelected}
-                        onCheckedChange={() => toggleQuestion(q)}
-                        disabled={atLimit}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm line-clamp-2">{q.question}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="outline" className="text-xs">
-                            {capitalize(q.difficulty)}
-                          </Badge>
-                          {required && (
-                            <span className="text-xs text-muted-foreground">
-                              ({current}/{required} selected)
-                            </span>
-                          )}
-                        </div>
+                return (
+                  <div
+                    key={q.id}
+                    className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                      isSelected
+                        ? "border-primary bg-primary/5"
+                        : atLimit
+                          ? "border-border opacity-50 cursor-not-allowed"
+                          : "border-border hover:bg-muted/50"
+                    }`}
+                    onClick={() => !atLimit && toggleQuestion(q)}
+                  >
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={() => toggleQuestion(q)}
+                      disabled={atLimit}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm line-clamp-2">{q.question}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="outline" className="text-xs">
+                          {capitalize(q.difficulty)}
+                        </Badge>
+                        {required && (
+                          <span className="text-xs text-muted-foreground">
+                            ({current}/{required} selected)
+                          </span>
+                        )}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+                  </div>
+                );
+              })
             )}
-          </ScrollArea>
+          </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="px-6 py-4 border-t">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>

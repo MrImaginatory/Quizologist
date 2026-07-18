@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
-import { predefinedTestsApi, questionsApi, PredefinedTest, Question } from "@/lib/api";
+import { predefinedTestsApi, questionsApi, usersApi, PredefinedTest, Question, User } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +30,7 @@ export default function PredefinedTestDetailPage() {
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
   const [showStudentSelector, setShowStudentSelector] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
+  const [studentNames, setStudentNames] = useState<Map<string, string>>(new Map());
   const [isLoadingStudents, setIsLoadingStudents] = useState(false);
 
   useEffect(() => {
@@ -63,6 +64,33 @@ export default function PredefinedTestDetailPage() {
 
     if (testId) fetchTest();
   }, [testId, token, router]);
+
+  const fetchStudentNames = async (studentIds: string[]) => {
+    if (studentIds.length === 0) return;
+    try {
+      const nameMap = new Map<string, string>();
+      const promises = studentIds.map(async (id) => {
+        try {
+          const res = await usersApi.getById(id, token || undefined);
+          if (res.data) {
+            nameMap.set(id, `${capitalize(res.data.fname)} ${capitalize(res.data.lname)}`);
+          }
+        } catch (e) {
+          console.error(`Failed to fetch student name for ${id}:`, e);
+        }
+      });
+      await Promise.all(promises);
+      setStudentNames(nameMap);
+    } catch (err) {
+      console.error("Failed to fetch student names:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedStudents.length > 0) {
+      fetchStudentNames(selectedStudents);
+    }
+  }, [selectedStudents, token]);
 
   const handleActivate = async () => {
     setIsActivating(true);
@@ -129,6 +157,19 @@ export default function PredefinedTestDetailPage() {
     }
   };
 
+  const handleToggleSpecificStudents = async (enabled: boolean) => {
+    try {
+      await predefinedTestsApi.update(testId, { use_specific_students: enabled }, token || undefined);
+      setTest((prev) => prev ? { ...prev, use_specific_students: enabled } : null);
+      if (!enabled) {
+        setSelectedStudents([]);
+      }
+      toast.success(`Specific students ${enabled ? "enabled" : "disabled"}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update setting");
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -191,6 +232,10 @@ export default function PredefinedTestDetailPage() {
             <div className="flex justify-between">
               <span className="text-muted-foreground">Fixed Questions</span>
               <span className="font-medium">{test.use_fixed_questions ? "Yes" : "No"}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Specific Students</span>
+              <span className="font-medium">{test.use_specific_students ? "Yes" : "No"}</span>
             </div>
           </CardContent>
         </Card>
@@ -288,32 +333,36 @@ export default function PredefinedTestDetailPage() {
               <p className="text-sm text-muted-foreground">
                 {selectedStudents.length > 0
                   ? `${selectedStudents.length} students assigned`
-                  : "All enrolled students (auto-eligible)"}
+                  : "No specific students assigned"}
               </p>
             </div>
-            <Button
-              onClick={() => setShowStudentSelector(true)}
-              disabled={isLoadingStudents}
-            >
-              {isLoadingStudents ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Plus className="mr-2 h-4 w-4" />
-              )}
-              {selectedStudents.length > 0 ? "Edit Students" : "Assign Students"}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={() => setShowStudentSelector(true)}
+                disabled={isLoadingStudents}
+              >
+                {isLoadingStudents ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Plus className="mr-2 h-4 w-4" />
+                )}
+                {selectedStudents.length > 0 ? "Edit Students" : "Assign Students"}
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {selectedStudents.length === 0 ? (
               <div className="text-center py-4 text-muted-foreground">
-                No specific students assigned. All enrolled students can take this test.
+                No specific students assigned. You can assign students using the button above.
               </div>
             ) : (
               <div className="space-y-2">
                 {selectedStudents.slice(0, 5).map((sId, index) => (
                   <div key={sId} className="flex items-center gap-2 p-2 bg-muted rounded">
                     <span className="text-sm text-muted-foreground">#{index + 1}</span>
-                    <span className="text-sm">Student {sId.slice(0, 8)}...</span>
+                    <span className="text-sm">
+                      {studentNames.get(sId) || `Student ${sId.slice(0, 8)}...`}
+                    </span>
                   </div>
                 ))}
                 {selectedStudents.length > 5 && (
