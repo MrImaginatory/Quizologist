@@ -54,7 +54,7 @@ export default function TestsPage() {
   const [courseId, setCourseId] = useState("");
   const [subjectId, setSubjectId] = useState("");
 
-  const { users: adminStudents, isLoading: adminStudentsLoading } = useUsers({ role: "student", limit: 100 });
+  const { users: adminStudents, isLoading: adminStudentsLoading } = useUsers({ role: "student", limit: 100, disabled: isTeacher });
   const { students: teachingStudents, isLoading: teachingStudentsLoading } = useTeachingStudents({ limit: 100 });
   const { courses: allCourses, isLoading: allCoursesLoading } = useCourses({ limit: 100 });
   const { subjects: allSubjects, isLoading: allSubjectsLoading } = useSubjects({ limit: 100 });
@@ -78,6 +78,7 @@ export default function TestsPage() {
     studentId: hasStudentSelected ? studentId : undefined,
     dateFrom: dateFrom || undefined,
     dateTo: dateTo || undefined,
+    disabled: isTeacher,
   });
 
   const { tests: teachingTests, total: teachingTotal, totalPages: teachingTotalPages, isLoading: teachingLoading, error: teachingError, refetch: teachingRefetch } = useTeachingTests({

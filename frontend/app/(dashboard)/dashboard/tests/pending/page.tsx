@@ -19,7 +19,7 @@ import { capitalize } from "@/lib/utils";
 import { toast } from "sonner";
 import { useState, useMemo } from "react";
 
-type TestStatus = "available" | "upcoming" | "expired";
+type TestStatus = "available" | "upcoming" | "expired" | "completed";
 
 export default function PendingTestsPage() {
   const router = useRouter();
@@ -42,6 +42,7 @@ export default function PendingTestsPage() {
   };
 
   const getTestStatus = (test: any): TestStatus => {
+    if (test.student_status === "completed") return "completed";
     if (test.status === "upcoming") return "upcoming";
     if (test.is_scheduled && test.end_time) {
       const now = new Date();
@@ -67,6 +68,11 @@ export default function PendingTestsPage() {
       icon: <AlertCircle className="h-4 w-4" />,
       label: "Expired",
     },
+    completed: {
+      color: "bg-green-500/10 text-green-500 border-green-500/20",
+      icon: <CheckCircle className="h-4 w-4" />,
+      label: "Completed",
+    },
   };
 
   const filteredTests = useMemo(() => {
@@ -75,7 +81,7 @@ export default function PendingTestsPage() {
   }, [tests, filterStatus]);
 
   const statusCounts = useMemo(() => {
-    const counts = { available: 0, upcoming: 0, expired: 0 };
+    const counts = { available: 0, upcoming: 0, expired: 0, completed: 0 };
     tests.forEach((test) => {
       const status = getTestStatus(test);
       counts[status]++;
@@ -257,7 +263,9 @@ export default function PendingTestsPage() {
                       ? "Not Started Yet"
                       : testStatus === "expired"
                         ? "Test Expired"
-                        : "Start Test"}
+                        : testStatus === "completed"
+                          ? "Completed"
+                          : "Start Test"}
                   </Button>
                 </CardContent>
               </Card>

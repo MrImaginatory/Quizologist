@@ -15,6 +15,7 @@ interface PendingTest {
   start_time: string | null;
   end_time: string | null;
   status: string;
+  student_status?: "assigned" | "started" | "completed";
 }
 
 interface PendingTestsResponse {

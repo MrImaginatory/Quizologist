@@ -1,4 +1,5 @@
-import { fn, col, Op } from "sequelize";
+import { fn, col, Op, QueryTypes } from "sequelize";
+import { sequelize } from "../../config/database";
 import TeacherAssignment from "./teacherAssignment.model";
 import Teacher from "../teacher/teacher.model";
 import Course from "../course/course.model";
@@ -14,6 +15,23 @@ import {
   GetWeaknessSummaryInput,
   GetQuestionCoverageInput,
 } from "./teacherAssignment.validation";
+
+async function getTeacherLocationId(teacherId: string): Promise<string | null> {
+  const [result] = await sequelize.query(
+    'SELECT location_id FROM users WHERE id = :teacherId',
+    { replacements: { teacherId }, type: QueryTypes.SELECT }
+  ) as any[];
+  return result?.location_id || null;
+}
+
+async function filterStudentIdsByLocation(studentIds: string[], locationId: string): Promise<string[]> {
+  if (studentIds.length === 0) return [];
+  const rows = await sequelize.query(
+    'SELECT id FROM users WHERE id IN (:studentIds) AND location_id = :locationId',
+    { replacements: { studentIds, locationId }, type: QueryTypes.SELECT }
+  ) as any[];
+  return rows.map((r: any) => r.id);
+}
 
 interface AssignCourseInput {
   teacher_id: string;
@@ -507,6 +525,18 @@ export class TeacherAssignmentService {
       };
     }
 
+    // Filter by teacher's location
+    const teacherLocationId = await getTeacherLocationId(teacherId);
+    if (teacherLocationId) {
+      studentIds = await filterStudentIdsByLocation(studentIds, teacherLocationId);
+      if (studentIds.length === 0) {
+        return {
+          students: [],
+          pagination: { total: 0, page, limit, totalPages: 0 },
+        };
+      }
+    }
+
     // Build student where conditions
     const studentWhere: any = {
       id: { [Op.in]: studentIds },
@@ -622,6 +652,18 @@ export class TeacherAssignmentService {
         tests: [],
         pagination: { total: 0, page, limit, totalPages: 0 },
       };
+    }
+
+    // Filter by teacher's location
+    const teacherLocationId = await getTeacherLocationId(teacherId);
+    if (teacherLocationId) {
+      studentIds = await filterStudentIdsByLocation(studentIds, teacherLocationId);
+      if (studentIds.length === 0) {
+        return {
+          tests: [],
+          pagination: { total: 0, page, limit, totalPages: 0 },
+        };
+      }
     }
 
     // If searching by student name/email, filter student IDs first
@@ -747,10 +789,19 @@ export class TeacherAssignmentService {
       raw: true,
     });
 
-    const studentIds = [...new Set(enrollments.map((e) => e.student_id))];
+    let studentIds = [...new Set(enrollments.map((e) => e.student_id))];
 
     if (studentIds.length === 0) {
       return { students: [] };
+    }
+
+    // Filter by teacher's location
+    const teacherLocationId = await getTeacherLocationId(teacherId);
+    if (teacherLocationId) {
+      studentIds = await filterStudentIdsByLocation(studentIds, teacherLocationId);
+      if (studentIds.length === 0) {
+        return { students: [] };
+      }
     }
 
     const testSessions = await TestSession.findAll({
@@ -849,10 +900,19 @@ export class TeacherAssignmentService {
       raw: true,
     });
 
-    const studentIds = [...new Set(enrollments.map((e) => e.student_id))];
+    let studentIds = [...new Set(enrollments.map((e) => e.student_id))];
 
     if (studentIds.length === 0) {
       return { weakTopics: [] };
+    }
+
+    // Filter by teacher's location
+    const teacherLocationId = await getTeacherLocationId(teacherId);
+    if (teacherLocationId) {
+      studentIds = await filterStudentIdsByLocation(studentIds, teacherLocationId);
+      if (studentIds.length === 0) {
+        return { weakTopics: [] };
+      }
     }
 
     // Get test sessions with their answers to calculate per-topic accuracy

@@ -1,4 +1,4 @@
-import { Op } from "sequelize";
+import { Op, QueryTypes } from "sequelize";
 import { sequelize } from "../../config/database";
 import { ApiError } from "../../utils/ApiError";
 import { RESPONSE_MESSAGES } from "../../utils/responseMessages";
@@ -18,6 +18,26 @@ import {
   GetAllTestsInput,
   PaginationInput,
 } from "./testSession.validation";
+
+async function getTeacherLocationId(teacherId: string): Promise<string | null> {
+  const [result] = await sequelize.query(
+    'SELECT location_id FROM users WHERE id = :teacherId',
+    { replacements: { teacherId }, type: QueryTypes.SELECT }
+  ) as any[];
+  return result?.location_id || null;
+}
+
+async function isStudentInSameLocation(teacherId: string, studentId: string): Promise<boolean> {
+  const teacherLocationId = await getTeacherLocationId(teacherId);
+  if (!teacherLocationId) return true; // No location set, allow access
+
+  const [result] = await sequelize.query(
+    'SELECT location_id FROM users WHERE id = :studentId',
+    { replacements: { studentId }, type: QueryTypes.SELECT }
+  ) as any[];
+
+  return result?.location_id === teacherLocationId;
+}
 
 const TIMESTAMP_EXCLUDE = {
   exclude: ["createdAt", "updatedAt", "deletedAt"],
@@ -416,6 +436,12 @@ export class TestSessionService {
       if (!hasMatchingSelection) {
         throw ApiError.forbidden("You do not have permission to view this test");
       }
+
+      // Also verify the test's student is in the same location
+      const sameLocation = await isStudentInSameLocation(requesterId, session.student_id);
+      if (!sameLocation) {
+        throw ApiError.forbidden("You do not have permission to view this student's test");
+      }
     }
 
     const answers = await TestAnswer.findAll({
@@ -471,6 +497,24 @@ export class TestSessionService {
   }
 
   static async getStudentPerformance(studentId: string, requesterId?: string, requesterRole?: string) {
+    // Teachers can only view students in the same location
+    if (requesterRole === "teacher" && requesterId) {
+      const sameLocation = await isStudentInSameLocation(requesterId, studentId);
+      if (!sameLocation) {
+        return {
+          studentId,
+          totalTests: 0,
+          averageScore: 0,
+          highestScore: 0,
+          lowestScore: 0,
+          totalQuestions: 0,
+          totalCorrect: 0,
+          totalIncorrect: 0,
+          totalSkipped: 0,
+        };
+      }
+    }
+
     // For teachers, filter by their assigned courses/subjects
     let whereCondition: any = {
       student_id: studentId,
@@ -575,6 +619,14 @@ export class TestSessionService {
     // Students can only view their own results; admin/teacher can view any
     if (requesterRole === "student" && requesterId !== studentId) {
       throw ApiError.forbidden("You can only view your own results");
+    }
+
+    // Teachers can only view students in the same location
+    if (requesterRole === "teacher") {
+      const sameLocation = await isStudentInSameLocation(requesterId, studentId);
+      if (!sameLocation) {
+        throw ApiError.forbidden("You do not have permission to view this student's results");
+      }
     }
 
     const { page, limit } = query;
@@ -729,6 +781,14 @@ export class TestSessionService {
   ) {
     if (requesterRole === "student" && requesterId !== studentId) {
       throw ApiError.forbidden("You can only view your own results");
+    }
+
+    // Teachers can only view students in the same location
+    if (requesterRole === "teacher") {
+      const sameLocation = await isStudentInSameLocation(requesterId, studentId);
+      if (!sameLocation) {
+        throw ApiError.forbidden("You do not have permission to view this student's results");
+      }
     }
 
     const { page, limit } = query;

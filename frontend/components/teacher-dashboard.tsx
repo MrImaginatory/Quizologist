@@ -69,7 +69,7 @@ const coverageConfig: ChartConfig = {
 };
 
 export function TeacherDashboard() {
-  const { token } = useAuth();
+  const { token, logout } = useAuth();
   const [stats, setStats] = useState<DashboardStatsResponse["data"] | null>(null);
   const [topStudents, setTopStudents] = useState<TopStudent[]>([]);
   const [weakTopics, setWeakTopics] = useState<WeakTopic[]>([]);
@@ -95,14 +95,19 @@ export function TeacherDashboard() {
         setWeakTopics(weakRes.data?.weakTopics || []);
         setCoverageTopics(coverageRes.data?.topics || []);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch dashboard data");
+        const message = err instanceof Error ? err.message : "Failed to fetch dashboard data";
+        if (message.toLowerCase().includes("invalid") && message.toLowerCase().includes("token")) {
+          logout();
+          return;
+        }
+        setError(message);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchData();
-  }, [token]);
+  }, [token, logout]);
 
   if (isLoading) {
     return (

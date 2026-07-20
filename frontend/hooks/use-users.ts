@@ -8,6 +8,7 @@ interface UseUsersOptions {
   role?: string;
   page?: number;
   limit?: number;
+  disabled?: boolean;
 }
 
 interface UseUsersReturn {
@@ -19,15 +20,19 @@ interface UseUsersReturn {
   refetch: () => void;
 }
 
-export function useUsers({ role, page = 1, limit = 10 }: UseUsersOptions = {}): UseUsersReturn {
+export function useUsers({ role, page = 1, limit = 10, disabled = false }: UseUsersOptions = {}): UseUsersReturn {
   const { token } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!disabled);
   const [error, setError] = useState("");
 
   const fetchUsers = useCallback(async () => {
+    if (disabled) {
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     setError("");
     try {
@@ -45,7 +50,7 @@ export function useUsers({ role, page = 1, limit = 10 }: UseUsersOptions = {}): 
     } finally {
       setIsLoading(false);
     }
-  }, [role, page, limit, token]);
+  }, [role, page, limit, token, disabled]);
 
   useEffect(() => {
     fetchUsers();

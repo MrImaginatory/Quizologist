@@ -76,6 +76,13 @@ export class DashboardService {
       ? assignedCourses.map((c: any) => c.course_id)
       : [];
 
+    // Get teacher's location for filtering
+    const [teacherLoc] = await sequelize.query(
+      `SELECT location_id FROM users WHERE id = :teacherId`,
+      { type: QueryTypes.SELECT, replacements: { teacherId } }
+    ) as any[];
+    const teacherLocationId = teacherLoc?.location_id || null;
+
     let studentsInCourses = 0;
     let testsSubmitted = 0;
     let questionsInCourses = 0;
@@ -83,16 +90,25 @@ export class DashboardService {
     if (courseIds.length > 0) {
       const placeholders = courseIds.map((_val: string, i: number) => `:courseId${i}`).join(", ");
 
+      // Build location filter for student queries
+      const locationFilter = teacherLocationId
+        ? `AND u.location_id = :locationId`
+        : '';
+
       const [studentCount] = await sequelize.query(
         `SELECT COUNT(DISTINCT e.student_id) as count
          FROM enrollments e
-         WHERE e.course_id IN (${placeholders}) AND e.deleted_at IS NULL`,
+         JOIN users u ON u.id = e.student_id
+         WHERE e.course_id IN (${placeholders}) AND e.deleted_at IS NULL ${locationFilter}`,
         {
           type: QueryTypes.SELECT,
-          replacements: courseIds.reduce((acc: Record<string, string>, id: string, i: number) => {
-            acc[`courseId${i}`] = id;
-            return acc;
-          }, {}),
+          replacements: {
+            ...courseIds.reduce((acc: Record<string, string>, id: string, i: number) => {
+              acc[`courseId${i}`] = id;
+              return acc;
+            }, {}),
+            ...(teacherLocationId ? { locationId: teacherLocationId } : {}),
+          },
         }
       ) as any[];
       studentsInCourses = parseInt(studentCount?.count || "0", 10);
@@ -101,14 +117,18 @@ export class DashboardService {
         `SELECT COUNT(*) as count
          FROM test_sessions ts
          JOIN enrollments e ON ts.student_id = e.student_id
+         JOIN users u ON u.id = e.student_id
          WHERE e.course_id IN (${placeholders})
-         AND ts.status = 'completed' AND e.deleted_at IS NULL`,
+         AND ts.status = 'completed' AND e.deleted_at IS NULL ${locationFilter}`,
         {
           type: QueryTypes.SELECT,
-          replacements: courseIds.reduce((acc: Record<string, string>, id: string, i: number) => {
-            acc[`courseId${i}`] = id;
-            return acc;
-          }, {}),
+          replacements: {
+            ...courseIds.reduce((acc: Record<string, string>, id: string, i: number) => {
+              acc[`courseId${i}`] = id;
+              return acc;
+            }, {}),
+            ...(teacherLocationId ? { locationId: teacherLocationId } : {}),
+          },
         }
       ) as any[];
       testsSubmitted = parseInt(testCount?.count || "0", 10);

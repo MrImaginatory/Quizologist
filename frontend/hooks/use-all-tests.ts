@@ -12,6 +12,7 @@ interface UseAllTestsOptions {
   studentId?: string;
   dateFrom?: string;
   dateTo?: string;
+  disabled?: boolean;
 }
 
 interface UseAllTestsResult {
@@ -31,15 +32,20 @@ export function useAllTests({
   studentId,
   dateFrom,
   dateTo,
+  disabled = false,
 }: UseAllTestsOptions = {}): UseAllTestsResult {
   const { token } = useAuth();
   const [tests, setTests] = useState<TestHistory[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!disabled);
   const [error, setError] = useState("");
 
   const fetchTests = useCallback(async () => {
+    if (disabled) {
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     setError("");
     try {
@@ -55,7 +61,7 @@ export function useAllTests({
     } finally {
       setIsLoading(false);
     }
-  }, [page, limit, status, subjectId, studentId, dateFrom, dateTo, token]);
+  }, [page, limit, status, subjectId, studentId, dateFrom, dateTo, token, disabled]);
 
   useEffect(() => {
     fetchTests();

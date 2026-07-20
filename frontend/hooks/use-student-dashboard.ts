@@ -30,7 +30,7 @@ interface StudentDashboardData {
 }
 
 export function useStudentDashboard(): StudentDashboardData {
-  const { token } = useAuth();
+  const { token, logout } = useAuth();
   const [stats, setStats] = useState<DashboardStatsResponse["data"] | null>(null);
   const [topicPerformance, setTopicPerformance] = useState<TopicPerformance[]>([]);
   const [subjectPerformance, setSubjectPerformance] = useState<SubjectPerformance[]>([]);
@@ -49,8 +49,6 @@ export function useStudentDashboard(): StudentDashboardData {
       setIsLoading(true);
       setError("");
       try {
-        const authHeaders = { token: token || undefined };
-
         const [statsRes, topicRes, subjectRes, trendsRes, swRes] = await Promise.allSettled([
           dashboardApi.getStats(token || undefined),
           dashboardApi.getStudentTopicPerformance(token || undefined),
@@ -58,6 +56,19 @@ export function useStudentDashboard(): StudentDashboardData {
           dashboardApi.getStudentPerformanceTrends(token || undefined),
           dashboardApi.getStudentStrengthsWeaknesses(token || undefined),
         ]);
+
+        // Check for token errors in any rejected promise
+        const rejectedResults = [statsRes, topicRes, subjectRes, trendsRes, swRes].filter(
+          (r): r is PromiseRejectedResult => r.status === "rejected"
+        );
+
+        for (const rejected of rejectedResults) {
+          const message = rejected.reason instanceof Error ? rejected.reason.message : String(rejected.reason);
+          if (message.toLowerCase().includes("invalid") && message.toLowerCase().includes("token")) {
+            logout();
+            return;
+          }
+        }
 
         if (statsRes.status === "fulfilled") {
           setStats(statsRes.value.data);
@@ -84,14 +95,19 @@ export function useStudentDashboard(): StudentDashboardData {
           setTotalTopicsAttempted(data.data.totalTopicsAttempted);
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch dashboard data");
+        const message = err instanceof Error ? err.message : "Failed to fetch dashboard data";
+        if (message.toLowerCase().includes("invalid") && message.toLowerCase().includes("token")) {
+          logout();
+          return;
+        }
+        setError(message);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchDashboardData();
-  }, [token]);
+  }, [token, logout]);
 
   return {
     stats,

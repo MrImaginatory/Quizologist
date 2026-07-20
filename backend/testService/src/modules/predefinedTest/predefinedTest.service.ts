@@ -363,10 +363,32 @@ export class PredefinedTestService {
       });
 
       if (assignedStudent) {
-        // Check if student has remaining attempts
-        if (assignedStudent.status === "completed" && test.max_attempts <= 1) {
-          continue; // Already completed, no more attempts
+        // Count actual attempts using both predefined_test_students and test_sessions
+        const existingStudentTests = await PredefinedTestStudent.findAll({
+          where: { predefined_test_id: test.id, student_id: studentId },
+        });
+        const TestSession = require("../testSession/testSession.model").default;
+        const sessionCount = await TestSession.count({
+          where: {
+            predefined_test_id: test.id,
+            student_id: studentId,
+            status: { [Op.in]: ["completed", "abandoned"] },
+          },
+        });
+        const totalAttempts = Math.max(existingStudentTests.length, sessionCount);
+
+        if (totalAttempts >= test.max_attempts) {
+          continue; // No attempts remaining
         }
+
+        // Also skip if student has an in-progress session
+        const hasInProgress = existingStudentTests.some(
+          (s: any) => s.status === "started"
+        );
+        if (hasInProgress) {
+          continue; // Already taking this test
+        }
+
         pendingTests.push({
           ...test.toJSON(),
           student_status: assignedStudent.status,

@@ -11,7 +11,7 @@ import { UsersByLocationChart } from "@/components/charts/users-by-location-char
 import { UsersByLocationTable } from "@/components/dashboard/users-by-location-table";
 
 export function AdminDashboard() {
-  const { token } = useAuth();
+  const { token, logout } = useAuth();
   const [stats, setStats] = useState<DashboardStatsResponse["data"] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -23,14 +23,19 @@ export function AdminDashboard() {
         const response = await dashboardApi.getStats(token || undefined);
         setStats(response.data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch stats");
+        const message = err instanceof Error ? err.message : "Failed to fetch stats";
+        if (message.toLowerCase().includes("invalid") && message.toLowerCase().includes("token")) {
+          logout();
+          return;
+        }
+        setError(message);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchStats();
-  }, [token]);
+  }, [token, logout]);
 
   if (isLoading) {
     return (
