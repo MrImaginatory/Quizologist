@@ -14,4 +14,10 @@ router.get("/student/time-analysis", DashboardController.getTimeAnalysis);
 router.get("/student/performance-trends", DashboardController.getPerformanceTrends);
 router.get("/student/strengths-weaknesses", DashboardController.getStrengthsWeaknesses);
 
+// Admin Analytics
+router.get("/analytics/teacher-student-ratio", DashboardController.getTeacherStudentRatio);
+router.get("/analytics/top-students-by-location", DashboardController.getTopStudentsByLocation);
+router.get("/analytics/least-questions", DashboardController.getLeastQuestions);
+router.get("/analytics/subjects-needing-attention", DashboardController.getSubjectsNeedingAttention);
+
 export default router;

@@ -109,6 +109,10 @@ export const API_ROUTES = {
   // Dashboard
   DASHBOARD: {
     STATS: `${BASE_URL}/api/dashboard/stats`,
+    ANALYTICS_TEACHER_STUDENT_RATIO: `${BASE_URL}/api/dashboard/analytics/teacher-student-ratio`,
+    ANALYTICS_TOP_STUDENTS: `${BASE_URL}/api/dashboard/analytics/top-students-by-location`,
+    ANALYTICS_LEAST_QUESTIONS: `${BASE_URL}/api/dashboard/analytics/least-questions`,
+    ANALYTICS_SUBJECTS_ATTENTION: `${BASE_URL}/api/dashboard/analytics/subjects-needing-attention`,
     STUDENT_ANALYTICS: (studentId: string) => `${BASE_URL}/api/dashboard/student/${studentId}`,
     TEACHER_ANALYTICS: (teacherId: string) => `${BASE_URL}/api/dashboard/teacher/${teacherId}`,
     STUDENT_TOPIC_PERFORMANCE: `${BASE_URL}/api/dashboard/student/topic-performance`,

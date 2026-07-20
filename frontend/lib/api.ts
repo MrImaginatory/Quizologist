@@ -177,6 +177,37 @@ export const dashboardApi = {
     apiRequest(API_ROUTES.DASHBOARD.STUDENT_PERFORMANCE_TRENDS, { token }),
   getStudentStrengthsWeaknesses: (token?: string) =>
     apiRequest(API_ROUTES.DASHBOARD.STUDENT_STRENGTHS_WEAKNESSES, { token }),
+
+  // Admin Analytics
+  getTeacherStudentRatio: (params: { location_id?: string }, token?: string) => {
+    const searchParams = new URLSearchParams();
+    if (params.location_id) searchParams.set("location_id", params.location_id);
+    const query = searchParams.toString();
+    return apiRequest<TeacherStudentRatioResponse>(`${API_ROUTES.DASHBOARD.ANALYTICS_TEACHER_STUDENT_RATIO}${query ? `?${query}` : ""}`, { token });
+  },
+  getTopStudentsByLocation: (params: { location_id?: string; date_from?: string; date_to?: string; limit?: number }, token?: string) => {
+    const searchParams = new URLSearchParams();
+    if (params.location_id) searchParams.set("location_id", params.location_id);
+    if (params.date_from) searchParams.set("date_from", params.date_from);
+    if (params.date_to) searchParams.set("date_to", params.date_to);
+    if (params.limit) searchParams.set("limit", params.limit.toString());
+    const query = searchParams.toString();
+    return apiRequest<TopStudentsByLocationResponse>(`${API_ROUTES.DASHBOARD.ANALYTICS_TOP_STUDENTS}${query ? `?${query}` : ""}`, { token });
+  },
+  getLeastQuestions: (params: { course_id?: string; subject_id?: string }, token?: string) => {
+    const searchParams = new URLSearchParams();
+    if (params.course_id) searchParams.set("course_id", params.course_id);
+    if (params.subject_id) searchParams.set("subject_id", params.subject_id);
+    const query = searchParams.toString();
+    return apiRequest<LeastQuestionsResponse>(`${API_ROUTES.DASHBOARD.ANALYTICS_LEAST_QUESTIONS}${query ? `?${query}` : ""}`, { token });
+  },
+  getSubjectsNeedingAttention: (params: { date_from?: string; date_to?: string }, token?: string) => {
+    const searchParams = new URLSearchParams();
+    if (params.date_from) searchParams.set("date_from", params.date_from);
+    if (params.date_to) searchParams.set("date_to", params.date_to);
+    const query = searchParams.toString();
+    return apiRequest<SubjectsAttentionResponse>(`${API_ROUTES.DASHBOARD.ANALYTICS_SUBJECTS_ATTENTION}${query ? `?${query}` : ""}`, { token });
+  },
 };
 
 export interface TopicPerformance {
@@ -218,6 +249,80 @@ export interface StrengthsWeaknessesResponse {
     overallAccuracy: number;
     totalTopicsAttempted: number;
     totalTests: number;
+  };
+}
+
+// Admin Analytics Types
+export interface TeacherStudentRatioResponse {
+  success: boolean;
+  message: string;
+  data: {
+    locations: {
+      id: string;
+      city: string;
+      state: string;
+      teacher_count: number;
+      student_count: number;
+      ratio: string;
+    }[];
+    total_teachers: number;
+    total_students: number;
+  };
+}
+
+export interface TopStudentsByLocationResponse {
+  success: boolean;
+  message: string;
+  data: {
+    students: {
+      id: string;
+      fname: string;
+      lname: string;
+      email: string;
+      city: string;
+      state: string;
+      total_tests: number;
+      avg_score: number;
+      total_correct: number;
+      total_questions: number;
+      rank: number;
+    }[];
+  };
+}
+
+export interface LeastQuestionsResponse {
+  success: boolean;
+  message: string;
+  data: {
+    topics: {
+      topicId: string;
+      topicName: string;
+      subjectName: string;
+      courseName: string;
+      questionCount: number;
+      status: "needs_questions" | "adequate";
+    }[];
+  };
+}
+
+export interface SubjectsAttentionResponse {
+  success: boolean;
+  message: string;
+  data: {
+    subjects: {
+      subjectId: string;
+      subjectName: string;
+      courseName: string;
+      avgScore: number;
+      studentCount: number;
+      belowPassingCount: number;
+      lowPerformers: {
+        studentId: string;
+        fname: string;
+        lname: string;
+        avgScore: number;
+      }[];
+    }[];
   };
 }
 
