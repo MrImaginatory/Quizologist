@@ -137,7 +137,11 @@ export class TestSessionController {
   static async getTestDetailForAdmin(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const data = testIdParamSchema.parse(req.params);
-      const result = await TestSessionService.getTestDetailForAdmin(data);
+      const result = await TestSessionService.getTestDetailForAdmin(
+        data,
+        req.user?.userId,
+        req.user?.role
+      );
 
       return ApiResponse.success(
         res,
@@ -152,7 +156,11 @@ export class TestSessionController {
   static async getStudentPerformance(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const params = getTestsByStudentSchema.parse(req.params);
-      const result = await TestSessionService.getStudentPerformance(params.studentId);
+      const result = await TestSessionService.getStudentPerformance(
+        params.studentId,
+        req.user?.userId,
+        req.user?.role
+      );
 
       return ApiResponse.success(
         res,

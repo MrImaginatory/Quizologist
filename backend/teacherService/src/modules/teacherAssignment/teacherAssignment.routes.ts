@@ -10,6 +10,7 @@ router.post("/assign/bulk-subjects", TeacherAssignmentController.bulkAssignSubje
 router.delete("/unenroll/:id", TeacherAssignmentController.removeAssignment);
 router.get("/teacher-enrollment", TeacherAssignmentController.getAssignments);
 router.get("/teacher/:teacherId", TeacherAssignmentController.getTeacherAssignments);
+router.get("/teaching/courses-and-subjects", TeacherAssignmentController.getTeachingCoursesAndSubjects);
 router.get("/teaching/students", TeacherAssignmentController.getTeachingStudents);
 router.get("/teaching/tests", TeacherAssignmentController.getTeachingTests);
 router.get("/teaching/top-students", TeacherAssignmentController.getTopStudents);

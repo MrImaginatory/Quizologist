@@ -699,6 +699,9 @@ export const teachersApi = {
     const query = searchParams.toString();
     return apiRequest<TeachingStudentsResponse>(`${API_ROUTES.TEACHERS.TEACHING_STUDENTS}${query ? `?${query}` : ""}`, { token });
   },
+  getTeachingCoursesAndSubjects: (token?: string): Promise<TeachingCoursesAndSubjectsResponse> => {
+    return apiRequest<TeachingCoursesAndSubjectsResponse>(API_ROUTES.TEACHERS.TEACHING_COURSES_AND_SUBJECTS, { token });
+  },
   getTeachingTests: (params: { course_id?: string; subject_id?: string; student_id?: string; search?: string; status?: string; page?: number; limit?: number }, token?: string) => {
     const searchParams = new URLSearchParams();
     if (params.course_id) searchParams.set("course_id", params.course_id);
@@ -781,6 +784,26 @@ export interface TeachingStudentsResponse {
   data: {
     students: TeachingStudent[];
     pagination: Pagination;
+  };
+}
+
+export interface TeachingCourse {
+  id: string;
+  name: string;
+}
+
+export interface TeachingSubject {
+  id: string;
+  name: string;
+  course_id: string;
+}
+
+export interface TeachingCoursesAndSubjectsResponse {
+  success: boolean;
+  message: string;
+  data: {
+    courses: TeachingCourse[];
+    subjects: TeachingSubject[];
   };
 }
 

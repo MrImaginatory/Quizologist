@@ -103,6 +103,21 @@ export class TeacherAssignmentController {
     }
   }
 
+  static async getTeachingCoursesAndSubjects(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const teacherId = req.user?.userId;
+      if (!teacherId) {
+        return ApiResponse.error(res, "Teacher ID is required", 400);
+      }
+
+      const result = await TeacherAssignmentService.getTeacherAssignedCoursesAndSubjects(teacherId);
+
+      return ApiResponse.success(res, "Teaching courses and subjects retrieved successfully", result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async getTeachingStudents(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const teacherId = req.user?.userId || req.query.teacher_id as string;

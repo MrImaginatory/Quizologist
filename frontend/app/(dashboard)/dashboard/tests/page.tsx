@@ -10,6 +10,7 @@ import { useUsers } from "@/hooks/use-users";
 import { useCourses } from "@/hooks/use-courses";
 import { useSubjects } from "@/hooks/use-subjects";
 import { useAuth } from "@/contexts/auth-context";
+import { useTeachingCoursesAndSubjects } from "@/hooks/use-teaching-courses-and-subjects";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Settings } from "lucide-react";
@@ -55,8 +56,15 @@ export default function TestsPage() {
 
   const { users: adminStudents, isLoading: adminStudentsLoading } = useUsers({ role: "student", limit: 100 });
   const { students: teachingStudents, isLoading: teachingStudentsLoading } = useTeachingStudents({ limit: 100 });
-  const { courses, isLoading: coursesLoading } = useCourses({ limit: 100 });
-  const { subjects, isLoading: subjectsLoading } = useSubjects({ limit: 100 });
+  const { courses: allCourses, isLoading: allCoursesLoading } = useCourses({ limit: 100 });
+  const { subjects: allSubjects, isLoading: allSubjectsLoading } = useSubjects({ limit: 100 });
+  const { courses: teacherCourses, subjects: teacherSubjects, isLoading: teachingCoursesLoading } = useTeachingCoursesAndSubjects();
+
+  // For teachers, use only their assigned courses/subjects; for admins, use all
+  const courses = isTeacher ? teacherCourses : allCourses;
+  const subjects = isTeacher ? teacherSubjects : allSubjects;
+  const coursesLoading = isTeacher ? teachingCoursesLoading : allCoursesLoading;
+  const subjectsLoading = isTeacher ? teachingCoursesLoading : allSubjectsLoading;
 
   const students = isTeacher ? teachingStudents : adminStudents;
   const studentsLoading = isTeacher ? teachingStudentsLoading : adminStudentsLoading;

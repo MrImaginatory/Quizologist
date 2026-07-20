@@ -10,6 +10,7 @@ import Question from "../question/question.model";
 import Course from "../course/course.model";
 import Subject from "../subject/subject.model";
 import Topic from "../topic/topic.model";
+import TeacherAssignment from "../teacherAssignment/teacherAssignment.model";
 import {
   StartTestInput,
   TestIdParam,
@@ -31,6 +32,15 @@ const SELECTION_INCLUDE = {
   attributes: ["course_id", "subject_id", "topic_id"],
   include: [COURSE_INCLUDE, SUBJECT_INCLUDE, TOPIC_INCLUDE],
 };
+
+async function getTeacherAssignmentPairs(teacherId: string): Promise<{ course_id: string; subject_id: string | null }[]> {
+  const assignments = await TeacherAssignment.findAll({
+    where: { teacher_id: teacherId },
+    attributes: ["course_id", "subject_id"],
+    raw: true,
+  });
+  return assignments.map((a: any) => ({ course_id: a.course_id, subject_id: a.subject_id }));
+}
 
 function generateTestId(firstName: string, lastName: string): string {
   const now = new Date();
@@ -371,13 +381,41 @@ export class TestSessionService {
     };
   }
 
-  static async getTestDetailForAdmin(data: TestIdParam) {
+  static async getTestDetailForAdmin(data: TestIdParam, requesterId?: string, requesterRole?: string) {
     const session = await TestSession.findOne({
       where: { id: data.testId },
     });
 
     if (!session) {
       throw ApiError.notFound(RESPONSE_MESSAGES.ERROR.TEST_NOT_FOUND);
+    }
+
+    // For teachers, verify the test session's selections match their assignments
+    if (requesterRole === "teacher" && requesterId) {
+      const assignmentPairs = await getTeacherAssignmentPairs(requesterId);
+      if (assignmentPairs.length === 0) {
+        throw ApiError.forbidden("You do not have permission to view this test");
+      }
+
+      const selections = await TestSelection.findAll({
+        where: { test_session_id: session.id },
+        attributes: ["course_id", "subject_id"],
+        raw: true,
+      });
+
+      // Check if ANY selection matches the teacher's assignments
+      const hasMatchingSelection = selections.some((sel: any) => {
+        return assignmentPairs.some((pair) => {
+          if (pair.subject_id) {
+            return sel.course_id === pair.course_id && sel.subject_id === pair.subject_id;
+          }
+          return sel.course_id === pair.course_id;
+        });
+      });
+
+      if (!hasMatchingSelection) {
+        throw ApiError.forbidden("You do not have permission to view this test");
+      }
     }
 
     const answers = await TestAnswer.findAll({
@@ -432,12 +470,63 @@ export class TestSessionService {
     };
   }
 
-  static async getStudentPerformance(studentId: string) {
+  static async getStudentPerformance(studentId: string, requesterId?: string, requesterRole?: string) {
+    // For teachers, filter by their assigned courses/subjects
+    let whereCondition: any = {
+      student_id: studentId,
+      status: "completed",
+    };
+
+    if (requesterRole === "teacher" && requesterId) {
+      const assignmentPairs = await getTeacherAssignmentPairs(requesterId);
+      if (assignmentPairs.length === 0) {
+        return {
+          studentId,
+          totalTests: 0,
+          averageScore: 0,
+          highestScore: 0,
+          lowestScore: 0,
+          totalQuestions: 0,
+          totalCorrect: 0,
+          totalIncorrect: 0,
+          totalSkipped: 0,
+        };
+      }
+
+      const matchingSelections = await TestSelection.findAll({
+        where: {
+          [Op.or]: assignmentPairs.map((pair) => {
+            const condition: any = { course_id: pair.course_id };
+            if (pair.subject_id) {
+              condition.subject_id = pair.subject_id;
+            }
+            return condition;
+          }),
+        },
+        attributes: ["test_session_id"],
+        raw: true,
+      });
+      const testSessionIds = [...new Set(matchingSelections.map((s: any) => s.test_session_id))];
+
+      if (testSessionIds.length === 0) {
+        return {
+          studentId,
+          totalTests: 0,
+          averageScore: 0,
+          highestScore: 0,
+          lowestScore: 0,
+          totalQuestions: 0,
+          totalCorrect: 0,
+          totalIncorrect: 0,
+          totalSkipped: 0,
+        };
+      }
+
+      whereCondition.id = { [Op.in]: testSessionIds };
+    }
+
     const sessions = await TestSession.findAll({
-      where: {
-        student_id: studentId,
-        status: "completed",
-      },
+      where: whereCondition,
     });
 
     if (sessions.length === 0) {
@@ -487,11 +576,62 @@ export class TestSessionService {
     const { page, limit } = query;
     const offset = (page - 1) * limit;
 
+    // For teachers, get their assigned course/subject pairs
+    let allowedSelectionWhere: any = undefined;
+    if (requesterRole === "teacher") {
+      const assignmentPairs = await getTeacherAssignmentPairs(requesterId);
+      if (assignmentPairs.length === 0) {
+        return {
+          results: [],
+          pagination: { total: 0, page, limit, totalPages: 0 },
+        };
+      }
+
+      // Build OR conditions: match test selections against teacher's assignments
+      // A test is visible if ANY of its selections match a teacher's assignment
+      allowedSelectionWhere = {
+        [Op.or]: assignmentPairs.map((pair) => {
+          const condition: any = { course_id: pair.course_id };
+          if (pair.subject_id) {
+            condition.subject_id = pair.subject_id;
+          }
+          return condition;
+        }),
+      };
+    }
+
+    // Find test sessions that match the criteria
+    let testSessionIds: string[] = [];
+
+    if (allowedSelectionWhere) {
+      // For teachers: find test sessions that have selections matching their assignments
+      const matchingSelections = await TestSelection.findAll({
+        where: allowedSelectionWhere,
+        attributes: ["test_session_id"],
+        raw: true,
+      });
+      testSessionIds = [...new Set(matchingSelections.map((s: any) => s.test_session_id))];
+
+      if (testSessionIds.length === 0) {
+        return {
+          results: [],
+          pagination: { total: 0, page, limit, totalPages: 0 },
+        };
+      }
+    }
+
+    const whereCondition: any = {
+      student_id: studentId,
+      status: "completed",
+    };
+
+    // For teachers, only show tests that have matching selections
+    if (testSessionIds.length > 0) {
+      whereCondition.id = { [Op.in]: testSessionIds };
+    }
+
     const { rows, count } = await TestSession.findAndCountAll({
-      where: {
-        student_id: studentId,
-        status: "completed",
-      },
+      where: whereCondition,
       attributes: [
         "id",
         "test_id",
@@ -590,11 +730,51 @@ export class TestSessionService {
     const { page, limit } = query;
     const offset = (page - 1) * limit;
 
+    // For teachers, get their assigned course/subject pairs
+    let testSessionIds: string[] = [];
+    if (requesterRole === "teacher") {
+      const assignmentPairs = await getTeacherAssignmentPairs(requesterId);
+      if (assignmentPairs.length === 0) {
+        return {
+          results: [],
+          pagination: { total: 0, page, limit, totalPages: 0 },
+        };
+      }
+
+      const matchingSelections = await TestSelection.findAll({
+        where: {
+          [Op.or]: assignmentPairs.map((pair) => {
+            const condition: any = { course_id: pair.course_id };
+            if (pair.subject_id) {
+              condition.subject_id = pair.subject_id;
+            }
+            return condition;
+          }),
+        },
+        attributes: ["test_session_id"],
+        raw: true,
+      });
+      testSessionIds = [...new Set(matchingSelections.map((s: any) => s.test_session_id))];
+
+      if (testSessionIds.length === 0) {
+        return {
+          results: [],
+          pagination: { total: 0, page, limit, totalPages: 0 },
+        };
+      }
+    }
+
+    const whereCondition: any = {
+      student_id: studentId,
+      status: "completed",
+    };
+
+    if (testSessionIds.length > 0) {
+      whereCondition.id = { [Op.in]: testSessionIds };
+    }
+
     const { rows, count } = await TestSession.findAndCountAll({
-      where: {
-        student_id: studentId,
-        status: "completed",
-      },
+      where: whereCondition,
       attributes: [
         "id",
         "test_id",

@@ -74,6 +74,7 @@ export const API_ROUTES = {
     ASSIGN_BULK_SUBJECTS: `${BASE_URL}/api/teacher/assign/bulk-subjects`,
     UNENROLL: (id: string) => `${BASE_URL}/api/teacher/unenroll/${id}`,
     TEACHER_ENROLLMENT: `${BASE_URL}/api/teacher/teacher-enrollment`,
+    TEACHING_COURSES_AND_SUBJECTS: `${BASE_URL}/api/teacher/teaching/courses-and-subjects`,
     TEACHING_STUDENTS: `${BASE_URL}/api/teacher/teaching/students`,
     TEACHING_TESTS: `${BASE_URL}/api/teacher/teaching/tests`,
     TEACHING_TOP_STUDENTS: `${BASE_URL}/api/teacher/teaching/top-students`,

@@ -326,6 +326,42 @@ export class TeacherAssignmentService {
     };
   }
 
+  static async getTeacherAssignedCoursesAndSubjects(teacherId: string): Promise<any> {
+    const assignments = await TeacherAssignment.findAll({
+      where: { teacher_id: teacherId },
+      include: [
+        { model: Course, as: "course", attributes: ["id", "name"] },
+        { model: Subject, as: "subject", attributes: ["id", "name", "course_id"] },
+      ],
+      raw: true,
+      nest: true,
+    });
+
+    const courseMap = new Map<string, { id: string; name: string }>();
+    const subjectMap = new Map<string, { id: string; name: string; course_id: string }>();
+
+    for (const assignment of assignments as any[]) {
+      if (assignment.course) {
+        courseMap.set(assignment.course.id, {
+          id: assignment.course.id,
+          name: assignment.course.name,
+        });
+      }
+      if (assignment.subject) {
+        subjectMap.set(assignment.subject.id, {
+          id: assignment.subject.id,
+          name: assignment.subject.name,
+          course_id: assignment.subject.course_id,
+        });
+      }
+    }
+
+    return {
+      courses: Array.from(courseMap.values()),
+      subjects: Array.from(subjectMap.values()),
+    };
+  }
+
   static async bulkAssignSubjects(data: BulkAssignSubjectsInput): Promise<any> {
     const { teacher_id, course_id, subject_ids } = data;
 
