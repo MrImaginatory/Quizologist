@@ -32,8 +32,8 @@ export function AnalyticsDashboard() {
       location_id: "",
       date_from: "",
       date_to: "",
-      subject_id: "",
       course_id: "",
+      subject_id: "",
       limit: 10,
     });
   }, []);
@@ -63,11 +63,13 @@ export function AnalyticsDashboard() {
         locationId={filters.location_id}
         dateFrom={filters.date_from}
         dateTo={filters.date_to}
+        courseId={filters.course_id}
         subjectId={filters.subject_id}
         topN={filters.limit}
         onLocationChange={(v) => handleFilterChange("location_id", v)}
         onDateFromChange={(v) => handleFilterChange("date_from", v)}
         onDateToChange={(v) => handleFilterChange("date_to", v)}
+        onCourseChange={(v) => handleFilterChange("course_id", v)}
         onSubjectChange={(v) => handleFilterChange("subject_id", v)}
         onTopNChange={(v) => handleFilterChange("limit", v)}
         onClear={handleClearFilters}

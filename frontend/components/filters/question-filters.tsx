@@ -80,7 +80,7 @@ export function QuestionFilters({ onFilterChange }: QuestionFiltersProps) {
           Course
         </Label>
         <Select value={courseId || "all"} onValueChange={(value) => {
-          setCourseId(value === "all" ? "" : value);
+          setCourseId(value === "all" ? "" : (value ?? ""));
           setSubjectId("");
           setTopicId("");
         }}>
@@ -105,7 +105,7 @@ export function QuestionFilters({ onFilterChange }: QuestionFiltersProps) {
           Subject
         </Label>
         <Select value={subjectId || "all"} onValueChange={(value) => {
-          setSubjectId(value === "all" ? "" : value);
+          setSubjectId(value === "all" ? "" : (value ?? ""));
           setTopicId("");
         }} disabled={!courseId}>
           <SelectTrigger className="w-full">
@@ -129,7 +129,7 @@ export function QuestionFilters({ onFilterChange }: QuestionFiltersProps) {
           Topic
         </Label>
         <Select value={topicId || "all"} onValueChange={(value) => {
-          setTopicId(value === "all" ? "" : value);
+          setTopicId(value === "all" ? "" : (value ?? ""));
         }} disabled={!subjectId}>
           <SelectTrigger className="w-full">
             <SelectValue>

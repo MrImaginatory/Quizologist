@@ -10,64 +10,113 @@ import {
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 import { X } from "lucide-react";
-import { useTeachingCoursesAndSubjects } from "@/hooks/use-teaching-courses-and-subjects";
+import { useCourses } from "@/hooks/use-courses";
+import { useSubjects } from "@/hooks/use-subjects";
 import { capitalize } from "@/lib/utils";
 
 interface AnalyticsFiltersProps {
   locationId: string;
   dateFrom: string;
   dateTo: string;
+  courseId: string;
   subjectId: string;
   topN: number;
   onLocationChange: (value: string) => void;
   onDateFromChange: (value: string) => void;
   onDateToChange: (value: string) => void;
+  onCourseChange: (value: string) => void;
   onSubjectChange: (value: string) => void;
   onTopNChange: (value: number) => void;
   onClear: () => void;
 }
 
-// Sample locations for filter (in production, fetch from API)
-const LOCATIONS = [
-  { id: "mumbai", name: "Mumbai" },
-  { id: "delhi", name: "Delhi" },
-  { id: "bangalore", name: "Bangalore" },
-  { id: "chennai", name: "Chennai" },
-  { id: "kolkata", name: "Kolkata" },
-];
+// Locations fetched from the database via API
+import { useEffect, useState } from "react";
+import { useAuth } from "@/contexts/auth-context";
+import { predefinedTestsApi } from "@/lib/api";
 
 export function AnalyticsFilters({
   locationId,
   dateFrom,
   dateTo,
+  courseId,
   subjectId,
   topN,
   onLocationChange,
   onDateFromChange,
   onDateToChange,
+  onCourseChange,
   onSubjectChange,
   onTopNChange,
   onClear,
 }: AnalyticsFiltersProps) {
-  const { subjects, isLoading: subjectsLoading } = useTeachingCoursesAndSubjects();
+  const { token } = useAuth();
+  const { courses, isLoading: coursesLoading } = useCourses({ limit: 100 });
+  const { subjects, isLoading: subjectsLoading } = useSubjects({ limit: 100, courseId: courseId || undefined });
 
-  const hasFilters = locationId || dateFrom || dateTo || subjectId || topN !== 10;
+  // Fetch locations from the database
+  const [locations, setLocations] = useState<{ id: string; city: string }[]>([]);
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const res = await fetch("/api/user/location?limit=100", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (data.success && data.data?.locations) {
+          setLocations(data.data.locations);
+        }
+      } catch {
+        // Use fallback locations
+        setLocations([
+          { id: "mumbai", city: "Mumbai" },
+          { id: "delhi", city: "Delhi" },
+          { id: "bangalore", city: "Bangalore" },
+        ]);
+      }
+    };
+    fetchLocations();
+  }, [token]);
+
+  const hasFilters = locationId || dateFrom || dateTo || courseId || subjectId || topN !== 10;
 
   return (
     <div className="flex flex-wrap items-end gap-3">
       {/* Location Filter */}
       <div className="flex-1 min-w-[180px]">
-        <Select value={locationId || "all"} onValueChange={(value) => onLocationChange(value === "all" ? "" : value)}>
+        <Select value={locationId || "all"} onValueChange={(value) => onLocationChange(value === "all" ? "" : value ?? "")}>
           <SelectTrigger className="w-full">
             <SelectValue>
-              {locationId ? LOCATIONS.find(l => l.id === locationId)?.name || locationId : "All Locations"}
+              {locationId ? capitalize(locations.find(l => l.id === locationId)?.city || locationId) : "All Locations"}
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Locations</SelectItem>
-            {LOCATIONS.map((location) => (
+            {locations.map((location) => (
               <SelectItem key={location.id} value={location.id}>
-                {location.name}
+                {location.city}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Course Filter */}
+      <div className="flex-1 min-w-[180px]">
+        <Select value={courseId || "all"} onValueChange={(value) => {
+          onCourseChange(value === "all" ? "" : value ?? "");
+          onSubjectChange("");
+        }}>
+          <SelectTrigger className="w-full">
+            <SelectValue>
+              {courseId ? capitalize(courses.find(c => c.id === courseId)?.name || courseId) : "All Courses"}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Courses</SelectItem>
+            {courses.map((course) => (
+              <SelectItem key={course.id} value={course.id}>
+                {capitalize(course.name)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -76,10 +125,10 @@ export function AnalyticsFilters({
 
       {/* Subject Filter */}
       <div className="flex-1 min-w-[180px]">
-        <Select value={subjectId || "all"} onValueChange={(value) => onSubjectChange(value === "all" ? "" : value)}>
+        <Select value={subjectId || "all"} onValueChange={(value) => onSubjectChange(value === "all" ? "" : value ?? "")} disabled={!courseId}>
           <SelectTrigger className="w-full">
             <SelectValue>
-              {subjectId ? subjects.find(s => s.id === subjectId)?.name || subjectId : "All Subjects"}
+              {subjectId ? capitalize(subjects.find(s => s.id === subjectId)?.name || subjectId) : !courseId ? "Select course first" : "All Subjects"}
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -109,7 +158,7 @@ export function AnalyticsFilters({
       </div>
 
       {/* Top N Selector */}
-      <Select value={topN.toString()} onValueChange={(value) => onTopNChange(parseInt(value, 10))}>
+      <Select value={topN.toString()} onValueChange={(value) => onTopNChange(parseInt(value ?? "10", 10))}>
         <SelectTrigger className="w-[120px]">
           <SelectValue>Top {topN}</SelectValue>
         </SelectTrigger>
