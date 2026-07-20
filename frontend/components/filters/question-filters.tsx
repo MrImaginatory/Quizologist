@@ -14,6 +14,8 @@ import { X } from "lucide-react";
 import { useCourses } from "@/hooks/use-courses";
 import { useSubjects } from "@/hooks/use-subjects";
 import { useTopics } from "@/hooks/use-topics";
+import { useTeachingCoursesAndSubjects } from "@/hooks/use-teaching-courses-and-subjects";
+import { useAuth } from "@/contexts/auth-context";
 import { capitalize } from "@/lib/utils";
 
 interface QuestionFiltersProps {
@@ -28,10 +30,32 @@ export function QuestionFilters({ onFilterChange }: QuestionFiltersProps) {
   const [courseId, setCourseId] = useState("");
   const [subjectId, setSubjectId] = useState("");
   const [topicId, setTopicId] = useState("");
+  const { user } = useAuth();
+  const isTeacher = user?.role === "teacher";
 
-  const { courses, isLoading: isLoadingCourses } = useCourses({ limit: 100 });
-  const { subjects, isLoading: isLoadingSubjects } = useSubjects({ limit: 100 });
-  const { topics, isLoading: isLoadingTopics } = useTopics({ limit: 100 });
+  const { courses: allCourses, isLoading: allCoursesLoading } = useCourses({ limit: 100 });
+  const { subjects: allSubjects, isLoading: allSubjectsLoading } = useSubjects({ limit: 100 });
+  const { topics: allTopics, isLoading: allTopicsLoading } = useTopics({ limit: 100 });
+  const { courses: teacherCourses, subjects: teacherSubjects, isLoading: teachingLoading } = useTeachingCoursesAndSubjects();
+
+  // For teachers, use only their assigned courses/subjects; for admins, use all
+  const courses = isTeacher ? teacherCourses : allCourses;
+  const subjects = isTeacher ? teacherSubjects : allSubjects;
+  const isLoadingCourses = isTeacher ? teachingLoading : allCoursesLoading;
+  const isLoadingSubjects = isTeacher ? teachingLoading : allSubjectsLoading;
+
+  // Filter topics based on selected subject (or all teacher's subjects for teachers)
+  const topics = isTeacher
+    ? allTopics.filter((t) => {
+        if (subjectId) {
+          return t.subject_id === subjectId;
+        }
+        // If no subject selected, show topics for teacher's assigned subjects
+        const teacherSubjectIds = teacherSubjects.map((s) => s.id);
+        return teacherSubjectIds.includes(t.subject_id);
+      })
+    : allTopics;
+  const isLoadingTopics = isTeacher ? teachingLoading : allTopicsLoading;
 
   const selectedCourse = courses.find((c) => c.id === courseId);
   const selectedSubject = subjects.find((s) => s.id === subjectId);
@@ -55,12 +79,10 @@ export function QuestionFilters({ onFilterChange }: QuestionFiltersProps) {
         <Label htmlFor="course" className="text-sm font-medium mb-2 block">
           Course
         </Label>
-        <Select value={courseId} onValueChange={(value) => {
-          if (value) {
-            setCourseId(value);
-            setSubjectId("");
-            setTopicId("");
-          }
+        <Select value={courseId || "all"} onValueChange={(value) => {
+          setCourseId(value === "all" ? "" : value);
+          setSubjectId("");
+          setTopicId("");
         }}>
           <SelectTrigger className="w-full">
             <SelectValue>
@@ -68,6 +90,7 @@ export function QuestionFilters({ onFilterChange }: QuestionFiltersProps) {
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="all">All Courses</SelectItem>
             {courses.map((course) => (
               <SelectItem key={course.id} value={course.id}>
                 {capitalize(course.name)}
@@ -81,11 +104,9 @@ export function QuestionFilters({ onFilterChange }: QuestionFiltersProps) {
         <Label htmlFor="subject" className="text-sm font-medium mb-2 block">
           Subject
         </Label>
-        <Select value={subjectId} onValueChange={(value) => {
-          if (value) {
-            setSubjectId(value);
-            setTopicId("");
-          }
+        <Select value={subjectId || "all"} onValueChange={(value) => {
+          setSubjectId(value === "all" ? "" : value);
+          setTopicId("");
         }} disabled={!courseId}>
           <SelectTrigger className="w-full">
             <SelectValue>
@@ -93,6 +114,7 @@ export function QuestionFilters({ onFilterChange }: QuestionFiltersProps) {
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="all">All Subjects</SelectItem>
             {subjects.map((subject) => (
               <SelectItem key={subject.id} value={subject.id}>
                 {capitalize(subject.name)}
@@ -106,13 +128,16 @@ export function QuestionFilters({ onFilterChange }: QuestionFiltersProps) {
         <Label htmlFor="topic" className="text-sm font-medium mb-2 block">
           Topic
         </Label>
-        <Select value={topicId} onValueChange={(value) => { if (value) setTopicId(value); }} disabled={!subjectId}>
+        <Select value={topicId || "all"} onValueChange={(value) => {
+          setTopicId(value === "all" ? "" : value);
+        }} disabled={!subjectId}>
           <SelectTrigger className="w-full">
             <SelectValue>
               {selectedTopic ? capitalize(selectedTopic.name) : !subjectId ? "Select subject first" : isLoadingTopics ? "Loading..." : "All Topics"}
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="all">All Topics</SelectItem>
             {topics.map((topic) => (
               <SelectItem key={topic.id} value={topic.id}>
                 {capitalize(topic.name)}
