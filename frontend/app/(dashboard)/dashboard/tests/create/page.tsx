@@ -7,6 +7,7 @@ import { predefinedTestsApi, CreatePredefinedTestPayload, Course, Subject, Topic
 import { useCourses } from "@/hooks/use-courses";
 import { useSubjects } from "@/hooks/use-subjects";
 import { useTopics } from "@/hooks/use-topics";
+import { useTeachingCoursesAndSubjects } from "@/hooks/use-teaching-courses-and-subjects";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -83,14 +84,32 @@ const defaultFormState: FormState = {
 };
 
 export default function CreatePredefinedTestPage() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [showClearDialog, setShowClearDialog] = useState(false);
 
-  const { courses, isLoading: isLoadingCourses } = useCourses({ limit: 100 });
-  const { subjects, isLoading: isLoadingSubjects } = useSubjects({ limit: 100 });
-  const { topics, isLoading: isLoadingTopics } = useTopics({ limit: 100 });
+  const isTeacher = user?.role === "teacher";
+
+  const { courses: allCourses, isLoading: allCoursesLoading } = useCourses({ limit: 100 });
+  const { subjects: allSubjects, isLoading: allSubjectsLoading } = useSubjects({ limit: 100 });
+  const { topics: allTopics, isLoading: allTopicsLoading } = useTopics({ limit: 100 });
+  const { courses: teacherCourses, subjects: teacherSubjects, isLoading: teachingLoading } = useTeachingCoursesAndSubjects();
+
+  // For teachers, use only their assigned courses/subjects; for admins, use all
+  const courses = isTeacher ? teacherCourses : allCourses;
+  const subjects = isTeacher ? teacherSubjects : allSubjects;
+  const isLoadingCourses = isTeacher ? teachingLoading : allCoursesLoading;
+  const isLoadingSubjects = isTeacher ? teachingLoading : allSubjectsLoading;
+
+  // Filter topics based on teacher's assigned subjects
+  const topics = isTeacher
+    ? allTopics.filter((t) => {
+        const teacherSubjectIds = teacherSubjects.map((s) => s.id);
+        return teacherSubjectIds.includes(t.subject_id);
+      })
+    : allTopics;
+  const isLoadingTopics = isTeacher ? teachingLoading : allTopicsLoading;
 
   const [formState, setFormState] = useState<FormState>(() => {
     if (typeof window !== "undefined") {

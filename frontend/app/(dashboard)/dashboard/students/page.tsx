@@ -91,6 +91,13 @@ export default function StudentsPage() {
       key: "subject_id",
       header: "Subject",
       render: (t: TeachingStudent) => {
+        if (!t.subject_id) {
+          return (
+            <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20">
+              All Subjects
+            </Badge>
+          );
+        }
         const subject = subjects.find((s) => s.id === t.subject_id);
         return subject ? (
           <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20">
