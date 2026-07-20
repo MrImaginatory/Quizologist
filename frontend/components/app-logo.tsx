@@ -25,10 +25,10 @@ export function AppLogo({ className, size = "md", showName = true }: AppLogoProp
       <Image
         src={appLogo}
         alt={`${appName} logo`}
-        width={icon}
-        height={icon}
+        width={40}
+        height={48}
         className="shrink-0"
-        style={{ width: "auto", height: "auto" }}
+        style={{ width: icon, height: "auto" }}
       />
       {showName && (
         <span className={cn("font-bold text-foreground", text)}>
