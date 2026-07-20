@@ -472,11 +472,14 @@ export class TeacherAssignmentService {
 
     const enrollmentConditions: any[] = [];
     for (const pair of courseSubjectPairs) {
-      const condition: any = { course_id: pair.course_id };
       if (pair.subject_id) {
-        condition.subject_id = pair.subject_id;
+        // Match enrollment with specific subject OR enrollment with null subject (all subjects)
+        enrollmentConditions.push({ course_id: pair.course_id, subject_id: pair.subject_id });
+        enrollmentConditions.push({ course_id: pair.course_id, subject_id: null });
+      } else {
+        // Course-level assignment — match any enrollment for this course
+        enrollmentConditions.push({ course_id: pair.course_id });
       }
-      enrollmentConditions.push(condition);
     }
 
     const enrollmentWhere: any = {
@@ -587,11 +590,14 @@ export class TeacherAssignmentService {
 
     const enrollmentConditions: any[] = [];
     for (const pair of courseSubjectPairs) {
-      const condition: any = { course_id: pair.course_id };
       if (pair.subject_id) {
-        condition.subject_id = pair.subject_id;
+        // Match enrollment with specific subject OR enrollment with null subject (all subjects)
+        enrollmentConditions.push({ course_id: pair.course_id, subject_id: pair.subject_id });
+        enrollmentConditions.push({ course_id: pair.course_id, subject_id: null });
+      } else {
+        // Course-level assignment — match any enrollment for this course
+        enrollmentConditions.push({ course_id: pair.course_id });
       }
-      enrollmentConditions.push(condition);
     }
 
     const enrollmentWhere: any = {
@@ -725,11 +731,14 @@ export class TeacherAssignmentService {
 
     const enrollmentConditions: any[] = [];
     for (const pair of courseSubjectPairs) {
-      const condition: any = { course_id: pair.course_id };
       if (pair.subject_id) {
-        condition.subject_id = pair.subject_id;
+        // Match enrollment with specific subject OR enrollment with null subject (all subjects)
+        enrollmentConditions.push({ course_id: pair.course_id, subject_id: pair.subject_id });
+        enrollmentConditions.push({ course_id: pair.course_id, subject_id: null });
+      } else {
+        // Course-level assignment — match any enrollment for this course
+        enrollmentConditions.push({ course_id: pair.course_id });
       }
-      enrollmentConditions.push(condition);
     }
 
     const enrollments = await Enrollment.findAll({
@@ -824,11 +833,14 @@ export class TeacherAssignmentService {
 
     const enrollmentConditions: any[] = [];
     for (const pair of courseSubjectPairs) {
-      const condition: any = { course_id: pair.course_id };
       if (pair.subject_id) {
-        condition.subject_id = pair.subject_id;
+        // Match enrollment with specific subject OR enrollment with null subject (all subjects)
+        enrollmentConditions.push({ course_id: pair.course_id, subject_id: pair.subject_id });
+        enrollmentConditions.push({ course_id: pair.course_id, subject_id: null });
+      } else {
+        // Course-level assignment — match any enrollment for this course
+        enrollmentConditions.push({ course_id: pair.course_id });
       }
-      enrollmentConditions.push(condition);
     }
 
     const enrollments = await Enrollment.findAll({

@@ -495,12 +495,16 @@ export class TestSessionService {
 
       const matchingSelections = await TestSelection.findAll({
         where: {
-          [Op.or]: assignmentPairs.map((pair) => {
-            const condition: any = { course_id: pair.course_id };
+          [Op.or]: assignmentPairs.flatMap((pair) => {
             if (pair.subject_id) {
-              condition.subject_id = pair.subject_id;
+              // Match selection with specific subject OR selection with null subject (all subjects)
+              return [
+                { course_id: pair.course_id, subject_id: pair.subject_id },
+                { course_id: pair.course_id, subject_id: null },
+              ];
             }
-            return condition;
+            // Course-level assignment — match any selection for this course
+            return [{ course_id: pair.course_id }];
           }),
         },
         attributes: ["test_session_id"],
@@ -743,12 +747,16 @@ export class TestSessionService {
 
       const matchingSelections = await TestSelection.findAll({
         where: {
-          [Op.or]: assignmentPairs.map((pair) => {
-            const condition: any = { course_id: pair.course_id };
+          [Op.or]: assignmentPairs.flatMap((pair) => {
             if (pair.subject_id) {
-              condition.subject_id = pair.subject_id;
+              // Match selection with specific subject OR selection with null subject (all subjects)
+              return [
+                { course_id: pair.course_id, subject_id: pair.subject_id },
+                { course_id: pair.course_id, subject_id: null },
+              ];
             }
-            return condition;
+            // Course-level assignment — match any selection for this course
+            return [{ course_id: pair.course_id }];
           }),
         },
         attributes: ["test_session_id"],
