@@ -412,6 +412,7 @@ export class PredefinedTestService {
       is_scheduled: test.is_scheduled,
       start_time: test.start_time,
       end_time: test.end_time,
+      status: test.status,
     };
   }
 

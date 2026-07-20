@@ -53,8 +53,8 @@ export function AddQuestionDialog({ open, onOpenChange, onSuccess }: AddQuestion
   const [error, setError] = useState("");
 
   const { courses, isLoading: isLoadingCourses } = useCourses({ limit: 100 });
-  const { subjects, isLoading: isLoadingSubjects } = useSubjects({ limit: 100 });
-  const { topics, isLoading: isLoadingTopics } = useTopics({ limit: 100 });
+  const { subjects, isLoading: isLoadingSubjects } = useSubjects({ limit: 100, courseId: courseId || undefined });
+  const { topics, isLoading: isLoadingTopics } = useTopics({ limit: 100, subjectId: subjectId || undefined });
 
   const selectedCourse = courses.find((c) => c.id === courseId);
   const selectedSubject = subjects.find((s) => s.id === subjectId);

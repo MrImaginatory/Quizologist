@@ -1,0 +1,977 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "TeacherService",
+    "description": "Teacher-course-subject assignments and teaching analytics",
+    "version": "1.0.0"
+  },
+  "tags": [],
+  "paths": {
+    "/teacher/list": {
+      "get": {
+        "summary": "Get Teachers with Assignment Counts",
+        "deprecated": false,
+        "description": "Get all teachers with their course, subject, and total assignment counts (admin only)",
+        "tags": ["Teacher Management"],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number",
+            "required": false,
+            "example": 1,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Items per page",
+            "required": false,
+            "example": 10,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Teachers retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "statusCode": 200,
+                  "success": true,
+                  "message": "Teachers retrieved successfully",
+                  "data": {
+                    "teachers": [
+                      {
+                        "id": "afa50e77-3fc1-46b8-9264-ec82ce2ea5f1",
+                        "fname": "amelia",
+                        "lname": "roob",
+                        "email": "destany_williamson28@yahoo.com",
+                        "mobileNumber": "9884395462",
+                        "createdAt": "2026-07-06T13:34:50.631Z",
+                        "courseCount": 2,
+                        "subjectCount": 5,
+                        "totalAssignments": 7
+                      }
+                    ],
+                    "pagination": {
+                      "total": 1,
+                      "page": 1,
+                      "limit": 10,
+                      "totalPages": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/teacher/assign/course": {
+      "post": {
+        "summary": "Assign Course to Teacher",
+        "deprecated": false,
+        "description": "Assign a course to a teacher (admin only)",
+        "tags": ["Teacher Assignments"],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              },
+              "example": {
+                "teacher_id": "afa50e77-3fc1-46b8-9264-ec82ce2ea5f1",
+                "course_id": "a15e2800-7a98-41aa-941c-d64755927c8e"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Course assigned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "statusCode": 201,
+                  "success": true,
+                  "message": "Course assigned to teacher successfully",
+                  "data": {
+                    "id": "b5bb36a8-4167-4fb2-b8a6-8cd9442b2c19",
+                    "teacher_id": "afa50e77-3fc1-46b8-9264-ec82ce2ea5f1",
+                    "course_id": "a15e2800-7a98-41aa-941c-d64755927c8e",
+                    "subject_id": null,
+                    "createdAt": "2026-07-18T10:00:00.000Z",
+                    "updatedAt": "2026-07-18T10:00:00.000Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/teacher/assign/subject": {
+      "post": {
+        "summary": "Assign Subject to Teacher",
+        "deprecated": false,
+        "description": "Assign a subject under a course to a teacher (admin only)",
+        "tags": ["Teacher Assignments"],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              },
+              "example": {
+                "teacher_id": "afa50e77-3fc1-46b8-9264-ec82ce2ea5f1",
+                "course_id": "a15e2800-7a98-41aa-941c-d64755927c8e",
+                "subject_id": "0383aa2d-16f2-4252-8e4a-82d84e88911b"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Subject assigned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "statusCode": 201,
+                  "success": true,
+                  "message": "Subject assigned to teacher successfully",
+                  "data": {
+                    "id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+                    "teacher_id": "afa50e77-3fc1-46b8-9264-ec82ce2ea5f1",
+                    "course_id": "a15e2800-7a98-41aa-941c-d64755927c8e",
+                    "subject_id": "0383aa2d-16f2-4252-8e4a-82d84e88911b",
+                    "createdAt": "2026-07-18T10:00:00.000Z",
+                    "updatedAt": "2026-07-18T10:00:00.000Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/teacher/assign/bulk-subjects": {
+      "post": {
+        "summary": "Bulk Assign Subjects to Teacher",
+        "deprecated": false,
+        "description": "Assign all or specific subjects under a course to a teacher (admin/teacher)",
+        "tags": ["Teacher Assignments"],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              },
+              "example": {
+                "teacher_id": "afa50e77-3fc1-46b8-9264-ec82ce2ea5f1",
+                "course_id": "a15e2800-7a98-41aa-941c-d64755927c8e",
+                "subject_ids": [
+                  "0383aa2d-16f2-4252-8e4a-82d84e88911b",
+                  "16669820-90ff-404f-912c-84b4a17059c0"
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Bulk assignment completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "statusCode": 201,
+                  "success": true,
+                  "message": "Bulk assignment completed",
+                  "data": {
+                    "total": 2,
+                    "created": 2,
+                    "skipped": 0,
+                    "assignments": [
+                      {
+                        "id": "d4e5f6a7-b8c9-0123-def4-567890123456",
+                        "teacher_id": "afa50e77-3fc1-46b8-9264-ec82ce2ea5f1",
+                        "course_id": "a15e2800-7a98-41aa-941c-d64755927c8e",
+                        "subject_id": "0383aa2d-16f2-4252-8e4a-82d84e88911b"
+                      },
+                      {
+                        "id": "e5f6a7b8-c9d0-1234-ef56-789012345678",
+                        "teacher_id": "afa50e77-3fc1-46b8-9264-ec82ce2ea5f1",
+                        "course_id": "a15e2800-7a98-41aa-941c-d64755927c8e",
+                        "subject_id": "16669820-90ff-404f-912c-84b4a17059c0"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/teacher/unenroll/{id}": {
+      "delete": {
+        "summary": "Remove Teacher Assignment",
+        "deprecated": false,
+        "description": "Remove a teacher's course/subject assignment (admin/teacher)",
+        "tags": ["Teacher Assignments"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Assignment UUID",
+            "required": true,
+            "example": "b5bb36a8-4167-4fb2-b8a6-8cd9442b2c19",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Assignment removed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "statusCode": 200,
+                  "success": true,
+                  "message": "Assignment removed successfully",
+                  "data": {
+                    "message": "Assignment removed successfully"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/teacher/teacher-enrollment": {
+      "get": {
+        "summary": "Get All Teacher Assignments",
+        "deprecated": false,
+        "description": "Get all teacher assignments with filters (admin/teacher)",
+        "tags": ["Teacher Assignments"],
+        "parameters": [
+          {
+            "name": "teacher_id",
+            "in": "query",
+            "description": "Filter by teacher UUID",
+            "required": false,
+            "example": "afa50e77-3fc1-46b8-9264-ec82ce2ea5f1",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "course_id",
+            "in": "query",
+            "description": "Filter by course UUID",
+            "required": false,
+            "example": "a15e2800-7a98-41aa-941c-d64755927c8e",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number",
+            "required": false,
+            "example": 1,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Items per page",
+            "required": false,
+            "example": 10,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Assignments retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "statusCode": 200,
+                  "success": true,
+                  "message": "Assignments retrieved successfully",
+                  "data": {
+                    "assignments": [
+                      {
+                        "id": "b5bb36a8-4167-4fb2-b8a6-8cd9442b2c19",
+                        "teacher_id": "afa50e77-3fc1-46b8-9264-ec82ce2ea5f1",
+                        "course_id": "a15e2800-7a98-41aa-941c-d64755927c8e",
+                        "subject_id": "0383aa2d-16f2-4252-8e4a-82d84e88911b",
+                        "teacher": {
+                          "id": "afa50e77-3fc1-46b8-9264-ec82ce2ea5f1",
+                          "fname": "amelia",
+                          "lname": "roob",
+                          "email": "destany_williamson28@yahoo.com"
+                        },
+                        "course": {
+                          "id": "a15e2800-7a98-41aa-941c-d64755927c8e",
+                          "name": "computer science"
+                        },
+                        "subject": {
+                          "id": "0383aa2d-16f2-4252-8e4a-82d84e88911b",
+                          "name": "data structures"
+                        }
+                      }
+                    ],
+                    "pagination": {
+                      "total": 1,
+                      "page": 1,
+                      "limit": 10,
+                      "totalPages": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/teacher/teacher/{teacherId}": {
+      "get": {
+        "summary": "Get Teacher Assignments by Teacher ID",
+        "deprecated": false,
+        "description": "Get all assignments for a specific teacher, grouped by course (admin/teacher)",
+        "tags": ["Teacher Assignments"],
+        "parameters": [
+          {
+            "name": "teacherId",
+            "in": "path",
+            "description": "Teacher UUID",
+            "required": true,
+            "example": "afa50e77-3fc1-46b8-9264-ec82ce2ea5f1",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Teacher assignments retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "statusCode": 200,
+                  "success": true,
+                  "message": "Teacher assignments retrieved successfully",
+                  "data": {
+                    "teacher": {
+                      "id": "afa50e77-3fc1-46b8-9264-ec82ce2ea5f1",
+                      "fname": "amelia",
+                      "lname": "roob",
+                      "email": "destany_williamson28@yahoo.com",
+                      "role": "teacher",
+                      "mobileNumber": "9884395462"
+                    },
+                    "assignments": [
+                      {
+                        "id": "a15e2800-7a98-41aa-941c-d64755927c8e",
+                        "name": "computer science",
+                        "assignment_id": "b5bb36a8-4167-4fb2-b8a6-8cd9442b2c19",
+                        "subjects": [
+                          {
+                            "id": "0383aa2d-16f2-4252-8e4a-82d84e88911b",
+                            "name": "data structures",
+                            "assignment_id": "c3d4e5f6-a7b8-9012-cdef-123456789012"
+                          },
+                          {
+                            "id": "16669820-90ff-404f-912c-84b4a17059c0",
+                            "name": "algorithms",
+                            "assignment_id": "d4e5f6a7-b8c9-0123-def4-567890123456"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/teacher/teaching/students": {
+      "get": {
+        "summary": "Get Teaching Students",
+        "deprecated": false,
+        "description": "Get students enrolled in teacher's assigned courses/subjects (admin/teacher)",
+        "tags": ["Teaching Analytics"],
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "query",
+            "description": "Filter by course UUID",
+            "required": false,
+            "example": "a15e2800-7a98-41aa-941c-d64755927c8e",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "subject_id",
+            "in": "query",
+            "description": "Filter by subject UUID",
+            "required": false,
+            "example": "0383aa2d-16f2-4252-8e4a-82d84e88911b",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "student_id",
+            "in": "query",
+            "description": "Filter by specific student UUID",
+            "required": false,
+            "example": "4918de49-1169-41b9-b035-8155d999dc8e",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Search by name or email",
+            "required": false,
+            "example": "john",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number",
+            "required": false,
+            "example": 1,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Items per page",
+            "required": false,
+            "example": 10,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Students retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "statusCode": 200,
+                  "success": true,
+                  "message": "Teaching students retrieved successfully",
+                  "data": {
+                    "students": [
+                      {
+                        "id": "4918de49-1169-41b9-b035-8155d999dc8e",
+                        "fname": "john",
+                        "lname": "doe",
+                        "email": "john@example.com",
+                        "course_id": "a15e2800-7a98-41aa-941c-d64755927c8e",
+                        "subject_id": "0383aa2d-16f2-4252-8e4a-82d84e88911b"
+                      }
+                    ],
+                    "pagination": {
+                      "total": 1,
+                      "page": 1,
+                      "limit": 10,
+                      "totalPages": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/teacher/teaching/tests": {
+      "get": {
+        "summary": "Get Teaching Tests",
+        "deprecated": false,
+        "description": "Get tests taken by students in teacher's assigned courses/subjects (admin/teacher)",
+        "tags": ["Teaching Analytics"],
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "query",
+            "description": "Filter by course UUID",
+            "required": false,
+            "example": "a15e2800-7a98-41aa-941c-d64755927c8e",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "subject_id",
+            "in": "query",
+            "description": "Filter by subject UUID",
+            "required": false,
+            "example": "0383aa2d-16f2-4252-8e4a-82d84e88911b",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "student_id",
+            "in": "query",
+            "description": "Filter by specific student UUID",
+            "required": false,
+            "example": "4918de49-1169-41b9-b035-8155d999dc8e",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Search by student name or email",
+            "required": false,
+            "example": "john",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filter by test status",
+            "required": false,
+            "example": "completed",
+            "schema": {
+              "type": "string",
+              "enum": ["pending", "in_progress", "completed", "abandoned"]
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number",
+            "required": false,
+            "example": 1,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Items per page",
+            "required": false,
+            "example": 10,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tests retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "statusCode": 200,
+                  "success": true,
+                  "message": "Teaching tests retrieved successfully",
+                  "data": {
+                    "tests": [
+                      {
+                        "id": "b5bb36a8-4167-4fb2-b8a6-8cd9442b2c19",
+                        "test_id": "john_doe_mon_20260718_143000",
+                        "student": {
+                          "id": "4918de49-1169-41b9-b035-8155d999dc8e",
+                          "fname": "john",
+                          "lname": "doe",
+                          "email": "john@example.com"
+                        },
+                        "status": "completed",
+                        "total_questions": 25,
+                        "attempted": 22,
+                        "correct": 18,
+                        "incorrect": 4,
+                        "score": 72.00,
+                        "started_at": "2026-07-18T14:30:00.000Z",
+                        "completed_at": "2026-07-18T14:55:00.000Z"
+                      }
+                    ],
+                    "pagination": {
+                      "total": 1,
+                      "page": 1,
+                      "limit": 10,
+                      "totalPages": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/teacher/teaching/top-students": {
+      "get": {
+        "summary": "Get Top Students",
+        "deprecated": false,
+        "description": "Get top-performing students in teacher's assigned courses/subjects (admin/teacher)",
+        "tags": ["Teaching Analytics"],
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "query",
+            "description": "Filter by course UUID",
+            "required": false,
+            "example": "a15e2800-7a98-41aa-941c-d64755927c8e",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "subject_id",
+            "in": "query",
+            "description": "Filter by subject UUID",
+            "required": false,
+            "example": "0383aa2d-16f2-4252-8e4a-82d84e88911b",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of top students to return",
+            "required": false,
+            "example": 10,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Top students retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "statusCode": 200,
+                  "success": true,
+                  "message": "Top students retrieved successfully",
+                  "data": {
+                    "students": [
+                      {
+                        "id": "4918de49-1169-41b9-b035-8155d999dc8e",
+                        "fname": "john",
+                        "lname": "doe",
+                        "email": "john@example.com",
+                        "totalTests": 5,
+                        "avgScore": 85.50,
+                        "avgCorrect": 21,
+                        "avgIncorrect": 4
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/teacher/teaching/weakness-summary": {
+      "get": {
+        "summary": "Get Weakness Summary",
+        "deprecated": false,
+        "description": "Get topics where students are underperforming (admin/teacher)",
+        "tags": ["Teaching Analytics"],
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "query",
+            "description": "Filter by course UUID",
+            "required": false,
+            "example": "a15e2800-7a98-41aa-941c-d64755927c8e",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "threshold",
+            "in": "query",
+            "description": "Accuracy threshold percentage (topics below this are considered weak)",
+            "required": false,
+            "example": 50,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Weakness summary retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "statusCode": 200,
+                  "success": true,
+                  "message": "Weakness summary retrieved successfully",
+                  "data": {
+                    "weakTopics": [
+                      {
+                        "topicId": "a8e38b6a-b596-45e0-95c2-9d786ff8989e",
+                        "topicName": "binary trees",
+                        "subjectName": "data structures",
+                        "courseName": "computer science",
+                        "weakStudentCount": 8,
+                        "totalStudents": 15,
+                        "avgAccuracy": 35
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/teacher/teaching/question-coverage": {
+      "get": {
+        "summary": "Get Question Coverage",
+        "deprecated": false,
+        "description": "Get topics covered by questions added by this teacher (admin/teacher)",
+        "tags": ["Teaching Analytics"],
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "query",
+            "description": "Filter by course UUID",
+            "required": false,
+            "example": "a15e2800-7a98-41aa-941c-d64755927c8e",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "subject_id",
+            "in": "query",
+            "description": "Filter by subject UUID",
+            "required": false,
+            "example": "0383aa2d-16f2-4252-8e4a-82d84e88911b",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of topics to return",
+            "required": false,
+            "example": 10,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Question coverage retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "statusCode": 200,
+                  "success": true,
+                  "message": "Question coverage retrieved successfully",
+                  "data": {
+                    "topics": [
+                      {
+                        "topicId": "a8e38b6a-b596-45e0-95c2-9d786ff8989e",
+                        "topicName": "binary trees",
+                        "subjectName": "data structures",
+                        "courseName": "computer science",
+                        "count": 25
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    }
+  },
+  "webhooks": {},
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/api",
+      "description": "Develop Env"
+    },
+    {
+      "url": "",
+      "description": "Testing Env"
+    },
+    {
+      "url": "",
+      "description": "Prod Env"
+    }
+  ],
+  "security": [
+    {
+      "bearer": []
+    }
+  ]
+}

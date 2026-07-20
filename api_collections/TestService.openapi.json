@@ -1,0 +1,1316 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "TestService",
+    "description": "Test session management, real-time test-taking, grading, and predefined tests",
+    "version": "1.0.0"
+  },
+  "tags": [],
+  "paths": {
+    "/test/start": {
+      "post": {
+        "summary": "Start New Test",
+        "deprecated": false,
+        "description": "Start a new test session with course/subject/topic selections",
+        "tags": ["Test Session"],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              },
+              "example": {
+                "duration_minutes": 30,
+                "question_limit": 30,
+                "selections": [
+                  {
+                    "course_id": "a15e2800-7a98-41aa-941c-d64755927c8e",
+                    "subject_id": "0383aa2d-16f2-4252-8e4a-82d84e88911b",
+                    "topic_id": "a8e38b6a-b596-45e0-95c2-9d786ff8989e"
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Test started successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "statusCode": 201,
+                  "success": true,
+                  "message": "Test started successfully",
+                  "data": {
+                    "id": "b5bb36a8-4167-4fb2-b8a6-8cd9442b2c19",
+                    "test_id": "john_doe_mon_20260718_143000",
+                    "status": "in_progress",
+                    "duration_minutes": 30,
+                    "question_limit": 30,
+                    "ends_at": "2026-07-18T15:00:00.000Z",
+                    "totalQuestions": 25,
+                    "questions": [
+                      {
+                        "index": 0,
+                        "questionId": "0f06abdc-16aa-45f2-98fb-0a70b303719e",
+                        "question": "What is the time complexity of binary search?",
+                        "choices": ["O(n)", "O(log n)", "O(n^2)", "O(1)"],
+                        "difficulty": "mid",
+                        "topicName": "binary trees",
+                        "subjectName": "data structures",
+                        "courseName": "computer science"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/test/submit/{testId}": {
+      "post": {
+        "summary": "Submit Test",
+        "deprecated": false,
+        "description": "Submit and grade a completed test",
+        "tags": ["Test Session"],
+        "parameters": [
+          {
+            "name": "testId",
+            "in": "path",
+            "description": "Test session ID (UUID)",
+            "required": true,
+            "example": "b5bb36a8-4167-4fb2-b8a6-8cd9442b2c19",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Test submitted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "statusCode": 200,
+                  "success": true,
+                  "message": "Test submitted successfully",
+                  "data": {
+                    "id": "b5bb36a8-4167-4fb2-b8a6-8cd9442b2c19",
+                    "test_id": "john_doe_mon_20260718_143000",
+                    "status": "completed",
+                    "totalQuestions": 25,
+                    "attempted": 22,
+                    "skipped": 3,
+                    "correct": 18,
+                    "incorrect": 4,
+                    "score": 72.00
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/test/abandon/{testId}": {
+      "post": {
+        "summary": "Abandon Test",
+        "deprecated": false,
+        "description": "Abandon an ongoing test session",
+        "tags": ["Test Session"],
+        "parameters": [
+          {
+            "name": "testId",
+            "in": "path",
+            "description": "Test session ID (UUID)",
+            "required": true,
+            "example": "b5bb36a8-4167-4fb2-b8a6-8cd9442b2c19",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Test abandoned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "statusCode": 200,
+                  "success": true,
+                  "message": "Test abandoned successfully",
+                  "data": {
+                    "id": "b5bb36a8-4167-4fb2-b8a6-8cd9442b2c19",
+                    "test_id": "john_doe_mon_20260718_143000",
+                    "status": "abandoned"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/test/history": {
+      "get": {
+        "summary": "Get Test History",
+        "deprecated": false,
+        "description": "Get own test history (student only)",
+        "tags": ["Test Session"],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number",
+            "required": false,
+            "example": 1,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Items per page",
+            "required": false,
+            "example": 10,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Test history retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "statusCode": 200,
+                  "success": true,
+                  "message": "Tests retrieved successfully",
+                  "data": {
+                    "tests": [
+                      {
+                        "id": "b5bb36a8-4167-4fb2-b8a6-8cd9442b2c19",
+                        "test_id": "john_doe_mon_20260718_143000",
+                        "student_id": "4918de49-1169-41b9-b035-8155d999dc8e",
+                        "status": "completed",
+                        "duration_minutes": 30,
+                        "question_limit": 30,
+                        "total_questions": 25,
+                        "attempted": 22,
+                        "correct": 18,
+                        "incorrect": 4,
+                        "skipped": 3,
+                        "score": 72.00,
+                        "started_at": "2026-07-18T14:30:00.000Z",
+                        "completed_at": "2026-07-18T14:55:00.000Z",
+                        "course": { "id": "a15e2800-7a98-41aa-941c-d64755927c8e", "name": "computer science" },
+                        "subject": { "id": "0383aa2d-16f2-4252-8e4a-82d84e88911b", "name": "data structures" },
+                        "topic": { "id": "a8e38b6a-b596-45e0-95c2-9d786ff8989e", "name": "binary trees" }
+                      }
+                    ],
+                    "pagination": {
+                      "total": 1,
+                      "page": 1,
+                      "limit": 10,
+                      "totalPages": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/test/result/{testId}": {
+      "get": {
+        "summary": "Get Test Result",
+        "deprecated": false,
+        "description": "Get full result with question breakdown (student only)",
+        "tags": ["Test Session"],
+        "parameters": [
+          {
+            "name": "testId",
+            "in": "path",
+            "description": "Test ID (UUID or formatted string)",
+            "required": true,
+            "example": "john_doe_mon_20260718_143000",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Test result retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "statusCode": 200,
+                  "success": true,
+                  "message": "Result retrieved successfully",
+                  "data": {
+                    "id": "b5bb36a8-4167-4fb2-b8a6-8cd9442b2c19",
+                    "test_id": "john_doe_mon_20260718_143000",
+                    "status": "completed",
+                    "totalQuestions": 25,
+                    "attempted": 22,
+                    "skipped": 3,
+                    "correct": 18,
+                    "incorrect": 4,
+                    "score": 72.00,
+                    "disconnectCount": 0,
+                    "startedAt": "2026-07-18T14:30:00.000Z",
+                    "completedAt": "2026-07-18T14:55:00.000Z",
+                    "questions": [
+                      {
+                        "index": 0,
+                        "question": "What is the time complexity of binary search?",
+                        "choices": ["O(n)", "O(log n)", "O(n^2)", "O(1)"],
+                        "selectedAnswer": "O(log n)",
+                        "correctAnswer": "O(log n)",
+                        "isCorrect": true,
+                        "explanation": "Binary search halves the search space each step.",
+                        "videoUrl": null,
+                        "timeTaken": 45,
+                        "topicName": "binary trees",
+                        "subjectName": "data structures",
+                        "courseName": "computer science"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/test/student/{studentId}": {
+      "get": {
+        "summary": "Get Tests by Student",
+        "deprecated": false,
+        "description": "Get all tests for a student (admin/teacher)",
+        "tags": ["Test Session"],
+        "parameters": [
+          {
+            "name": "studentId",
+            "in": "path",
+            "description": "Student UUID",
+            "required": true,
+            "example": "4918de49-1169-41b9-b035-8155d999dc8e",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number",
+            "required": false,
+            "example": 1,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Items per page",
+            "required": false,
+            "example": 10,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tests retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/test/student/{studentId}/results": {
+      "get": {
+        "summary": "Get Student Results with Question Breakdown",
+        "deprecated": false,
+        "description": "Get completed test results with full question breakdown",
+        "tags": ["Test Session"],
+        "parameters": [
+          {
+            "name": "studentId",
+            "in": "path",
+            "description": "Student UUID",
+            "required": true,
+            "example": "4918de49-1169-41b9-b035-8155d999dc8e",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number",
+            "required": false,
+            "example": 1,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Items per page",
+            "required": false,
+            "example": 10,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Student results retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "statusCode": 200,
+                  "success": true,
+                  "message": "Student results retrieved successfully",
+                  "data": {
+                    "results": [
+                      {
+                        "id": "b5bb36a8-4167-4fb2-b8a6-8cd9442b2c19",
+                        "test_id": "john_doe_mon_20260718_143000",
+                        "status": "completed",
+                        "score": 72.00,
+                        "totalQuestions": 25,
+                        "attempted": 22,
+                        "correct": 18,
+                        "incorrect": 4,
+                        "skipped": 3,
+                        "startedAt": "2026-07-18T14:30:00.000Z",
+                        "completedAt": "2026-07-18T14:55:00.000Z",
+                        "questions": []
+                      }
+                    ],
+                    "pagination": {
+                      "total": 1,
+                      "page": 1,
+                      "limit": 10,
+                      "totalPages": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/test/student/{studentId}/summary": {
+      "get": {
+        "summary": "Get Student Result Summary",
+        "deprecated": false,
+        "description": "Lightweight summary without question data",
+        "tags": ["Test Session"],
+        "parameters": [
+          {
+            "name": "studentId",
+            "in": "path",
+            "description": "Student UUID",
+            "required": true,
+            "example": "4918de49-1169-41b9-b035-8155d999dc8e",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number",
+            "required": false,
+            "example": 1,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Items per page",
+            "required": false,
+            "example": 10,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Summary retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "statusCode": 200,
+                  "success": true,
+                  "message": "Student result summary retrieved successfully",
+                  "data": {
+                    "results": [
+                      {
+                        "id": "b5bb36a8-4167-4fb2-b8a6-8cd9442b2c19",
+                        "testId": "john_doe_mon_20260718_143000",
+                        "score": 72.00,
+                        "accuracy": 72,
+                        "totalQuestions": 25,
+                        "attempted": 22,
+                        "correct": 18,
+                        "incorrect": 4,
+                        "skipped": 3,
+                        "durationMinutes": 30,
+                        "disconnects": 0,
+                        "courses": ["computer science"],
+                        "subjects": ["data structures"],
+                        "startedAt": "2026-07-18T14:30:00.000Z",
+                        "completedAt": "2026-07-18T14:55:00.000Z"
+                      }
+                    ],
+                    "pagination": {
+                      "total": 1,
+                      "page": 1,
+                      "limit": 10,
+                      "totalPages": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/test/student/{studentId}/performance": {
+      "get": {
+        "summary": "Get Student Performance",
+        "deprecated": false,
+        "description": "Get student performance summary (admin/teacher)",
+        "tags": ["Test Session"],
+        "parameters": [
+          {
+            "name": "studentId",
+            "in": "path",
+            "description": "Student UUID",
+            "required": true,
+            "example": "4918de49-1169-41b9-b035-8155d999dc8e",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Performance retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "statusCode": 200,
+                  "success": true,
+                  "message": "Student performance retrieved successfully",
+                  "data": {
+                    "studentId": "4918de49-1169-41b9-b035-8155d999dc8e",
+                    "totalTests": 5,
+                    "averageScore": 72.50,
+                    "highestScore": 92.00,
+                    "lowestScore": 45.00,
+                    "totalQuestions": 125,
+                    "totalCorrect": 90,
+                    "totalIncorrect": 25,
+                    "totalSkipped": 10
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/test/detail/{testId}": {
+      "get": {
+        "summary": "Get Test Detail for Admin",
+        "deprecated": false,
+        "description": "Get full test detail with answers (admin/teacher)",
+        "tags": ["Test Session"],
+        "parameters": [
+          {
+            "name": "testId",
+            "in": "path",
+            "description": "Test session UUID",
+            "required": true,
+            "example": "b5bb36a8-4167-4fb2-b8a6-8cd9442b2c19",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Test detail retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/test/all": {
+      "get": {
+        "summary": "Get All Tests",
+        "deprecated": false,
+        "description": "Get all tests with filters (admin only)",
+        "tags": ["Test Session"],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number",
+            "required": false,
+            "example": 1,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Items per page",
+            "required": false,
+            "example": 10,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filter by status",
+            "required": false,
+            "example": "completed",
+            "schema": {
+              "type": "string",
+              "enum": ["pending", "in_progress", "completed", "abandoned"]
+            }
+          },
+          {
+            "name": "subjectId",
+            "in": "query",
+            "description": "Filter by subject UUID",
+            "required": false,
+            "example": "0383aa2d-16f2-4252-8e4a-82d84e88911b",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateFrom",
+            "in": "query",
+            "description": "Filter from date (ISO string)",
+            "required": false,
+            "example": "2026-07-01T00:00:00.000Z",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateTo",
+            "in": "query",
+            "description": "Filter to date (ISO string)",
+            "required": false,
+            "example": "2026-07-31T23:59:59.000Z",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tests retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/test/{testId}": {
+      "get": {
+        "summary": "Get Test by ID",
+        "deprecated": false,
+        "description": "Get test session details (student only)",
+        "tags": ["Test Session"],
+        "parameters": [
+          {
+            "name": "testId",
+            "in": "path",
+            "description": "Test session UUID",
+            "required": true,
+            "example": "b5bb36a8-4167-4fb2-b8a6-8cd9442b2c19",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Test retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/test/predefined/pending": {
+      "get": {
+        "summary": "Get Pending Predefined Tests",
+        "deprecated": false,
+        "description": "Get pending/available predefined tests for student",
+        "tags": ["Predefined Test"],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Pending tests retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "statusCode": 200,
+                  "success": true,
+                  "message": "Pending tests retrieved successfully",
+                  "data": {
+                    "tests": [
+                      {
+                        "id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+                        "title": "Mid-Term Exam - Data Structures",
+                        "description": "Comprehensive exam covering all topics",
+                        "status": "active",
+                        "duration_minutes": 45,
+                        "question_limit": 40,
+                        "difficulty": "mixed",
+                        "is_scheduled": true,
+                        "start_time": "2026-07-20T09:00:00.000Z",
+                        "end_time": "2026-07-20T23:59:59.000Z",
+                        "student_status": "assigned"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/test/predefined/join/{token}": {
+      "get": {
+        "summary": "Join Predefined Test by Token",
+        "deprecated": false,
+        "description": "Get predefined test info by join token",
+        "tags": ["Predefined Test"],
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "description": "Test link token",
+            "required": true,
+            "example": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Test info retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "statusCode": 200,
+                  "success": true,
+                  "message": "Test info retrieved successfully",
+                  "data": {
+                    "id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+                    "title": "Mid-Term Exam - Data Structures",
+                    "description": "Comprehensive exam covering all topics",
+                    "duration_minutes": 45,
+                    "question_limit": 40,
+                    "difficulty": "mixed",
+                    "is_scheduled": true,
+                    "start_time": "2026-07-20T09:00:00.000Z",
+                    "end_time": "2026-07-20T23:59:59.000Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/test/predefined": {
+      "get": {
+        "summary": "Get All Predefined Tests",
+        "deprecated": false,
+        "description": "Get all predefined tests (admin/teacher)",
+        "tags": ["Predefined Test"],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number",
+            "required": false,
+            "example": 1,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Items per page",
+            "required": false,
+            "example": 10,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filter by status",
+            "required": false,
+            "example": "active",
+            "schema": {
+              "type": "string",
+              "enum": ["draft", "active", "inactive", "archived"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Predefined tests retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "summary": "Create Predefined Test",
+        "deprecated": false,
+        "description": "Create a new predefined test",
+        "tags": ["Predefined Test"],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              },
+              "example": {
+                "title": "Mid-Term Exam - Data Structures",
+                "description": "Comprehensive exam covering all topics",
+                "is_scheduled": true,
+                "start_time": "2026-07-20T09:00:00.000Z",
+                "end_time": "2026-07-20T23:59:59.000Z",
+                "timezone": "Asia/Kolkata",
+                "duration_minutes": 45,
+                "question_limit": 40,
+                "difficulty": "mixed",
+                "difficulty_ratio": {
+                  "beginner": 20,
+                  "normal": 30,
+                  "mid": 30,
+                  "hard": 15,
+                  "expert": 5
+                },
+                "use_fixed_questions": false,
+                "use_specific_students": true,
+                "max_attempts": 1,
+                "course_ids": ["a15e2800-7a98-41aa-941c-d64755927c8e"],
+                "subject_ids": ["0383aa2d-16f2-4252-8e4a-82d84e88911b"],
+                "topic_ids": ["a8e38b6a-b596-45e0-95c2-9d786ff8989e"],
+                "student_ids": ["4918de49-1169-41b9-b035-8155d999dc8e"]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Predefined test created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/test/predefined/{id}": {
+      "get": {
+        "summary": "Get Predefined Test by ID",
+        "deprecated": false,
+        "description": "Get predefined test details with questions and assignments",
+        "tags": ["Predefined Test"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Predefined test UUID",
+            "required": true,
+            "example": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Predefined test retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "summary": "Update Predefined Test",
+        "deprecated": false,
+        "description": "Update a predefined test (draft/active status only)",
+        "tags": ["Predefined Test"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Predefined test UUID",
+            "required": true,
+            "example": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              },
+              "example": {
+                "title": "Updated Mid-Term Exam",
+                "duration_minutes": 60,
+                "question_limit": 50
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Predefined test updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "summary": "Delete Predefined Test",
+        "deprecated": false,
+        "description": "Soft delete a predefined test",
+        "tags": ["Predefined Test"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Predefined test UUID",
+            "required": true,
+            "example": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Predefined test deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/test/predefined/{id}/activate": {
+      "post": {
+        "summary": "Activate Predefined Test",
+        "deprecated": false,
+        "description": "Activate a predefined test (draft/inactive -> active)",
+        "tags": ["Predefined Test"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Predefined test UUID",
+            "required": true,
+            "example": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Predefined test activated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/test/predefined/{id}/deactivate": {
+      "post": {
+        "summary": "Deactivate Predefined Test",
+        "deprecated": false,
+        "description": "Deactivate an active predefined test (active -> inactive)",
+        "tags": ["Predefined Test"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Predefined test UUID",
+            "required": true,
+            "example": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Predefined test deactivated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/test/predefined/{id}/start": {
+      "post": {
+        "summary": "Start Predefined Test",
+        "deprecated": false,
+        "description": "Start a predefined test as a student",
+        "tags": ["Predefined Test"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Predefined test UUID",
+            "required": true,
+            "example": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Predefined test started",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "example": {
+                  "statusCode": 201,
+                  "success": true,
+                  "message": "Test started successfully",
+                  "data": {
+                    "id": "d4e5f6a7-b8c9-0123-def4-567890123456",
+                    "test_id": "PREDEFINED_c3d4e5f6_1689916200000",
+                    "status": "in_progress",
+                    "duration_minutes": 45,
+                    "question_limit": 40,
+                    "ends_at": "2026-07-18T15:15:00.000Z",
+                    "totalQuestions": 40,
+                    "questions": [
+                      {
+                        "index": 0,
+                        "questionId": "0f06abdc-16aa-45f2-98fb-0a70b303719e",
+                        "question": "What is the time complexity of binary search?",
+                        "choices": ["O(n)", "O(log n)", "O(n^2)", "O(1)"],
+                        "difficulty": "mid",
+                        "topicName": "binary trees",
+                        "subjectName": "data structures",
+                        "courseName": "computer science"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    }
+  },
+  "webhooks": {},
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/api",
+      "description": "Develop Env"
+    },
+    {
+      "url": "",
+      "description": "Testing Env"
+    },
+    {
+      "url": "",
+      "description": "Prod Env"
+    }
+  ],
+  "security": [
+    {
+      "bearer": []
+    }
+  ]
+}
