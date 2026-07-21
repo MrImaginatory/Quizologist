@@ -22,6 +22,9 @@ import {
   FileSpreadsheet,
   Trash2,
   ArrowRight,
+  AlertCircle,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useCourses } from "@/hooks/use-courses";
@@ -85,6 +88,8 @@ export default function ImportQuestionsPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [parsedQuestions, setParsedQuestions] = useState<ResolvedQuestion[]>([]);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
+  const [importProgress, setImportProgress] = useState({ current: 0, total: 0 });
+  const [showErrors, setShowErrors] = useState(false);
 
   const handleDownloadTemplate = async () => {
     try {
@@ -319,29 +324,50 @@ export default function ImportQuestionsPage() {
 
   const handleImport = async () => {
     setIsLoading(true);
-    try {
-      const questionsToImport = parsedQuestions
-        .filter((q) => q.status === "ready")
-        .map((q) => ({
-          type: q.type as "mcq",
-          question: q.question,
-          choices: q.choices,
-          correctAnswer: q.correctAnswer,
-          explanation: q.explanation || "",
-          videoUrl: q.videoUrl || "",
-          difficulty: "normal",
-          topic_id: q.topic_id,
-          subject_id: q.subject_id,
-          course_id: q.course_id,
-          questionAddedBy: "",
-        }));
+    const BATCH_SIZE = 500;
 
-      const result = await questionsApi.bulkImport(questionsToImport, token || undefined);
+    const questionsToImport = parsedQuestions
+      .filter((q) => q.status === "ready")
+      .map((q) => ({
+        type: q.type as "mcq",
+        question: q.question,
+        choices: q.choices,
+        correctAnswer: q.correctAnswer,
+        explanation: q.explanation || "",
+        videoUrl: q.videoUrl || "",
+        difficulty: "normal",
+        topic_id: q.topic_id,
+        subject_id: q.subject_id,
+        course_id: q.course_id,
+        questionAddedBy: "",
+      }));
+
+    setImportProgress({ current: 0, total: questionsToImport.length });
+
+    let totalImported = 0;
+    let totalFailed = 0;
+    const allErrors: { row: number; reason: string }[] = [];
+
+    try {
+      for (let i = 0; i < questionsToImport.length; i += BATCH_SIZE) {
+        const batch = questionsToImport.slice(i, i + BATCH_SIZE);
+        const result = await questionsApi.bulkImport(batch, token || undefined);
+
+        totalImported += result.data.imported;
+        totalFailed += result.data.failed;
+        allErrors.push(...(result.data.errors || []));
+
+        setImportProgress({
+          current: Math.min(i + BATCH_SIZE, questionsToImport.length),
+          total: questionsToImport.length,
+        });
+      }
+
       setImportResult({
         totalRows: parsedQuestions.length,
-        imported: result.imported,
-        failed: result.failed,
-        errors: result.errors || [],
+        imported: totalImported,
+        failed: totalFailed,
+        errors: allErrors,
       });
       setStep("result");
     } catch (error) {
@@ -529,6 +555,20 @@ export default function ImportQuestionsPage() {
             </div>
 
             <div className="flex justify-end mt-4">
+              {isLoading && importProgress.total > 0 && (
+                <div className="flex-1 mr-4 space-y-2">
+                  <div className="flex justify-between text-sm text-muted-foreground">
+                    <span>Importing questions...</span>
+                    <span>{importProgress.current} / {importProgress.total}</span>
+                  </div>
+                  <div className="w-full bg-muted rounded-full h-2">
+                    <div
+                      className="bg-primary h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${(importProgress.current / importProgress.total) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              )}
               <Button onClick={handleImport} disabled={isLoading || readyCount === 0}>
                 {isLoading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -557,31 +597,49 @@ export default function ImportQuestionsPage() {
                 <div className="text-2xl font-bold">{importResult.totalRows}</div>
                 <div className="text-sm text-muted-foreground">Total Rows</div>
               </div>
-              <div className="text-center p-4 bg-green-500/10 rounded-lg">
-                <div className="text-2xl font-bold text-green-500">{importResult.imported}</div>
-                <div className="text-sm text-muted-foreground">Imported</div>
+              <div className="text-center p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+                <div className="text-2xl font-bold text-green-400">{importResult.imported}</div>
+                <div className="text-sm text-green-400/80">Imported</div>
               </div>
-              <div className="text-center p-4 bg-red-500/10 rounded-lg">
-                <div className="text-2xl font-bold text-red-500">{importResult.failed}</div>
-                <div className="text-sm text-muted-foreground">Failed</div>
+              <div className="text-center p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+                <div className="text-2xl font-bold text-red-400">{importResult.failed}</div>
+                <div className="text-sm text-red-400/80">Failed</div>
               </div>
             </div>
 
             {importResult.errors && importResult.errors.length > 0 && (
-              <div className="mt-4">
-                <h4 className="font-medium mb-2">Errors:</h4>
-                <ul className="space-y-1 text-sm text-muted-foreground">
-                  {importResult.errors.map((err, i) => (
-                    <li key={i}>
-                      <span className="font-medium">Row {err.row}:</span> {err.reason}
-                    </li>
-                  ))}
-                </ul>
+              <div className="mt-4 space-y-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowErrors(!showErrors)}
+                  className="flex items-center gap-2 border-red-500/20 hover:border-red-500/40 text-red-400 bg-red-500/5 hover:bg-red-500/10 transition-all duration-200"
+                >
+                  <AlertCircle className="h-4 w-4" />
+                  {showErrors ? "Hide Errors" : "Show Errors"} ({importResult.errors.length})
+                  {showErrors ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </Button>
+
+                {showErrors && (
+                  <div className="mt-2 max-h-[300px] overflow-auto p-4 bg-red-950/20 border border-red-500/20 rounded-lg animate-in fade-in-50 slide-in-from-top-1 duration-200">
+                    <h4 className="font-medium mb-3 text-red-400 flex items-center gap-1.5">
+                      <AlertCircle className="h-4 w-4" />
+                      Detailed Import Errors:
+                    </h4>
+                    <ul className="space-y-2 text-sm text-muted-foreground text-left">
+                      {importResult.errors.map((err, i) => (
+                        <li key={i} className="flex gap-2 items-start py-1.5 border-b border-border/45 last:border-0">
+                          <span className="font-medium text-red-400/90 whitespace-nowrap">Row {err.row}:</span>
+                          <span>{err.reason}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             )}
 
             <div className="flex gap-4 mt-6">
-              <Button variant="outline" onClick={() => { setStep("upload"); setParsedQuestions([]); setImportResult(null); }}>
+              <Button variant="outline" onClick={() => { setStep("upload"); setParsedQuestions([]); setImportResult(null); setShowErrors(false); }}>
                 Import More
               </Button>
               <Button onClick={() => window.location.href = "/dashboard/questions"}>

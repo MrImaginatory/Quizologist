@@ -30,6 +30,7 @@ export interface BulkQuestionInput {
   correctAnswer: string;
   explanation?: string;
   videoUrl?: string;
+  difficulty?: string;
   topic_id: string;
   subject_id: string;
   course_id: string;
@@ -190,10 +191,11 @@ export class QuestionImportService {
     defaultUserId: string,
     user?: { userId: string; role: string }
   ): Promise<BulkImportResult> {
+    const BATCH_SIZE = 500;
     const errors: { row: number; reason: string }[] = [];
     let imported = 0;
 
-    // If teacher, fetch their allowed course/subject pairs
+    // 1. Teacher authorization check (once)
     let allowedPairs: Set<string> | null = null;
     if (user && user.role === "teacher") {
       const assignments = await TeacherAssignment.findAll({
@@ -207,79 +209,106 @@ export class QuestionImportService {
       );
     }
 
-    // Pre-fetch all existing questions for duplicate check
-    const existingQuestions = await Question.findAll({
-      attributes: ["question", "topic_id"],
-      where: { deletedAt: null },
-    });
-    const existingSet = new Set(
-      existingQuestions.map((q) => `${q.question.toLowerCase()}|${q.topic_id}`)
-    );
-
+    // 2. Pre-validate all rows (fast, no DB writes)
+    const validRows: { index: number; data: any; dedupeKey: string }[] = [];
     for (let i = 0; i < questions.length; i++) {
-      const row = i + 2; // Excel rows are 1-indexed, header is row 1
+      const row = i + 2;
       const q = questions[i];
 
-      // If teacher, validate course/subject assignment
       if (allowedPairs) {
         const pairKey = `${q.course_id}|${q.subject_id || ""}`;
         if (!allowedPairs.has(pairKey)) {
-          errors.push({
-            row,
-            reason: "You are not assigned to this course/subject combination",
-          });
+          errors.push({ row, reason: "You are not assigned to this course/subject combination" });
           continue;
         }
       }
 
-      // Validate choices count
       const validChoices = q.choices.filter((c) => c && c.trim() !== "");
       if (validChoices.length < 2) {
         errors.push({ row, reason: "At least 2 valid options are required" });
         continue;
       }
 
-      // Validate correct answer matches one of the choices
       if (!validChoices.includes(q.correctAnswer)) {
-        errors.push({
-          row,
-          reason: "Correct answer does not match any provided option",
-        });
+        errors.push({ row, reason: "Correct answer does not match any provided option" });
         continue;
       }
 
-      // Check for duplicate question within the same topic
-      const dedupeKey = `${q.question.toLowerCase()}|${q.topic_id}`;
-      if (existingSet.has(dedupeKey)) {
-        errors.push({
-          row,
-          reason: "A question with this text already exists for this topic",
-        });
-        continue;
-      }
-
-      // Insert the question
-      try {
-        await Question.create({
+      validRows.push({
+        index: i,
+        data: {
           type: "mcq",
           question: q.question,
           choices: validChoices,
           correctAnswer: q.correctAnswer,
           explanation: q.explanation || null,
           videoUrl: q.videoUrl || null,
-          difficulty: "normal",
+          difficulty: q.difficulty || "normal",
           topic_id: q.topic_id,
           subject_id: q.subject_id,
           course_id: q.course_id,
           questionAddedBy: q.questionAddedBy || defaultUserId,
-        });
+        },
+        dedupeKey: `${q.question.toLowerCase()}|${q.topic_id}`,
+      });
+    }
 
-        // Add to set so duplicates within the same batch are caught
-        existingSet.add(dedupeKey);
-        imported++;
-      } catch (err: any) {
-        errors.push({ row, reason: err.message || "Failed to create question" });
+    // 3. Batch duplicate check using DB (only for topic_ids in this batch)
+    const batchTopicIds = [...new Set(validRows.map((r) => r.data.topic_id))];
+    const existingQuestions = await Question.findAll({
+      where: {
+        topic_id: { [Op.in]: batchTopicIds },
+        deletedAt: null,
+      },
+      attributes: ["question", "topic_id"],
+    });
+    const existingSet = new Set(
+      existingQuestions.map((q) => `${q.question.toLowerCase()}|${q.topic_id}`)
+    );
+
+    // 4. Process in batches using Sequelize bulkCreate
+    for (let i = 0; i < validRows.length; i += BATCH_SIZE) {
+      const batch = validRows.slice(i, i + BATCH_SIZE);
+      const batchRecords: any[] = [];
+      const batchErrors: { row: number; reason: string }[] = [];
+
+      for (const item of batch) {
+        const row = item.index + 2;
+        if (existingSet.has(item.dedupeKey)) {
+          batchErrors.push({ row, reason: "A question with this text already exists for this topic" });
+          continue;
+        }
+        batchRecords.push(item.data);
+        existingSet.add(item.dedupeKey);
       }
+
+      if (batchRecords.length > 0) {
+        try {
+          const result = await Question.bulkCreate(batchRecords, {
+            validate: true,
+            returning: false,
+          });
+          imported += result.length;
+        } catch (err: any) {
+          // Fallback to individual inserts to get per-row errors
+          for (const record of batchRecords) {
+            try {
+              await Question.create(record);
+              imported++;
+            } catch (innerErr: any) {
+              const originalIndex = validRows.findIndex(
+                (r) => r.data.question === record.question && r.data.topic_id === record.topic_id
+              );
+              batchErrors.push({
+                row: originalIndex >= 0 ? originalIndex + 2 : i + 2,
+                reason: innerErr.message || "Failed to create question",
+              });
+            }
+          }
+        }
+      }
+
+      errors.push(...batchErrors);
     }
 
     return {

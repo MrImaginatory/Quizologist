@@ -21,7 +21,7 @@ export const bulkQuestionsSchema = z.object({
   questions: z
     .array(bulkQuestionSchema)
     .min(1, "At least one question is required")
-    .max(500, "Maximum 500 questions per import"),
+    .max(10000, "Maximum 10000 questions per import"),
 });
 
 export type BulkQuestionInput = z.infer<typeof bulkQuestionSchema>;

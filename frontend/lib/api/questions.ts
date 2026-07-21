@@ -46,7 +46,16 @@ export const questionsApi = {
     return response.blob();
   },
   bulkImport: (questions: Omit<Question, "id">[], token?: string) =>
-    apiRequest<{ totalRows: number; imported: number; failed: number; errors: { row: number; reason: string }[] }>(
+    apiRequest<{
+      success: boolean;
+      message: string;
+      data: {
+        totalRows: number;
+        imported: number;
+        failed: number;
+        errors: { row: number; reason: string }[];
+      };
+    }>(
       API_ROUTES.QUESTIONS.BULK,
       { method: "POST", body: JSON.stringify({ questions }), token }
     ),
