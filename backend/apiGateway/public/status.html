@@ -255,6 +255,10 @@
       background: var(--green);
     }
 
+    .uptime-bar.partial {
+      background: var(--yellow);
+    }
+
     .uptime-bar.down {
       background: var(--red);
     }
@@ -544,7 +548,12 @@
     const fmtDate = (s) => new Date(s).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
     const renderBars = (history) => history.map(d => {
-      const cls = d.status === 'UP' ? 'up' : 'down';
+      let cls = 'up';
+      if (d.status === 'DOWN') {
+        cls = 'down';
+      } else if (d.status === 'PARTIAL') {
+        cls = 'partial';
+      }
       const tip = `${fmtDate(d.date)}: ${d.status}`;
       return `<div class="uptime-bar ${cls}" data-tip="${tip}"></div>`;
     }).join('');

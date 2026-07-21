@@ -13,7 +13,7 @@ interface ServiceStatus {
   currentStatus: "UP" | "DOWN";
   lastCheck: string;
   uptime90d: number; // percentage
-  history: { date: string; status: "UP" | "DOWN" }[];
+  history: { date: string; status: "UP" | "DOWN" | "PARTIAL" }[];
 }
 
 const LOG_DIR = path.join(__dirname, "../../health-logs");
@@ -65,7 +65,7 @@ export function startHealthChecker(serviceUrls: { name: string; url: string }[])
     clearInterval(healthCheckInterval);
   }
 
-  healthCheckInterval = setInterval(async () => {
+  const check = async () => {
     for (const service of serviceUrls) {
       try {
         const response = await fetch(`${service.url}/health`, { signal: AbortSignal.timeout(5000) });
@@ -78,7 +78,12 @@ export function startHealthChecker(serviceUrls: { name: string; url: string }[])
         logHealth(service.name, "DOWN", error.message);
       }
     }
-  }, 60000); // Check every 60 seconds
+  };
+
+  // Run immediate initial check
+  check();
+
+  healthCheckInterval = setInterval(check, 60000); // Check every 60 seconds
 
   console.log("Health checker started - checking every 60 seconds");
 }
@@ -110,7 +115,7 @@ export function getServiceStatuses(): ServiceStatus[] {
     const currentStatus = latest?.status || "DOWN";
 
     // Build 90-day history
-    const history: { date: string; status: "UP" | "DOWN" }[] = [];
+    const history: { date: string; status: "UP" | "DOWN" | "PARTIAL" }[] = [];
     const now = new Date();
 
     for (let i = 89; i >= 0; i--) {
@@ -125,15 +130,27 @@ export function getServiceStatuses(): ServiceStatus[] {
         // No records = assume UP (service was running before monitoring started)
         history.push({ date: dateStr, status: "UP" });
       } else {
-        // If any DOWN record exists for the day, mark as DOWN
         const hasDown = dayRecords.some((r) => r.status === "DOWN");
-        history.push({ date: dateStr, status: hasDown ? "DOWN" : "UP" });
+        const hasUp = dayRecords.some((r) => r.status === "UP");
+        
+        let status: "UP" | "DOWN" | "PARTIAL" = "UP";
+        if (hasDown && hasUp) {
+          status = "PARTIAL";
+        } else if (hasDown) {
+          status = "DOWN";
+        }
+        
+        history.push({ date: dateStr, status });
       }
     }
 
     // Calculate uptime percentage
-    const upDays = history.filter((h) => h.status === "UP").length;
-    const uptime90d = Math.round((upDays / history.length) * 1000) / 10;
+    const uptimePoints = history.reduce((acc, h) => {
+      if (h.status === "UP") return acc + 1;
+      if (h.status === "PARTIAL") return acc + 0.95; // 95% uptime for days with partial outages
+      return acc;
+    }, 0);
+    const uptime90d = Math.round((uptimePoints / history.length) * 1000) / 10;
 
     return {
       name: service,
