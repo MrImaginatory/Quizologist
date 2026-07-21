@@ -7,7 +7,12 @@ import { StatisticsCard } from "@/components/statistics-card";
 import { dashboardApi, DashboardStatsResponse } from "@/lib/api";
 import { Loader2, MapPin } from "lucide-react";
 import { ViewToggle } from "@/components/dashboard/view-toggle";
-import { UsersByLocationChart } from "@/components/charts/users-by-location-chart";
+import dynamic from "next/dynamic";
+
+const UsersByLocationChart = dynamic(
+  () => import("@/components/charts/users-by-location-chart").then(m => ({ default: m.UsersByLocationChart })),
+  { ssr: false, loading: () => <div className="h-[300px] animate-pulse bg-muted rounded-lg" /> }
+);
 import { UsersByLocationTable } from "@/components/dashboard/users-by-location-table";
 
 export function AdminDashboard() {

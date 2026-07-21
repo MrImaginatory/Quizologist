@@ -1,5 +1,7 @@
 "use client";
 
+import { useRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   Table,
   TableBody,
@@ -62,6 +64,16 @@ export function DataTable<T>({
   onPageChange,
   onLimitChange,
 }: DataTableProps<T>) {
+  const parentRef = useRef<HTMLDivElement>(null);
+  const useVirtual = !pagination && data.length > 50;
+
+  const virtualizer = useVirtualizer({
+    count: data.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 48,
+    enabled: useVirtual,
+  });
+
   return (
     <Card>
       <CardHeader>
@@ -113,7 +125,7 @@ export function DataTable<T>({
           <div className="py-8 text-center text-muted-foreground">No data found.</div>
         ) : (
           <>
-            <div className="overflow-x-auto">
+            <div className={useVirtual ? "overflow-auto max-h-[500px]" : "overflow-x-auto"} ref={parentRef}>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -123,22 +135,62 @@ export function DataTable<T>({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {data.map((item, rowIndex) => {
-                    const rowNumber = pagination
-                      ? (pagination.page - 1) * pagination.limit + rowIndex + 1
-                      : rowIndex + 1;
-                    return (
-                      <TableRow key={keyExtractor(item)}>
-                        {columns.map((col) => (
-                          <TableCell key={col.key}>
-                            {col.render
-                              ? col.render(item, rowNumber - 1)
-                              : String((item as Record<string, unknown>)[col.key] ?? "")}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    );
-                  })}
+                  {useVirtual ? (
+                    <>
+                      {virtualizer.getVirtualItems().length > 0 && (
+                        <tr>
+                          <td
+                            colSpan={columns.length}
+                            style={{ height: virtualizer.getVirtualItems()[0]?.start ?? 0 }}
+                          />
+                        </tr>
+                      )}
+                      {virtualizer.getVirtualItems().map((virtualRow) => {
+                        const item = data[virtualRow.index];
+                        const rowNumber = virtualRow.index + 1;
+                        return (
+                          <TableRow key={keyExtractor(item)} ref={virtualizer.measureElement}>
+                            {columns.map((col) => (
+                              <TableCell key={col.key}>
+                                {col.render
+                                  ? col.render(item, rowNumber - 1)
+                                  : String((item as Record<string, unknown>)[col.key] ?? "")}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        );
+                      })}
+                      {virtualizer.getVirtualItems().length > 0 && (
+                        <tr>
+                          <td
+                            colSpan={columns.length}
+                            style={{
+                              height:
+                                virtualizer.getTotalSize() -
+                                (virtualizer.getVirtualItems().at(-1)?.end ?? 0),
+                            }}
+                          />
+                        </tr>
+                      )}
+                    </>
+                  ) : (
+                    data.map((item, rowIndex) => {
+                      const rowNumber = pagination
+                        ? (pagination.page - 1) * pagination.limit + rowIndex + 1
+                        : rowIndex + 1;
+                      return (
+                        <TableRow key={keyExtractor(item)}>
+                          {columns.map((col) => (
+                            <TableCell key={col.key}>
+                              {col.render
+                                ? col.render(item, rowNumber - 1)
+                                : String((item as Record<string, unknown>)[col.key] ?? "")}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      );
+                    })
+                  )}
                 </TableBody>
               </Table>
             </div>

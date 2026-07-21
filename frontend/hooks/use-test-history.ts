@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/contexts/auth-context";
-import { testsApi, TestHistory } from "@/lib/api";
+import useSWR from "swr";
+import { createFetcher, swrOptions } from "@/lib/swr-config";
+import { API_ROUTES } from "@/lib/api-routes";
+import type { TestHistoryResponse } from "@/lib/api";
 
 interface UseTestHistoryOptions {
   page?: number;
@@ -11,30 +13,22 @@ interface UseTestHistoryOptions {
 
 export function useTestHistory({ page = 1, limit = 10 }: UseTestHistoryOptions = {}) {
   const { token } = useAuth();
-  const [tests, setTests] = useState<TestHistory[]>([]);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+  const fetcher = createFetcher(token);
+  
+  const url = `${API_ROUTES.TESTS.HISTORY}?page=${page}&limit=${limit}`;
+  
+  const { data, error, isLoading, mutate } = useSWR<TestHistoryResponse>(
+    token ? url : null,
+    fetcher,
+    swrOptions
+  );
 
-  const fetchTests = useCallback(async () => {
-    setIsLoading(true);
-    setError("");
-    try {
-      const response = await testsApi.getHistory(page, limit, token || undefined);
-      setTests(response.data.tests);
-      setTotal(response.data.pagination.total);
-      setTotalPages(response.data.pagination.totalPages);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch test history");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [page, limit, token]);
-
-  useEffect(() => {
-    fetchTests();
-  }, [fetchTests]);
-
-  return { tests, total, totalPages, isLoading, error, refetch: fetchTests };
+  return {
+    tests: data?.data?.tests || [],
+    total: data?.data?.pagination?.total || 0,
+    totalPages: data?.data?.pagination?.totalPages || 0,
+    isLoading,
+    error: error?.message || "",
+    refetch: () => mutate(),
+  };
 }

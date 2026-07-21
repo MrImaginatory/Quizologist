@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
-import { predefinedTestsApi } from "@/lib/api";
+import useSWR from "swr";
+import { createFetcher, swrOptions } from "@/lib/swr-config";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Clock, BookOpen, Play, AlertCircle } from "lucide-react";
@@ -31,48 +31,61 @@ export default function JoinTestPage() {
   // Extract the actual token from the URL format: test_name_start_end_uuid
   const token = rawToken.includes("_") ? rawToken.split("_").pop() || rawToken : rawToken;
 
-  const [testInfo, setTestInfo] = useState<TestInfo | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isStarting, setIsStarting] = useState(false);
-  const [error, setError] = useState("");
+  const fetcher = createFetcher(authToken);
 
-  useEffect(() => {
-    if (authLoading) return;
+  const { data: response, error, isLoading } = useSWR<{ data: TestInfo }>(
+    token && authToken ? `/api/predefined-tests/token/${token}` : null,
+    (url) => fetcher(url),
+    { ...swrOptions, revalidateOnFocus: false }
+  );
 
-    if (!authToken) {
-      // Store the current URL to redirect back after login
-      const currentUrl = window.location.pathname;
-      sessionStorage.setItem("redirectAfterLogin", currentUrl);
-      router.push("/signin");
-      return;
-    }
+  const testInfo = response?.data;
+  const isStarting = false;
 
-    const fetchTestInfo = async () => {
-      try {
-        const response = await predefinedTestsApi.getByToken(token, authToken) as { data: TestInfo };
-        setTestInfo(response.data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load test info");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  if (authLoading || isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
-    if (token) fetchTestInfo();
-  }, [token, authToken, authLoading, router]);
+  if (!authToken) {
+    const currentUrl = window.location.pathname;
+    sessionStorage.setItem("redirectAfterLogin", currentUrl);
+    router.push("/signin");
+    return null;
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <Card className="max-w-md w-full">
+          <CardContent className="p-6 text-center">
+            <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
+            <h2 className="text-xl font-bold mb-2">Unable to Load Test</h2>
+            <p className="text-muted-foreground mb-4">{error.message}</p>
+            <Button onClick={() => router.push("/dashboard")}>
+              Go to Dashboard
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!testInfo) return null;
 
   const handleStartTest = async () => {
     if (!testInfo || !authToken) return;
 
-    setIsStarting(true);
     try {
+      const { predefinedTestsApi } = await import("@/lib/api");
       const response = await predefinedTestsApi.start(testInfo.id, authToken);
       toast.success("Test started!");
       router.push(`/live-test?id=${response.data.id}`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to start test");
-    } finally {
-      setIsStarting(false);
     }
   };
 

@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
-import { predefinedTestsApi } from "@/lib/api";
+import useSWR from "swr";
+import { createFetcher, swrOptions } from "@/lib/swr-config";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -29,57 +29,43 @@ export default function JoinTestPage() {
   const router = useRouter();
   const params = useParams();
   const { token: authToken, isLoading: authLoading, user } = useAuth();
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading test...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!authToken) {
+    const currentUrl = window.location.pathname;
+    sessionStorage.setItem("redirectAfterLogin", currentUrl);
+    router.push("/signin");
+    return null;
+  }
+
   const rawToken = params.token as string;
 
   // Extract the actual token from the URL format: test_name_start_end_uuid
   const token = rawToken.includes("_") ? rawToken.split("_").pop() || rawToken : rawToken;
 
-  const [testInfo, setTestInfo] = useState<TestInfo | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isStarting, setIsStarting] = useState(false);
-  const [error, setError] = useState("");
+  const fetcher = createFetcher(authToken);
 
-  useEffect(() => {
-    if (authLoading) return;
+  const { data: response, error: swrError, isLoading } = useSWR<{ data: TestInfo }>(
+    token ? `/api/predefined-tests/token/${token}` : null,
+    (url) => fetcher(url),
+    { ...swrOptions, revalidateOnFocus: false }
+  );
 
-    if (!authToken) {
-      // Store the current URL to redirect back after login
-      const currentUrl = window.location.pathname;
-      sessionStorage.setItem("redirectAfterLogin", currentUrl);
-      router.push("/signin");
-      return;
-    }
+  const testInfo = response?.data;
+  const isStarting = false;
+  const error = swrError?.message || "";
 
-    const fetchTestInfo = async () => {
-      try {
-        const response = await predefinedTestsApi.getByToken(token, authToken) as { data: TestInfo };
-        setTestInfo(response.data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load test info");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (token) fetchTestInfo();
-  }, [token, authToken, authLoading, router]);
-
-  const handleStartTest = async () => {
-    if (!testInfo || !authToken) return;
-
-    setIsStarting(true);
-    try {
-      const response = await predefinedTestsApi.start(testInfo.id, authToken);
-      toast.success("Test started!");
-      router.push(`/live-test?id=${response.data.id}`);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to start test");
-    } finally {
-      setIsStarting(false);
-    }
-  };
-
-  if (authLoading || isLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
@@ -108,6 +94,18 @@ export default function JoinTestPage() {
   }
 
   if (!testInfo) return null;
+
+  const handleStartTest = async () => {
+    if (!testInfo || !authToken) return;
+    try {
+      const { predefinedTestsApi } = await import("@/lib/api");
+      const response = await predefinedTestsApi.start(testInfo.id, authToken);
+      toast.success("Test started!");
+      router.push(`/live-test?id=${response.data.id}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to start test");
+    }
+  };
 
   const isTestActive = testInfo.status === "active";
   const isScheduled = testInfo.is_scheduled;

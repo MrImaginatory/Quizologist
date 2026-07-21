@@ -8,15 +8,11 @@ import { appConfig } from "@/lib/app-config";
 import { AuthProvider } from "@/contexts/auth-context";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/toaster";
+import { VitalsProvider } from "@/components/vitals-provider";
 
 const geistHeading = Geist({ subsets: ["latin"], variable: "--font-heading" });
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -53,7 +49,6 @@ export default function RootLayout({
       className={cn(
         "h-full",
         "antialiased",
-        geistSans.variable,
         geistMono.variable,
         "font-sans",
         inter.variable,
@@ -67,6 +62,7 @@ export default function RootLayout({
               {children}
               <ThemeToggle />
               <Toaster />
+              <VitalsProvider />
             </TooltipProvider>
           </AuthProvider>
         </ThemeProvider>

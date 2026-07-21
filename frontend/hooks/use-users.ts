@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/contexts/auth-context";
-import { usersApi, User } from "@/lib/api";
+import useSWR from "swr";
+import { createFetcher, swrOptions } from "@/lib/swr-config";
+import { API_ROUTES } from "@/lib/api-routes";
+import type { UsersResponse } from "@/lib/api";
 
 interface UseUsersOptions {
   role?: string;
@@ -12,7 +14,7 @@ interface UseUsersOptions {
 }
 
 interface UseUsersReturn {
-  users: User[];
+  users: any[];
   total: number;
   isLoading: boolean;
   error: string;
@@ -22,39 +24,24 @@ interface UseUsersReturn {
 
 export function useUsers({ role, page = 1, limit = 10, disabled = false }: UseUsersOptions = {}): UseUsersReturn {
   const { token } = useAuth();
-  const [users, setUsers] = useState<User[]>([]);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [isLoading, setIsLoading] = useState(!disabled);
-  const [error, setError] = useState("");
+  const fetcher = createFetcher(token);
+  
+  const url = role
+    ? `${API_ROUTES.USERS.BY_ROLE(role)}?page=${page}&limit=${limit}`
+    : `${API_ROUTES.USERS.BASE}?page=${page}&limit=${limit}`;
+  
+  const { data, error, isLoading, mutate } = useSWR<UsersResponse>(
+    token && !disabled ? url : null,
+    fetcher,
+    swrOptions
+  );
 
-  const fetchUsers = useCallback(async () => {
-    if (disabled) {
-      setIsLoading(false);
-      return;
-    }
-    setIsLoading(true);
-    setError("");
-    try {
-      let response;
-      if (role) {
-        response = await usersApi.getByRole(role, page, limit, token || undefined);
-      } else {
-        response = await usersApi.getAll(page, limit, token || undefined);
-      }
-      setUsers(response.data.users);
-      setTotal(response.data.pagination.total);
-      setTotalPages(response.data.pagination.totalPages);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch users");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [role, page, limit, token, disabled]);
-
-  useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
-
-  return { users, total, isLoading, error, totalPages, refetch: fetchUsers };
+  return {
+    users: data?.data?.users || [],
+    total: data?.data?.pagination?.total || 0,
+    isLoading: disabled ? false : isLoading,
+    error: error?.message || "",
+    totalPages: data?.data?.pagination?.totalPages || 0,
+    refetch: () => mutate(),
+  };
 }

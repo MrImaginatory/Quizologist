@@ -2,7 +2,6 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +28,16 @@ import { cn } from "@/lib/utils";
 import { capitalize } from "@/lib/utils";
 import { useAuth } from "@/contexts/auth-context";
 import { testsApi, TestResult } from "@/lib/api";
-import { exportTestResultToPDF, exportTestResultToExcel } from "@/lib/export-utils";
+
+const handleExportPDF = async (result: TestResult, user: { fname?: string; lname?: string; email?: string }) => {
+  const { exportTestResultToPDF } = await import("@/lib/export-pdf");
+  exportTestResultToPDF(result, user);
+};
+
+const handleExportExcel = async (result: TestResult, user: { fname?: string; lname?: string; email?: string }) => {
+  const { exportTestResultToExcel } = await import("@/lib/export-excel");
+  exportTestResultToExcel(result, user);
+};
 
 function TestResultContent() {
   const searchParams = useSearchParams();
@@ -133,11 +141,11 @@ function TestResultContent() {
                 }
               />
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => exportTestResultToPDF(result, user || {})}>
+                <DropdownMenuItem onClick={() => handleExportPDF(result, user || {})}>
                   <FileText className="h-4 w-4 mr-2" />
                   Download PDF
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => exportTestResultToExcel(result, user || {})}>
+                <DropdownMenuItem onClick={() => handleExportExcel(result, user || {})}>
                   <FileSpreadsheet className="h-4 w-4 mr-2" />
                   Download Excel
                 </DropdownMenuItem>

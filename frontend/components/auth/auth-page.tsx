@@ -12,7 +12,7 @@ export function AuthPage() {
   const [mode, setMode] = useState<AuthMode>("signin");
 
   return (
-    <div className="min-h-screen flex">
+    <main className="min-h-screen flex">
       {/* Left side - Branding (signin) / Form (signup) */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-muted">
         <AnimatePresence mode="wait">
@@ -107,6 +107,6 @@ export function AuthPage() {
           )}
         </AnimatePresence>
       </div>
-    </div>
+    </main>
   );
 }

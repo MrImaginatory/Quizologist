@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,12 +55,7 @@ export function SignInForm({ onSwitch }: SignInFormProps) {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="w-full"
-    >
+    <div className="w-full animate-fade-in-up">
       <Card className="border-0 shadow-none bg-transparent p-6">
         <CardHeader className="text-center lg:text-left p-0 mb-6">
           <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
@@ -110,6 +104,7 @@ export function SignInForm({ onSwitch }: SignInFormProps) {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -144,6 +139,6 @@ export function SignInForm({ onSwitch }: SignInFormProps) {
           </p>
         </CardFooter>
       </Card>
-    </motion.div>
+    </div>
   );
 }

@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
-import { subjectsApi, Subject } from "@/lib/api";
+import useSWR from "swr";
+import { createFetcher, swrOptions } from "@/lib/swr-config";
+import { API_ROUTES } from "@/lib/api-routes";
+import type { SubjectsResponse } from "@/lib/api";
 
 interface UseSubjectsOptions {
   page?: number;
@@ -12,32 +14,23 @@ interface UseSubjectsOptions {
 
 export function useSubjects({ page = 1, limit = 10, courseId }: UseSubjectsOptions = {}) {
   const { token } = useAuth();
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+  const fetcher = createFetcher(token);
+  
+  const url = courseId
+    ? `${API_ROUTES.SUBJECTS.BY_COURSE(courseId)}?page=${page}&limit=${limit}`
+    : `${API_ROUTES.SUBJECTS.BASE}?page=${page}&limit=${limit}`;
+  
+  const { data, error, isLoading } = useSWR<SubjectsResponse>(
+    token ? url : null,
+    fetcher,
+    swrOptions
+  );
 
-  useEffect(() => {
-    const fetchSubjects = async () => {
-      setIsLoading(true);
-      setError("");
-      try {
-        const response = courseId
-          ? await subjectsApi.getByCourse(courseId, page, limit, token || undefined)
-          : await subjectsApi.getAll(page, limit, token || undefined);
-        setSubjects(response.data.subjects);
-        setTotal(response.data.pagination.total);
-        setTotalPages(response.data.pagination.totalPages);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch subjects");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchSubjects();
-  }, [page, limit, courseId, token]);
-
-  return { subjects, total, totalPages, isLoading, error };
+  return {
+    subjects: data?.data?.subjects || [],
+    total: data?.data?.pagination?.total || 0,
+    totalPages: data?.data?.pagination?.totalPages || 0,
+    isLoading,
+    error: error?.message || "",
+  };
 }

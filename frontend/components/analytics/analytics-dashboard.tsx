@@ -3,13 +3,21 @@
 import { useState, useCallback } from "react";
 import { useAdminAnalytics } from "@/hooks/use-admin-analytics";
 import { AnalyticsFilters } from "./analytics-filters";
-import { TeacherStudentRatioChart } from "./teacher-student-ratio-chart";
+import dynamic from "next/dynamic";
 import { TeacherStudentRatioCards } from "./teacher-student-ratio-cards";
 import { TopStudentsTable } from "./top-students-table";
-import { LeastQuestionsChart } from "./least-questions-chart";
 import { SubjectsAttentionTable } from "./subjects-attention-table";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
+
+const TeacherStudentRatioChart = dynamic(
+  () => import("./teacher-student-ratio-chart").then(m => ({ default: m.TeacherStudentRatioChart })),
+  { ssr: false, loading: () => <div className="h-[300px] animate-pulse bg-muted rounded-lg" /> }
+);
+const LeastQuestionsChart = dynamic(
+  () => import("./least-questions-chart").then(m => ({ default: m.LeastQuestionsChart })),
+  { ssr: false, loading: () => <div className="h-[300px] animate-pulse bg-muted rounded-lg" /> }
+);
 
 export function AnalyticsDashboard() {
   const [filters, setFilters] = useState({

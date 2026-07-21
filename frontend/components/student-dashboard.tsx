@@ -19,9 +19,20 @@ import { usePendingTests } from "@/hooks/use-pending-tests";
 import { capitalize } from "@/lib/utils";
 import { Loader2, Target, BookOpen, CheckCircle, Play, Clock, TrendingUp } from "lucide-react";
 import { ViewToggle } from "@/components/dashboard/view-toggle";
-import { PerformanceTrendChart } from "@/components/charts/performance-trend-chart";
-import { SubjectRadarChart } from "@/components/charts/subject-radar-chart";
-import { TopicBarChart } from "@/components/charts/topic-bar-chart";
+import dynamic from "next/dynamic";
+
+const PerformanceTrendChart = dynamic(
+  () => import("@/components/charts/performance-trend-chart").then(m => ({ default: m.PerformanceTrendChart })),
+  { ssr: false, loading: () => <div className="h-[300px] animate-pulse bg-muted rounded-lg" /> }
+);
+const SubjectRadarChart = dynamic(
+  () => import("@/components/charts/subject-radar-chart").then(m => ({ default: m.SubjectRadarChart })),
+  { ssr: false, loading: () => <div className="h-[300px] animate-pulse bg-muted rounded-lg" /> }
+);
+const TopicBarChart = dynamic(
+  () => import("@/components/charts/topic-bar-chart").then(m => ({ default: m.TopicBarChart })),
+  { ssr: false, loading: () => <div className="h-[300px] animate-pulse bg-muted rounded-lg" /> }
+);
 
 const statusColors: Record<string, string> = {
   strong: "bg-green-500/10 text-green-500 border-green-500/20",

@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/contexts/auth-context";
-import { teachersApi, TeacherEnrollmentItem } from "@/lib/api";
+import useSWR from "swr";
+import { createFetcher, swrOptions } from "@/lib/swr-config";
+import { API_ROUTES } from "@/lib/api-routes";
+import type { TeacherEnrollmentResponse } from "@/lib/api";
 
 export interface TeacherCourseAssignment {
   id: string;
@@ -13,7 +15,7 @@ export interface TeacherCourseAssignment {
 
 interface UseTeacherEnrollmentsResult {
   assignments: TeacherCourseAssignment[];
-  rawAssignments: TeacherEnrollmentItem[];
+  rawAssignments: any[];
   isLoading: boolean;
   error: string;
   refetch: () => void;
@@ -21,63 +23,51 @@ interface UseTeacherEnrollmentsResult {
 
 export function useTeacherEnrollments(): UseTeacherEnrollmentsResult {
   const { token, user } = useAuth();
-  const [assignments, setAssignments] = useState<TeacherCourseAssignment[]>([]);
-  const [rawAssignments, setRawAssignments] = useState<TeacherEnrollmentItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+  const fetcher = createFetcher(token);
+  
+  const url = user && user.role === "teacher" && user.id
+    ? `${API_ROUTES.TEACHERS.TEACHER_ENROLLMENT}?teacher_id=${user.id}&limit=100`
+    : null;
+  
+  const { data, error, isLoading, mutate } = useSWR<TeacherEnrollmentResponse>(
+    url,
+    fetcher,
+    swrOptions
+  );
 
-  const fetchAssignments = useCallback(async () => {
-    if (!user || user.role !== "teacher" || !user.id) {
-      setIsLoading(false);
-      return;
+  const raw = data?.data?.assignments || [];
+  
+  const groupedByCourse: Record<string, TeacherCourseAssignment> = {};
+  for (const item of raw) {
+    const courseId = item.course.id;
+    if (!groupedByCourse[courseId]) {
+      groupedByCourse[courseId] = {
+        id: courseId,
+        name: item.course.name,
+        subjects: [],
+        assignmentIds: [],
+      };
     }
-
-    setIsLoading(true);
-    setError("");
-    try {
-      const response = await teachersApi.getTeacherEnrollments(
-        { teacher_id: user.id, limit: 100 },
-        token || undefined
+    groupedByCourse[courseId].assignmentIds.push(item.id);
+    if (item.subject) {
+      const subjectExists = groupedByCourse[courseId].subjects.some(
+        (s) => s.id === item.subject!.id
       );
-
-      const raw = response.data.assignments || [];
-      setRawAssignments(raw);
-
-      const groupedByCourse = raw.reduce<Record<string, TeacherCourseAssignment>>((acc, item) => {
-        const courseId = item.course.id;
-        if (!acc[courseId]) {
-          acc[courseId] = {
-            id: courseId,
-            name: item.course.name,
-            subjects: [],
-            assignmentIds: [],
-          };
-        }
-        acc[courseId].assignmentIds.push(item.id);
-        if (item.subject) {
-          const subjectExists = acc[courseId].subjects.some((s) => s.id === item.subject!.id);
-          if (!subjectExists) {
-            acc[courseId].subjects.push({
-              id: item.subject.id,
-              name: item.subject.name,
-              assignmentId: item.id,
-            });
-          }
-        }
-        return acc;
-      }, {});
-
-      setAssignments(Object.values(groupedByCourse));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch assignments");
-    } finally {
-      setIsLoading(false);
+      if (!subjectExists) {
+        groupedByCourse[courseId].subjects.push({
+          id: item.subject.id,
+          name: item.subject.name,
+          assignmentId: item.id,
+        });
+      }
     }
-  }, [token, user]);
+  }
 
-  useEffect(() => {
-    fetchAssignments();
-  }, [fetchAssignments]);
-
-  return { assignments, rawAssignments, isLoading, error, refetch: fetchAssignments };
+  return {
+    assignments: Object.values(groupedByCourse),
+    rawAssignments: raw,
+    isLoading,
+    error: error?.message || "",
+    refetch: () => mutate(),
+  };
 }

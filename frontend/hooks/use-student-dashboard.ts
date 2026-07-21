@@ -1,27 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
-import {
-  dashboardApi,
-  DashboardStatsResponse,
-  TopicPerformance,
-  SubjectPerformance,
-  PerformanceTrend,
-  TopicPerformanceResponse,
-  SubjectPerformanceResponse,
-  PerformanceTrendsResponse,
-  StrengthsWeaknessesResponse,
-} from "@/lib/api";
+import useSWR from "swr";
+import { createFetcher, swrOptions } from "@/lib/swr-config";
+import { API_ROUTES } from "@/lib/api-routes";
 
 interface StudentDashboardData {
-  stats: DashboardStatsResponse["data"] | null;
-  topicPerformance: TopicPerformance[];
-  subjectPerformance: SubjectPerformance[];
+  stats: any | null;
+  topicPerformance: any[];
+  subjectPerformance: any[];
   performanceTrends: {
-    last15Days: PerformanceTrend[];
-    last30Days: PerformanceTrend[];
-    last60Days: PerformanceTrend[];
+    last15Days: any[];
+    last30Days: any[];
+    last60Days: any[];
   };
   overallAccuracy: number;
   totalTopicsAttempted: number;
@@ -31,91 +22,67 @@ interface StudentDashboardData {
 
 export function useStudentDashboard(): StudentDashboardData {
   const { token, logout } = useAuth();
-  const [stats, setStats] = useState<DashboardStatsResponse["data"] | null>(null);
-  const [topicPerformance, setTopicPerformance] = useState<TopicPerformance[]>([]);
-  const [subjectPerformance, setSubjectPerformance] = useState<SubjectPerformance[]>([]);
-  const [performanceTrends, setPerformanceTrends] = useState({
-    last15Days: [] as PerformanceTrend[],
-    last30Days: [] as PerformanceTrend[],
-    last60Days: [] as PerformanceTrend[],
-  });
-  const [overallAccuracy, setOverallAccuracy] = useState(0);
-  const [totalTopicsAttempted, setTotalTopicsAttempted] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+  const fetcher = createFetcher(token);
+  
+  const { data: statsRes, error: statsErr } = useSWR(
+    token ? API_ROUTES.DASHBOARD.STATS : null,
+    fetcher,
+    swrOptions
+  );
+  
+  const { data: topicRes, error: topicErr } = useSWR(
+    token ? API_ROUTES.DASHBOARD.STUDENT_TOPIC_PERFORMANCE : null,
+    fetcher,
+    swrOptions
+  );
+  
+  const { data: subjectRes, error: subjectErr } = useSWR(
+    token ? API_ROUTES.DASHBOARD.STUDENT_SUBJECT_PERFORMANCE : null,
+    fetcher,
+    swrOptions
+  );
+  
+  const { data: trendsRes, error: trendsErr } = useSWR(
+    token ? API_ROUTES.DASHBOARD.STUDENT_PERFORMANCE_TRENDS : null,
+    fetcher,
+    swrOptions
+  );
+  
+  const { data: swRes, error: swErr } = useSWR(
+    token ? API_ROUTES.DASHBOARD.STUDENT_STRENGTHS_WEAKNESSES : null,
+    fetcher,
+    swrOptions
+  );
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      setIsLoading(true);
-      setError("");
-      try {
-        const [statsRes, topicRes, subjectRes, trendsRes, swRes] = await Promise.allSettled([
-          dashboardApi.getStats(token || undefined),
-          dashboardApi.getStudentTopicPerformance(token || undefined),
-          dashboardApi.getStudentSubjectPerformance(token || undefined),
-          dashboardApi.getStudentPerformanceTrends(token || undefined),
-          dashboardApi.getStudentStrengthsWeaknesses(token || undefined),
-        ]);
+  // Check for token errors and logout
+  const errors = [statsErr, topicErr, subjectErr, trendsErr, swErr].filter(Boolean);
+  for (const err of errors) {
+    const message = err.message || "";
+    if (message.toLowerCase().includes("invalid") && message.toLowerCase().includes("token")) {
+      logout();
+      return {
+        stats: null,
+        topicPerformance: [],
+        subjectPerformance: [],
+        performanceTrends: { last15Days: [], last30Days: [], last60Days: [] },
+        overallAccuracy: 0,
+        totalTopicsAttempted: 0,
+        isLoading: false,
+        error: "",
+      };
+    }
+  }
 
-        // Check for token errors in any rejected promise
-        const rejectedResults = [statsRes, topicRes, subjectRes, trendsRes, swRes].filter(
-          (r): r is PromiseRejectedResult => r.status === "rejected"
-        );
-
-        for (const rejected of rejectedResults) {
-          const message = rejected.reason instanceof Error ? rejected.reason.message : String(rejected.reason);
-          if (message.toLowerCase().includes("invalid") && message.toLowerCase().includes("token")) {
-            logout();
-            return;
-          }
-        }
-
-        if (statsRes.status === "fulfilled") {
-          setStats(statsRes.value.data);
-        }
-
-        if (topicRes.status === "fulfilled") {
-          const data = topicRes.value as TopicPerformanceResponse;
-          setTopicPerformance(data.data.topics);
-        }
-
-        if (subjectRes.status === "fulfilled") {
-          const data = subjectRes.value as SubjectPerformanceResponse;
-          setSubjectPerformance(data.data.subjects);
-        }
-
-        if (trendsRes.status === "fulfilled") {
-          const data = trendsRes.value as PerformanceTrendsResponse;
-          setPerformanceTrends(data.data);
-        }
-
-        if (swRes.status === "fulfilled") {
-          const data = swRes.value as StrengthsWeaknessesResponse;
-          setOverallAccuracy(data.data.overallAccuracy);
-          setTotalTopicsAttempted(data.data.totalTopicsAttempted);
-        }
-      } catch (err) {
-        const message = err instanceof Error ? err.message : "Failed to fetch dashboard data";
-        if (message.toLowerCase().includes("invalid") && message.toLowerCase().includes("token")) {
-          logout();
-          return;
-        }
-        setError(message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchDashboardData();
-  }, [token, logout]);
+  const isLoading = !statsRes && !topicRes && !subjectRes && !trendsRes && !swRes && !statsErr;
+  const error = errors.length > 0 ? errors[0].message : "";
 
   return {
-    stats,
-    topicPerformance,
-    subjectPerformance,
-    performanceTrends,
-    overallAccuracy,
-    totalTopicsAttempted,
+    stats: statsRes?.data || null,
+    topicPerformance: topicRes?.data?.topics || [],
+    subjectPerformance: subjectRes?.data?.subjects || [],
+    performanceTrends: trendsRes?.data || { last15Days: [], last30Days: [], last60Days: [] },
+    overallAccuracy: swRes?.data?.overallAccuracy || 0,
+    totalTopicsAttempted: swRes?.data?.totalTopicsAttempted || 0,
     isLoading,
     error,
   };

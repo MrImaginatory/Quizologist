@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
-import { predefinedTestsApi } from "@/lib/api";
+import useSWR from "swr";
+import { createFetcher, swrOptions } from "@/lib/swr-config";
+import { API_ROUTES } from "@/lib/api-routes";
 
 interface PendingTest {
   id: string;
@@ -27,26 +28,17 @@ interface PendingTestsResponse {
 
 export function usePendingTests() {
   const { token } = useAuth();
-  const [tests, setTests] = useState<PendingTest[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+  const fetcher = createFetcher(token);
+  
+  const { data, error, isLoading } = useSWR(
+    token ? API_ROUTES.PREDEFINED_TESTS.PENDING : null,
+    fetcher,
+    swrOptions
+  );
 
-  useEffect(() => {
-    const fetchPendingTests = async () => {
-      setIsLoading(true);
-      setError("");
-      try {
-        const response = await predefinedTestsApi.getPending(token || undefined) as PendingTestsResponse;
-        setTests(response.data?.tests || []);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch pending tests");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchPendingTests();
-  }, [token]);
-
-  return { tests, isLoading, error };
+  return {
+    tests: (data as PendingTestsResponse)?.data?.tests || [],
+    isLoading,
+    error: error?.message || "",
+  };
 }

@@ -1,5 +1,3 @@
-"use client";
-
 import { RouteGuard } from "@/components/auth/route-guard";
 
 export default function TestLayout({

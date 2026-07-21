@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
-import { teachersApi } from "@/lib/api";
+import useSWR from "swr";
+import { createFetcher, swrOptions } from "@/lib/swr-config";
+import { API_ROUTES } from "@/lib/api-routes";
+import type { TeachingCoursesAndSubjectsResponse } from "@/lib/api";
 
 interface TeachingCourse {
   id: string;
@@ -17,28 +19,18 @@ interface TeachingSubject {
 
 export function useTeachingCoursesAndSubjects() {
   const { token } = useAuth();
-  const [courses, setCourses] = useState<TeachingCourse[]>([]);
-  const [subjects, setSubjects] = useState<TeachingSubject[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+  const fetcher = createFetcher(token);
+  
+  const { data, error, isLoading } = useSWR<TeachingCoursesAndSubjectsResponse>(
+    token ? API_ROUTES.TEACHERS.TEACHING_COURSES_AND_SUBJECTS : null,
+    fetcher,
+    swrOptions
+  );
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      setError("");
-      try {
-        const response = await teachersApi.getTeachingCoursesAndSubjects(token || undefined);
-        setCourses(response.data?.courses || []);
-        setSubjects(response.data?.subjects || []);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch teaching courses and subjects");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [token]);
-
-  return { courses, subjects, isLoading, error };
+  return {
+    courses: data?.data?.courses || [],
+    subjects: data?.data?.subjects || [],
+    isLoading,
+    error: error?.message || "",
+  };
 }

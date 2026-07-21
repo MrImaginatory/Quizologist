@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useCallback, useRef, useState } from "react";
-import { io, Socket } from "socket.io-client";
+import type { Socket } from "socket.io-client";
 import { useAuth } from "@/contexts/auth-context";
 
 interface TestJoinedData {
@@ -64,57 +64,64 @@ export function useTestSocket(options: UseTestSocketOptions = {}) {
   useEffect(() => {
     if (!token) return;
 
-    const socketUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+    let socket: Socket;
+    let heartbeat: NodeJS.Timeout | null = null;
 
-    const socket = io(socketUrl, {
-      path: "/socket.io",
-      auth: { token },
-      transports: ["websocket"], // ponytail: skip polling, gateway only handles WS upgrades
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-    });
+    const connectSocket = async () => {
+      const { io } = await import("socket.io-client");
+      const socketUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
-    socket.on("connect", () => {
-      setIsConnected(true);
-    });
+      socket = io(socketUrl, {
+        path: "/socket.io",
+        auth: { token },
+        transports: ["websocket"],
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+      });
 
-    socket.on("disconnect", () => {
-      setIsConnected(false);
-    });
+      socket.on("connect", () => {
+        setIsConnected(true);
+      });
 
-    socket.on("connect_error", () => {
-      // Silently handle connection errors
-      setIsConnected(false);
-    });
+      socket.on("disconnect", () => {
+        setIsConnected(false);
+      });
 
-    socket.on("test_joined", (data: TestJoinedData) => {
-      onTestJoined?.(data);
-    });
+      socket.on("connect_error", () => {
+        setIsConnected(false);
+      });
 
-    socket.on("answer_recorded", (data: AnswerRecordedData) => {
-      onAnswerRecorded?.(data);
-    });
+      socket.on("test_joined", (data: TestJoinedData) => {
+        onTestJoined?.(data);
+      });
 
-    socket.on("time_update", (data: TimeUpdateData) => {
-      onTimeUpdate?.(data);
-    });
+      socket.on("answer_recorded", (data: AnswerRecordedData) => {
+        onAnswerRecorded?.(data);
+      });
 
-    socket.on("test_submitted", (data: TestSubmittedData) => {
-      onTestSubmitted?.(data);
-    });
+      socket.on("time_update", (data: TimeUpdateData) => {
+        onTimeUpdate?.(data);
+      });
 
-    socket.on("error", (data: ErrorData) => {
-      onError?.(data);
-    });
+      socket.on("test_submitted", (data: TestSubmittedData) => {
+        onTestSubmitted?.(data);
+      });
 
-    socketRef.current = socket;
+      socket.on("error", (data: ErrorData) => {
+        onError?.(data);
+      });
+
+      socketRef.current = socket;
+    };
+
+    connectSocket();
 
     return () => {
-      if (heartbeatRef.current) {
-        clearInterval(heartbeatRef.current);
+      if (heartbeat) {
+        clearInterval(heartbeat);
       }
-      socket.disconnect();
+      socket?.disconnect();
     };
   }, [token]);
 

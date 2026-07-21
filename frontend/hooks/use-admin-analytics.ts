@@ -1,14 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/contexts/auth-context";
-import { dashboardApi } from "@/lib/api";
-import type {
-  TeacherStudentRatioResponse,
-  TopStudentsByLocationResponse,
-  LeastQuestionsResponse,
-  SubjectsAttentionResponse,
-} from "@/lib/api";
+import useSWR from "swr";
+import { createFetcher, swrOptions } from "@/lib/swr-config";
+import { API_ROUTES } from "@/lib/api-routes";
 
 interface AnalyticsFilters {
   location_id?: string;
@@ -20,97 +15,103 @@ interface AnalyticsFilters {
 }
 
 interface AdminAnalyticsData {
-  ratioData: TeacherStudentRatioResponse["data"] | null;
-  topStudents: TopStudentsByLocationResponse["data"] | null;
-  leastQuestions: LeastQuestionsResponse["data"] | null;
-  subjectsAttention: SubjectsAttentionResponse["data"] | null;
+  ratioData: any | null;
+  topStudents: any | null;
+  leastQuestions: any | null;
+  subjectsAttention: any | null;
   isLoading: boolean;
   error: string;
   refetch: () => void;
 }
 
+function buildUrl(base: string, params: Record<string, string | number | undefined>) {
+  const searchParams = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== "") {
+      searchParams.set(key, String(value));
+    }
+  }
+  const query = searchParams.toString();
+  return `${base}${query ? `?${query}` : ""}`;
+}
+
 export function useAdminAnalytics(filters: AnalyticsFilters = {}): AdminAnalyticsData {
   const { token, logout } = useAuth();
-  const [ratioData, setRatioData] = useState<TeacherStudentRatioResponse["data"] | null>(null);
-  const [topStudents, setTopStudents] = useState<TopStudentsByLocationResponse["data"] | null>(null);
-  const [leastQuestions, setLeastQuestions] = useState<LeastQuestionsResponse["data"] | null>(null);
-  const [subjectsAttention, setSubjectsAttention] = useState<SubjectsAttentionResponse["data"] | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+  const fetcher = createFetcher(token);
+  
+  const ratioUrl = buildUrl(API_ROUTES.DASHBOARD.ANALYTICS_TEACHER_STUDENT_RATIO, {
+    location_id: filters.location_id,
+  });
+  
+  const topStudentsUrl = buildUrl(API_ROUTES.DASHBOARD.ANALYTICS_TOP_STUDENTS, {
+    location_id: filters.location_id,
+    date_from: filters.date_from,
+    date_to: filters.date_to,
+    limit: filters.limit || 10,
+  });
+  
+  const leastQuestionsUrl = buildUrl(API_ROUTES.DASHBOARD.ANALYTICS_LEAST_QUESTIONS, {
+    course_id: filters.course_id,
+    subject_id: filters.subject_id,
+  });
+  
+  const subjectsUrl = buildUrl(API_ROUTES.DASHBOARD.ANALYTICS_SUBJECTS_ATTENTION, {
+    date_from: filters.date_from,
+    date_to: filters.date_to,
+  });
+  
+  const { data: ratioRes, error: ratioErr } = useSWR(
+    token ? ratioUrl : null,
+    fetcher,
+    swrOptions
+  );
+  
+  const { data: topStudentsRes, error: topStudentsErr } = useSWR(
+    token ? topStudentsUrl : null,
+    fetcher,
+    swrOptions
+  );
+  
+  const { data: leastQuestionsRes, error: leastQuestionsErr } = useSWR(
+    token ? leastQuestionsUrl : null,
+    fetcher,
+    swrOptions
+  );
+  
+  const { data: subjectsRes, error: subjectsErr, mutate } = useSWR(
+    token ? subjectsUrl : null,
+    fetcher,
+    swrOptions
+  );
 
-  const fetchData = useCallback(async () => {
-    setIsLoading(true);
-    setError("");
-    try {
-      const [ratioRes, topStudentsRes, leastQuestionsRes, subjectsRes] = await Promise.allSettled([
-        dashboardApi.getTeacherStudentRatio({ location_id: filters.location_id }, token || undefined),
-        dashboardApi.getTopStudentsByLocation({
-          location_id: filters.location_id,
-          date_from: filters.date_from,
-          date_to: filters.date_to,
-          limit: filters.limit || 10,
-        }, token || undefined),
-        dashboardApi.getLeastQuestions({
-          course_id: filters.course_id,
-          subject_id: filters.subject_id,
-        }, token || undefined),
-        dashboardApi.getSubjectsNeedingAttention({
-          date_from: filters.date_from,
-          date_to: filters.date_to,
-        }, token || undefined),
-      ]);
-
-      // Check for token errors
-      const rejectedResults = [ratioRes, topStudentsRes, leastQuestionsRes, subjectsRes].filter(
-        (r): r is PromiseRejectedResult => r.status === "rejected"
-      );
-
-      for (const rejected of rejectedResults) {
-        const message = rejected.reason instanceof Error ? rejected.reason.message : String(rejected.reason);
-        if (message.toLowerCase().includes("invalid") && message.toLowerCase().includes("token")) {
-          logout();
-          return;
-        }
-      }
-
-      if (ratioRes.status === "fulfilled") {
-        setRatioData(ratioRes.value.data);
-      }
-
-      if (topStudentsRes.status === "fulfilled") {
-        setTopStudents(topStudentsRes.value.data);
-      }
-
-      if (leastQuestionsRes.status === "fulfilled") {
-        setLeastQuestions(leastQuestionsRes.value.data);
-      }
-
-      if (subjectsRes.status === "fulfilled") {
-        setSubjectsAttention(subjectsRes.value.data);
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to fetch analytics data";
-      if (message.toLowerCase().includes("invalid") && message.toLowerCase().includes("token")) {
-        logout();
-        return;
-      }
-      setError(message);
-    } finally {
-      setIsLoading(false);
+  // Check for token errors and logout
+  const errors = [ratioErr, topStudentsErr, leastQuestionsErr, subjectsErr].filter(Boolean);
+  for (const err of errors) {
+    const message = err.message || "";
+    if (message.toLowerCase().includes("invalid") && message.toLowerCase().includes("token")) {
+      logout();
+      return {
+        ratioData: null,
+        topStudents: null,
+        leastQuestions: null,
+        subjectsAttention: null,
+        isLoading: false,
+        error: "",
+        refetch: () => {},
+      };
     }
-  }, [token, logout, filters.location_id, filters.date_from, filters.date_to, filters.subject_id, filters.course_id, filters.limit]);
+  }
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  const isLoading = !ratioRes && !topStudentsRes && !leastQuestionsRes && !subjectsRes && !ratioErr;
+  const error = errors.length > 0 ? errors[0].message : "";
 
   return {
-    ratioData,
-    topStudents,
-    leastQuestions,
-    subjectsAttention,
+    ratioData: ratioRes?.data || null,
+    topStudents: topStudentsRes?.data || null,
+    leastQuestions: leastQuestionsRes?.data || null,
+    subjectsAttention: subjectsRes?.data || null,
     isLoading,
     error,
-    refetch: fetchData,
+    refetch: () => mutate(),
   };
 }

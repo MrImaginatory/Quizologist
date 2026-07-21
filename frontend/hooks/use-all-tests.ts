@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/contexts/auth-context";
-import { testsApi, TestHistory } from "@/lib/api";
+import useSWR from "swr";
+import { createFetcher, swrOptions } from "@/lib/swr-config";
+import { API_ROUTES } from "@/lib/api-routes";
+import type { PredefinedTestResponse } from "@/lib/api";
 
 interface UseAllTestsOptions {
   page?: number;
@@ -16,7 +18,7 @@ interface UseAllTestsOptions {
 }
 
 interface UseAllTestsResult {
-  tests: TestHistory[];
+  tests: any[];
   total: number;
   totalPages: number;
   isLoading: boolean;
@@ -35,44 +37,31 @@ export function useAllTests({
   disabled = false,
 }: UseAllTestsOptions = {}): UseAllTestsResult {
   const { token } = useAuth();
-  const [tests, setTests] = useState<TestHistory[]>([]);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [isLoading, setIsLoading] = useState(!disabled);
-  const [error, setError] = useState("");
-
-  const fetchTests = useCallback(async () => {
-    if (disabled) {
-      setIsLoading(false);
-      return;
-    }
-    setIsLoading(true);
-    setError("");
-    try {
-      const response = await testsApi.getAll(
-        { page, limit, status, subjectId, studentId, dateFrom, dateTo },
-        token || undefined
-      );
-      setTests(response.data.tests);
-      setTotal(response.data.pagination.total);
-      setTotalPages(response.data.pagination.totalPages);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch tests");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [page, limit, status, subjectId, studentId, dateFrom, dateTo, token, disabled]);
-
-  useEffect(() => {
-    fetchTests();
-  }, [fetchTests]);
+  const fetcher = createFetcher(token);
+  
+  const searchParams = new URLSearchParams();
+  if (page) searchParams.set("page", page.toString());
+  if (limit) searchParams.set("limit", limit.toString());
+  if (status) searchParams.set("status", status);
+  if (subjectId) searchParams.set("subjectId", subjectId);
+  if (studentId) searchParams.set("studentId", studentId);
+  if (dateFrom) searchParams.set("dateFrom", dateFrom);
+  if (dateTo) searchParams.set("dateTo", dateTo);
+  
+  const url = `${API_ROUTES.TESTS.ALL}?${searchParams.toString()}`;
+  
+  const { data, error, isLoading, mutate } = useSWR<PredefinedTestResponse>(
+    token && !disabled ? url : null,
+    fetcher,
+    swrOptions
+  );
 
   return {
-    tests,
-    total,
-    totalPages,
-    isLoading,
-    error,
-    refetch: fetchTests,
+    tests: data?.data?.tests || [],
+    total: data?.data?.pagination?.total || 0,
+    totalPages: data?.data?.pagination?.totalPages || 0,
+    isLoading: disabled ? false : isLoading,
+    error: error?.message || "",
+    refetch: () => mutate(),
   };
 }

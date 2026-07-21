@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/contexts/auth-context";
-import { teachersApi, TeachingTest } from "@/lib/api";
+import useSWR from "swr";
+import { createFetcher, swrOptions } from "@/lib/swr-config";
+import { API_ROUTES } from "@/lib/api-routes";
+import type { TeachingTestsResponse } from "@/lib/api";
 
 interface UseTeachingTestsOptions {
   page?: number;
@@ -14,7 +16,7 @@ interface UseTeachingTestsOptions {
 }
 
 interface UseTeachingTestsResult {
-  tests: TeachingTest[];
+  tests: any[];
   total: number;
   totalPages: number;
   isLoading: boolean;
@@ -31,33 +33,30 @@ export function useTeachingTests({
   student_id,
 }: UseTeachingTestsOptions = {}): UseTeachingTestsResult {
   const { token } = useAuth();
-  const [tests, setTests] = useState<TeachingTest[]>([]);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+  const fetcher = createFetcher(token);
+  
+  const searchParams = new URLSearchParams();
+  if (page) searchParams.set("page", page.toString());
+  if (limit) searchParams.set("limit", limit.toString());
+  if (status) searchParams.set("status", status);
+  if (course_id) searchParams.set("course_id", course_id);
+  if (subject_id) searchParams.set("subject_id", subject_id);
+  if (student_id) searchParams.set("student_id", student_id);
+  
+  const url = `${API_ROUTES.TEACHERS.TEACHING_TESTS}?${searchParams.toString()}`;
+  
+  const { data, error, isLoading, mutate } = useSWR<TeachingTestsResponse>(
+    token ? url : null,
+    fetcher,
+    swrOptions
+  );
 
-  const fetchTests = useCallback(async () => {
-    setIsLoading(true);
-    setError("");
-    try {
-      const response = await teachersApi.getTeachingTests(
-        { page, limit, status, course_id, subject_id, student_id },
-        token || undefined
-      );
-      setTests(response.data.tests);
-      setTotal(response.data.pagination.total);
-      setTotalPages(response.data.pagination.totalPages);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch tests");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [page, limit, status, course_id, subject_id, student_id, token]);
-
-  useEffect(() => {
-    fetchTests();
-  }, [fetchTests]);
-
-  return { tests, total, totalPages, isLoading, error, refetch: fetchTests };
+  return {
+    tests: data?.data?.tests || [],
+    total: data?.data?.pagination?.total || 0,
+    totalPages: data?.data?.pagination?.totalPages || 0,
+    isLoading,
+    error: error?.message || "",
+    refetch: () => mutate(),
+  };
 }

@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/contexts/auth-context";
-import { teachersApi, TeachingStudent } from "@/lib/api";
+import useSWR from "swr";
+import { createFetcher, swrOptions } from "@/lib/swr-config";
+import { API_ROUTES } from "@/lib/api-routes";
+import type { TeachingStudentsResponse } from "@/lib/api";
 
 interface UseTeachingStudentsOptions {
   page?: number;
@@ -12,7 +14,7 @@ interface UseTeachingStudentsOptions {
 }
 
 interface UseTeachingStudentsResult {
-  students: TeachingStudent[];
+  students: any[];
   total: number;
   totalPages: number;
   isLoading: boolean;
@@ -27,33 +29,28 @@ export function useTeachingStudents({
   subject_id,
 }: UseTeachingStudentsOptions = {}): UseTeachingStudentsResult {
   const { token } = useAuth();
-  const [students, setStudents] = useState<TeachingStudent[]>([]);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+  const fetcher = createFetcher(token);
+  
+  const searchParams = new URLSearchParams();
+  if (page) searchParams.set("page", page.toString());
+  if (limit) searchParams.set("limit", limit.toString());
+  if (course_id) searchParams.set("course_id", course_id);
+  if (subject_id) searchParams.set("subject_id", subject_id);
+  
+  const url = `${API_ROUTES.TEACHERS.TEACHING_STUDENTS}?${searchParams.toString()}`;
+  
+  const { data, error, isLoading, mutate } = useSWR<TeachingStudentsResponse>(
+    token ? url : null,
+    fetcher,
+    swrOptions
+  );
 
-  const fetchStudents = useCallback(async () => {
-    setIsLoading(true);
-    setError("");
-    try {
-      const response = await teachersApi.getTeachingStudents(
-        { page, limit, course_id, subject_id },
-        token || undefined
-      );
-      setStudents(response.data.students);
-      setTotal(response.data.pagination.total);
-      setTotalPages(response.data.pagination.totalPages);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch students");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [page, limit, course_id, subject_id, token]);
-
-  useEffect(() => {
-    fetchStudents();
-  }, [fetchStudents]);
-
-  return { students, total, totalPages, isLoading, error, refetch: fetchStudents };
+  return {
+    students: data?.data?.students || [],
+    total: data?.data?.pagination?.total || 0,
+    totalPages: data?.data?.pagination?.totalPages || 0,
+    isLoading,
+    error: error?.message || "",
+    refetch: () => mutate(),
+  };
 }

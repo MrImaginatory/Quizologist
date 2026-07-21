@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/contexts/auth-context";
-import { questionsApi, Question } from "@/lib/api";
+import useSWR from "swr";
+import { createFetcher, swrOptions } from "@/lib/swr-config";
+import { API_ROUTES } from "@/lib/api-routes";
+import type { QuestionsResponse } from "@/lib/api";
 
 interface UseQuestionsOptions {
   page?: number;
@@ -13,7 +15,7 @@ interface UseQuestionsOptions {
 }
 
 interface UseQuestionsResult {
-  questions: Question[];
+  questions: any[];
   total: number;
   totalPages: number;
   isLoading: boolean;
@@ -29,39 +31,29 @@ export function useQuestions({
   topicId,
 }: UseQuestionsOptions = {}): UseQuestionsResult {
   const { token } = useAuth();
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+  const fetcher = createFetcher(token);
+  
+  const searchParams = new URLSearchParams();
+  if (courseId) searchParams.set("course_id", courseId);
+  if (subjectId) searchParams.set("subject_id", subjectId);
+  if (topicId) searchParams.set("topic_id", topicId);
+  searchParams.set("page", page.toString());
+  searchParams.set("limit", limit.toString());
+  
+  const url = `${API_ROUTES.QUESTIONS.FILTER}?${searchParams.toString()}`;
+  
+  const { data, error, isLoading, mutate } = useSWR<QuestionsResponse>(
+    token ? url : null,
+    fetcher,
+    swrOptions
+  );
 
-  const fetchQuestions = useCallback(async () => {
-    setIsLoading(true);
-    setError("");
-    try {
-      const response = await questionsApi.filter(
-        {
-          course_id: courseId,
-          subject_id: subjectId,
-          topic_id: topicId,
-          page,
-          limit,
-        },
-        token || undefined
-      );
-      setQuestions(response.data.questions);
-      setTotal(response.data.pagination.total);
-      setTotalPages(response.data.pagination.totalPages);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch questions");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [courseId, subjectId, topicId, page, limit, token]);
-
-  useEffect(() => {
-    fetchQuestions();
-  }, [fetchQuestions]);
-
-  return { questions, total, totalPages, isLoading, error, refetch: fetchQuestions };
+  return {
+    questions: data?.data?.questions || [],
+    total: data?.data?.pagination?.total || 0,
+    totalPages: data?.data?.pagination?.totalPages || 0,
+    isLoading,
+    error: error?.message || "",
+    refetch: () => mutate(),
+  };
 }

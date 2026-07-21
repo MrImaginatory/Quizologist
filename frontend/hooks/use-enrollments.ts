@@ -1,33 +1,28 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/contexts/auth-context";
-import { enrollmentsApi, Enrollment } from "@/lib/api";
+import useSWR from "swr";
+import { createFetcher, swrOptions } from "@/lib/swr-config";
+import { API_ROUTES } from "@/lib/api-routes";
+import type { EnrollmentsResponse } from "@/lib/api";
 
 export function useEnrollments() {
   const { token } = useAuth();
-  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
-  const [total, setTotal] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+  const fetcher = createFetcher(token);
 
-  const fetchEnrollments = useCallback(async () => {
-    setIsLoading(true);
-    setError("");
-    try {
-      const response = await enrollmentsApi.getAll(1, 100, token || undefined);
-      setEnrollments(response.data.enrollments);
-      setTotal(response.data.pagination.total);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch enrollments");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [token]);
+  const url = `${API_ROUTES.ENROLLMENTS.BASE}?page=1&limit=100`;
 
-  useEffect(() => {
-    fetchEnrollments();
-  }, [fetchEnrollments]);
+  const { data, error, isLoading, mutate } = useSWR<EnrollmentsResponse>(
+    token ? url : null,
+    fetcher,
+    swrOptions
+  );
 
-  return { enrollments, total, isLoading, error, refetch: fetchEnrollments };
+  return {
+    enrollments: data?.data?.enrollments || [],
+    total: data?.data?.pagination?.total || 0,
+    isLoading,
+    error: error?.message || "",
+    refetch: () => mutate(),
+  };
 }

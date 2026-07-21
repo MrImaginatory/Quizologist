@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
-import { predefinedTestsApi, PredefinedTest } from "@/lib/api";
+import useSWR from "swr";
+import { createFetcher, swrOptions } from "@/lib/swr-config";
+import { API_ROUTES } from "@/lib/api-routes";
+import type { PredefinedTestResponse } from "@/lib/api";
 
 interface UsePredefinedTestsOptions {
   page?: number;
@@ -18,33 +20,27 @@ export function usePredefinedTests({
   course_id,
 }: UsePredefinedTestsOptions = {}) {
   const { token } = useAuth();
-  const [tests, setTests] = useState<PredefinedTest[]>([]);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+  const fetcher = createFetcher(token);
+  
+  const searchParams = new URLSearchParams();
+  if (page) searchParams.set("page", page.toString());
+  if (limit) searchParams.set("limit", limit.toString());
+  if (status) searchParams.set("status", status);
+  if (course_id) searchParams.set("course_id", course_id);
+  
+  const url = `${API_ROUTES.PREDEFINED_TESTS.BASE}?${searchParams.toString()}`;
+  
+  const { data, error, isLoading } = useSWR<PredefinedTestResponse>(
+    token ? url : null,
+    fetcher,
+    swrOptions
+  );
 
-  useEffect(() => {
-    const fetchTests = async () => {
-      setIsLoading(true);
-      setError("");
-      try {
-        const response = await predefinedTestsApi.getAll(
-          { page, limit, status, course_id },
-          token || undefined
-        );
-        setTests(response.data.tests);
-        setTotal(response.data.pagination.total);
-        setTotalPages(response.data.pagination.totalPages);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch predefined tests");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchTests();
-  }, [page, limit, status, course_id, token]);
-
-  return { tests, total, totalPages, isLoading, error };
+  return {
+    tests: data?.data?.tests || [],
+    total: data?.data?.pagination?.total || 0,
+    totalPages: data?.data?.pagination?.totalPages || 0,
+    isLoading,
+    error: error?.message || "",
+  };
 }
