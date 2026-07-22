@@ -20,7 +20,7 @@ export function useTopics({ page = 1, limit = 10, subjectId }: UseTopicsOptions 
     ? `${API_ROUTES.TOPICS.BY_SUBJECT(subjectId)}?page=${page}&limit=${limit}`
     : `${API_ROUTES.TOPICS.BASE}?page=${page}&limit=${limit}`;
   
-  const { data, error, isLoading } = useSWR<TopicsResponse>(
+  const { data, error, isLoading, mutate } = useSWR<TopicsResponse>(
     token ? url : null,
     fetcher,
     swrOptions
@@ -32,5 +32,6 @@ export function useTopics({ page = 1, limit = 10, subjectId }: UseTopicsOptions 
     totalPages: data?.data?.pagination?.totalPages || 0,
     isLoading,
     error: error?.message || "",
+    refetch: () => mutate(),
   };
 }

@@ -19,7 +19,7 @@ export default function TopicsPage() {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Topic | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const { topics, total, totalPages, isLoading, error } = useTopics({ page, limit });
+  const { topics, total, totalPages, isLoading, error, refetch } = useTopics({ page, limit });
   const { token } = useAuth();
 
   const handleDelete = useCallback(async (id: string) => {
@@ -102,7 +102,7 @@ export default function TopicsPage() {
         onPageChange={setPage}
         onLimitChange={setLimit}
       />
-      <AddTopicDialog open={showAddDialog} onOpenChange={setShowAddDialog} />
+      <AddTopicDialog open={showAddDialog} onOpenChange={setShowAddDialog} onSuccess={refetch} />
       <ConfirmDialog
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}

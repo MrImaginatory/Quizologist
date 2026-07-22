@@ -21,7 +21,10 @@ import {
 } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { useSubjects } from "@/hooks/use-subjects";
+import { topicsApi } from "@/lib/api";
+import { useAuth } from "@/contexts/auth-context";
 import { capitalize } from "@/lib/utils";
+import { toast } from "sonner";
 
 const MAX_DESCRIPTION_LENGTH = 1024;
 
@@ -32,6 +35,7 @@ interface AddTopicDialogProps {
 }
 
 export function AddTopicDialog({ open, onOpenChange, onSuccess }: AddTopicDialogProps) {
+  const { token } = useAuth();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [subjectId, setSubjectId] = useState("");
@@ -47,8 +51,11 @@ export function AddTopicDialog({ open, onOpenChange, onSuccess }: AddTopicDialog
     setError("");
 
     try {
-      // TODO: Call API to create topic
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await topicsApi.create(
+        { name: name.trim(), description: description.trim() || undefined, subject_id: subjectId },
+        token || undefined
+      );
+      toast.success("Topic created successfully!");
       setName("");
       setDescription("");
       setSubjectId("");
@@ -56,6 +63,7 @@ export function AddTopicDialog({ open, onOpenChange, onSuccess }: AddTopicDialog
       onSuccess?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create topic");
+      toast.error(err instanceof Error ? err.message : "Failed to create topic");
     } finally {
       setIsLoading(false);
     }

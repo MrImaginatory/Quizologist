@@ -19,7 +19,7 @@ export default function SubjectsPage() {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Subject | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const { subjects, total, totalPages, isLoading, error } = useSubjects({ page, limit });
+  const { subjects, total, totalPages, isLoading, error, refetch } = useSubjects({ page, limit });
   const { token } = useAuth();
 
   const handleDelete = useCallback(async (id: string) => {
@@ -97,7 +97,7 @@ export default function SubjectsPage() {
         onPageChange={setPage}
         onLimitChange={setLimit}
       />
-      <AddSubjectDialog open={showAddDialog} onOpenChange={setShowAddDialog} />
+      <AddSubjectDialog open={showAddDialog} onOpenChange={setShowAddDialog} onSuccess={refetch} />
       <ConfirmDialog
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}

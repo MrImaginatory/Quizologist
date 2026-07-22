@@ -18,7 +18,7 @@ export default function CoursesPage() {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Course | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const { courses, total, totalPages, isLoading, error } = useCourses({ page, limit });
+  const { courses, total, totalPages, isLoading, error, refetch } = useCourses({ page, limit });
   const { token } = useAuth();
 
   const handleDelete = useCallback(async (id: string) => {
@@ -91,7 +91,7 @@ export default function CoursesPage() {
         onPageChange={setPage}
         onLimitChange={setLimit}
       />
-      <AddCourseDialog open={showAddDialog} onOpenChange={setShowAddDialog} />
+      <AddCourseDialog open={showAddDialog} onOpenChange={setShowAddDialog} onSuccess={refetch} />
       <ConfirmDialog
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}

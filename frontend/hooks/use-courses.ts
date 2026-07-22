@@ -17,7 +17,7 @@ export function useCourses({ page = 1, limit = 10 }: UseCoursesOptions = {}) {
   
   const url = `${API_ROUTES.COURSES.BASE}?page=${page}&limit=${limit}`;
   
-  const { data, error, isLoading } = useSWR<CoursesResponse>(
+  const { data, error, isLoading, mutate } = useSWR<CoursesResponse>(
     token ? url : null,
     fetcher,
     swrOptions
@@ -29,5 +29,6 @@ export function useCourses({ page = 1, limit = 10 }: UseCoursesOptions = {}) {
     totalPages: data?.data?.pagination?.totalPages || 0,
     isLoading,
     error: error?.message || "",
+    refetch: () => mutate(),
   };
 }

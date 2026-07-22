@@ -21,7 +21,10 @@ import {
 } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { useCourses } from "@/hooks/use-courses";
+import { subjectsApi } from "@/lib/api";
+import { useAuth } from "@/contexts/auth-context";
 import { capitalize } from "@/lib/utils";
+import { toast } from "sonner";
 
 const MAX_DESCRIPTION_LENGTH = 1024;
 
@@ -32,6 +35,7 @@ interface AddSubjectDialogProps {
 }
 
 export function AddSubjectDialog({ open, onOpenChange, onSuccess }: AddSubjectDialogProps) {
+  const { token } = useAuth();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [courseId, setCourseId] = useState("");
@@ -47,8 +51,11 @@ export function AddSubjectDialog({ open, onOpenChange, onSuccess }: AddSubjectDi
     setError("");
 
     try {
-      // TODO: Call API to create subject
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await subjectsApi.create(
+        { name: name.trim(), description: description.trim() || undefined, course_id: courseId },
+        token || undefined
+      );
+      toast.success("Subject created successfully!");
       setName("");
       setDescription("");
       setCourseId("");
@@ -56,6 +63,7 @@ export function AddSubjectDialog({ open, onOpenChange, onSuccess }: AddSubjectDi
       onSuccess?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create subject");
+      toast.error(err instanceof Error ? err.message : "Failed to create subject");
     } finally {
       setIsLoading(false);
     }

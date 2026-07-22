@@ -13,6 +13,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
+import { coursesApi } from "@/lib/api";
+import { useAuth } from "@/contexts/auth-context";
+import { toast } from "sonner";
 
 const MAX_DESCRIPTION_LENGTH = 1024;
 
@@ -23,6 +26,7 @@ interface AddCourseDialogProps {
 }
 
 export function AddCourseDialog({ open, onOpenChange, onSuccess }: AddCourseDialogProps) {
+  const { token } = useAuth();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -34,14 +38,18 @@ export function AddCourseDialog({ open, onOpenChange, onSuccess }: AddCourseDial
     setError("");
 
     try {
-      // TODO: Call API to create course
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await coursesApi.create(
+        { name: name.trim(), description: description.trim() || undefined },
+        token || undefined
+      );
+      toast.success("Course created successfully!");
       setName("");
       setDescription("");
       onOpenChange(false);
       onSuccess?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create course");
+      toast.error(err instanceof Error ? err.message : "Failed to create course");
     } finally {
       setIsLoading(false);
     }

@@ -20,7 +20,7 @@ export function useSubjects({ page = 1, limit = 10, courseId }: UseSubjectsOptio
     ? `${API_ROUTES.SUBJECTS.BY_COURSE(courseId)}?page=${page}&limit=${limit}`
     : `${API_ROUTES.SUBJECTS.BASE}?page=${page}&limit=${limit}`;
   
-  const { data, error, isLoading } = useSWR<SubjectsResponse>(
+  const { data, error, isLoading, mutate } = useSWR<SubjectsResponse>(
     token ? url : null,
     fetcher,
     swrOptions
@@ -32,5 +32,6 @@ export function useSubjects({ page = 1, limit = 10, courseId }: UseSubjectsOptio
     totalPages: data?.data?.pagination?.totalPages || 0,
     isLoading,
     error: error?.message || "",
+    refetch: () => mutate(),
   };
 }
