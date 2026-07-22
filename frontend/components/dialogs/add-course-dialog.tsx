@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
-import { coursesApi } from "@/lib/api";
+import { coursesApi, Course } from "@/lib/api";
 import { useAuth } from "@/contexts/auth-context";
 import { toast } from "sonner";
 
@@ -22,15 +22,29 @@ const MAX_DESCRIPTION_LENGTH = 1024;
 interface AddCourseDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  editCourse?: Course | null;
   onSuccess?: () => void;
 }
 
-export function AddCourseDialog({ open, onOpenChange, onSuccess }: AddCourseDialogProps) {
+export function AddCourseDialog({ open, onOpenChange, editCourse, onSuccess }: AddCourseDialogProps) {
   const { token } = useAuth();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const isEditing = !!editCourse;
+
+  useEffect(() => {
+    if (editCourse && open) {
+      setName(editCourse.name);
+      setDescription(editCourse.description || "");
+    } else if (!open) {
+      setName("");
+      setDescription("");
+      setError("");
+    }
+  }, [editCourse, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,18 +52,24 @@ export function AddCourseDialog({ open, onOpenChange, onSuccess }: AddCourseDial
     setError("");
 
     try {
-      await coursesApi.create(
-        { name: name.trim(), description: description.trim() || undefined },
-        token || undefined
-      );
-      toast.success("Course created successfully!");
+      const payload = { name: name.trim(), description: description.trim() || undefined };
+
+      if (isEditing) {
+        await coursesApi.update(editCourse.id, payload, token || undefined);
+        toast.success("Course updated successfully!");
+      } else {
+        await coursesApi.create(payload, token || undefined);
+        toast.success("Course created successfully!");
+      }
+
       setName("");
       setDescription("");
       onOpenChange(false);
       onSuccess?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create course");
-      toast.error(err instanceof Error ? err.message : "Failed to create course");
+      const msg = isEditing ? "Failed to update course" : "Failed to create course";
+      setError(err instanceof Error ? err.message : msg);
+      toast.error(err instanceof Error ? err.message : msg);
     } finally {
       setIsLoading(false);
     }
@@ -59,9 +79,9 @@ export function AddCourseDialog({ open, onOpenChange, onSuccess }: AddCourseDial
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add Course</DialogTitle>
+          <DialogTitle>{isEditing ? "Edit Course" : "Add Course"}</DialogTitle>
           <DialogDescription>
-            Create a new course. Click save when you're done.
+            {isEditing ? "Update the course details." : "Create a new course. Click save when you're done."}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
@@ -104,7 +124,7 @@ export function AddCourseDialog({ open, onOpenChange, onSuccess }: AddCourseDial
             </Button>
             <Button type="submit" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Save
+              {isEditing ? "Update" : "Save"}
             </Button>
           </DialogFooter>
         </form>

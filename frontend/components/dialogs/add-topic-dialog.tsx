@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { useSubjects } from "@/hooks/use-subjects";
-import { topicsApi } from "@/lib/api";
+import { topicsApi, Topic } from "@/lib/api";
 import { useAuth } from "@/contexts/auth-context";
 import { capitalize } from "@/lib/utils";
 import { toast } from "sonner";
@@ -31,10 +31,11 @@ const MAX_DESCRIPTION_LENGTH = 1024;
 interface AddTopicDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  editTopic?: Topic | null;
   onSuccess?: () => void;
 }
 
-export function AddTopicDialog({ open, onOpenChange, onSuccess }: AddTopicDialogProps) {
+export function AddTopicDialog({ open, onOpenChange, editTopic, onSuccess }: AddTopicDialogProps) {
   const { token } = useAuth();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -43,7 +44,21 @@ export function AddTopicDialog({ open, onOpenChange, onSuccess }: AddTopicDialog
   const [error, setError] = useState("");
   const { subjects, isLoading: isLoadingSubjects } = useSubjects({ limit: 100 });
 
+  const isEditing = !!editTopic;
   const selectedSubject = subjects.find((s) => s.id === subjectId);
+
+  useEffect(() => {
+    if (editTopic && open) {
+      setName(editTopic.name);
+      setDescription(editTopic.description || "");
+      setSubjectId(editTopic.subject_id);
+    } else if (!open) {
+      setName("");
+      setDescription("");
+      setSubjectId("");
+      setError("");
+    }
+  }, [editTopic, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,19 +66,25 @@ export function AddTopicDialog({ open, onOpenChange, onSuccess }: AddTopicDialog
     setError("");
 
     try {
-      await topicsApi.create(
-        { name: name.trim(), description: description.trim() || undefined, subject_id: subjectId },
-        token || undefined
-      );
-      toast.success("Topic created successfully!");
+      const payload = { name: name.trim(), description: description.trim() || undefined, subject_id: subjectId };
+
+      if (isEditing) {
+        await topicsApi.update(editTopic.id, payload, token || undefined);
+        toast.success("Topic updated successfully!");
+      } else {
+        await topicsApi.create(payload, token || undefined);
+        toast.success("Topic created successfully!");
+      }
+
       setName("");
       setDescription("");
       setSubjectId("");
       onOpenChange(false);
       onSuccess?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create topic");
-      toast.error(err instanceof Error ? err.message : "Failed to create topic");
+      const msg = isEditing ? "Failed to update topic" : "Failed to create topic";
+      setError(err instanceof Error ? err.message : msg);
+      toast.error(err instanceof Error ? err.message : msg);
     } finally {
       setIsLoading(false);
     }
@@ -73,9 +94,9 @@ export function AddTopicDialog({ open, onOpenChange, onSuccess }: AddTopicDialog
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add Topic</DialogTitle>
+          <DialogTitle>{isEditing ? "Edit Topic" : "Add Topic"}</DialogTitle>
           <DialogDescription>
-            Create a new topic under a subject. Click save when you're done.
+            {isEditing ? "Update the topic details." : "Create a new topic under a subject. Click save when you're done."}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
@@ -135,7 +156,7 @@ export function AddTopicDialog({ open, onOpenChange, onSuccess }: AddTopicDialog
             </Button>
             <Button type="submit" disabled={isLoading || !subjectId}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Save
+              {isEditing ? "Update" : "Save"}
             </Button>
           </DialogFooter>
         </form>

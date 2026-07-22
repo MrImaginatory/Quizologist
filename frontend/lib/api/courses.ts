@@ -9,6 +9,8 @@ export const coursesApi = {
     apiRequest(API_ROUTES.COURSES.BY_ID(id), { token }),
   create: (data: { name: string; description?: string }, token?: string) =>
     apiRequest(API_ROUTES.COURSES.BASE, { method: "POST", body: JSON.stringify(data), token }),
+  update: (id: string, data: { name: string; description?: string }, token?: string) =>
+    apiRequest(API_ROUTES.COURSES.BY_ID(id), { method: "PUT", body: JSON.stringify(data), token }),
   delete: (id: string, token?: string) =>
     apiRequest(API_ROUTES.COURSES.BY_ID(id), { method: "DELETE", token }),
 };

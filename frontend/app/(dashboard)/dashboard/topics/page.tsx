@@ -17,6 +17,7 @@ export default function TopicsPage() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [editTopic, setEditTopic] = useState<Topic | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Topic | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { topics, total, totalPages, isLoading, error, refetch } = useTopics({ page, limit });
@@ -30,6 +31,16 @@ export default function TopicsPage() {
     type: "topic",
     onDelete: handleDelete,
   });
+
+  const handleEditClick = (topic: Topic) => {
+    setEditTopic(topic);
+    setShowAddDialog(true);
+  };
+
+  const handleDialogClose = () => {
+    setShowAddDialog(false);
+    setEditTopic(null);
+  };
 
   const handleDeleteClick = (topic: Topic) => {
     setDeleteTarget(topic);
@@ -63,7 +74,7 @@ export default function TopicsPage() {
       header: "Actions",
       render: (t: Topic) => (
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="h-8 w-8">
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditClick(t)}>
             <Pencil className="h-4 w-4" />
           </Button>
           <Button
@@ -102,7 +113,7 @@ export default function TopicsPage() {
         onPageChange={setPage}
         onLimitChange={setLimit}
       />
-      <AddTopicDialog open={showAddDialog} onOpenChange={setShowAddDialog} onSuccess={refetch} />
+      <AddTopicDialog open={showAddDialog} onOpenChange={handleDialogClose} editTopic={editTopic} onSuccess={refetch} />
       <ConfirmDialog
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { useCourses } from "@/hooks/use-courses";
-import { subjectsApi } from "@/lib/api";
+import { subjectsApi, Subject } from "@/lib/api";
 import { useAuth } from "@/contexts/auth-context";
 import { capitalize } from "@/lib/utils";
 import { toast } from "sonner";
@@ -31,10 +31,11 @@ const MAX_DESCRIPTION_LENGTH = 1024;
 interface AddSubjectDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  editSubject?: Subject | null;
   onSuccess?: () => void;
 }
 
-export function AddSubjectDialog({ open, onOpenChange, onSuccess }: AddSubjectDialogProps) {
+export function AddSubjectDialog({ open, onOpenChange, editSubject, onSuccess }: AddSubjectDialogProps) {
   const { token } = useAuth();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -43,7 +44,21 @@ export function AddSubjectDialog({ open, onOpenChange, onSuccess }: AddSubjectDi
   const [error, setError] = useState("");
   const { courses, isLoading: isLoadingCourses } = useCourses({ limit: 100 });
 
+  const isEditing = !!editSubject;
   const selectedCourse = courses.find((c) => c.id === courseId);
+
+  useEffect(() => {
+    if (editSubject && open) {
+      setName(editSubject.name);
+      setDescription(editSubject.description || "");
+      setCourseId(editSubject.course_id);
+    } else if (!open) {
+      setName("");
+      setDescription("");
+      setCourseId("");
+      setError("");
+    }
+  }, [editSubject, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,19 +66,25 @@ export function AddSubjectDialog({ open, onOpenChange, onSuccess }: AddSubjectDi
     setError("");
 
     try {
-      await subjectsApi.create(
-        { name: name.trim(), description: description.trim() || undefined, course_id: courseId },
-        token || undefined
-      );
-      toast.success("Subject created successfully!");
+      const payload = { name: name.trim(), description: description.trim() || undefined, course_id: courseId };
+
+      if (isEditing) {
+        await subjectsApi.update(editSubject.id, payload, token || undefined);
+        toast.success("Subject updated successfully!");
+      } else {
+        await subjectsApi.create(payload, token || undefined);
+        toast.success("Subject created successfully!");
+      }
+
       setName("");
       setDescription("");
       setCourseId("");
       onOpenChange(false);
       onSuccess?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create subject");
-      toast.error(err instanceof Error ? err.message : "Failed to create subject");
+      const msg = isEditing ? "Failed to update subject" : "Failed to create subject";
+      setError(err instanceof Error ? err.message : msg);
+      toast.error(err instanceof Error ? err.message : msg);
     } finally {
       setIsLoading(false);
     }
@@ -73,9 +94,9 @@ export function AddSubjectDialog({ open, onOpenChange, onSuccess }: AddSubjectDi
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add Subject</DialogTitle>
+          <DialogTitle>{isEditing ? "Edit Subject" : "Add Subject"}</DialogTitle>
           <DialogDescription>
-            Create a new subject under a course. Click save when you're done.
+            {isEditing ? "Update the subject details." : "Create a new subject under a course. Click save when you're done."}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
@@ -135,7 +156,7 @@ export function AddSubjectDialog({ open, onOpenChange, onSuccess }: AddSubjectDi
             </Button>
             <Button type="submit" disabled={isLoading || !courseId}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Save
+              {isEditing ? "Update" : "Save"}
             </Button>
           </DialogFooter>
         </form>

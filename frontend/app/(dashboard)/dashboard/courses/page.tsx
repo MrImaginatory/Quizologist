@@ -16,6 +16,7 @@ export default function CoursesPage() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [editCourse, setEditCourse] = useState<Course | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Course | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { courses, total, totalPages, isLoading, error, refetch } = useCourses({ page, limit });
@@ -29,6 +30,16 @@ export default function CoursesPage() {
     type: "course",
     onDelete: handleDelete,
   });
+
+  const handleEditClick = (course: Course) => {
+    setEditCourse(course);
+    setShowAddDialog(true);
+  };
+
+  const handleDialogClose = () => {
+    setShowAddDialog(false);
+    setEditCourse(null);
+  };
 
   const handleDeleteClick = (course: Course) => {
     setDeleteTarget(course);
@@ -52,7 +63,7 @@ export default function CoursesPage() {
       header: "Actions",
       render: (c: Course) => (
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="h-8 w-8">
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditClick(c)}>
             <Pencil className="h-4 w-4" />
           </Button>
           <Button
@@ -91,7 +102,7 @@ export default function CoursesPage() {
         onPageChange={setPage}
         onLimitChange={setLimit}
       />
-      <AddCourseDialog open={showAddDialog} onOpenChange={setShowAddDialog} onSuccess={refetch} />
+      <AddCourseDialog open={showAddDialog} onOpenChange={handleDialogClose} editCourse={editCourse} onSuccess={refetch} />
       <ConfirmDialog
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}

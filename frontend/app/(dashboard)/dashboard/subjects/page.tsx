@@ -17,6 +17,7 @@ export default function SubjectsPage() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [editSubject, setEditSubject] = useState<Subject | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Subject | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { subjects, total, totalPages, isLoading, error, refetch } = useSubjects({ page, limit });
@@ -30,6 +31,16 @@ export default function SubjectsPage() {
     type: "subject",
     onDelete: handleDelete,
   });
+
+  const handleEditClick = (subject: Subject) => {
+    setEditSubject(subject);
+    setShowAddDialog(true);
+  };
+
+  const handleDialogClose = () => {
+    setShowAddDialog(false);
+    setEditSubject(null);
+  };
 
   const handleDeleteClick = (subject: Subject) => {
     setDeleteTarget(subject);
@@ -58,7 +69,7 @@ export default function SubjectsPage() {
       header: "Actions",
       render: (s: Subject) => (
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="h-8 w-8">
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditClick(s)}>
             <Pencil className="h-4 w-4" />
           </Button>
           <Button
@@ -97,7 +108,7 @@ export default function SubjectsPage() {
         onPageChange={setPage}
         onLimitChange={setLimit}
       />
-      <AddSubjectDialog open={showAddDialog} onOpenChange={setShowAddDialog} onSuccess={refetch} />
+      <AddSubjectDialog open={showAddDialog} onOpenChange={handleDialogClose} editSubject={editSubject} onSuccess={refetch} />
       <ConfirmDialog
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
