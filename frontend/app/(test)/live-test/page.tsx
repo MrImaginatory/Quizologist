@@ -195,6 +195,11 @@ function LiveTestContent() {
     questionStartTime.current = Date.now();
 
     setSkipped((prev) => new Set(prev).add(currentQuestion));
+    setAnswers((prev) => {
+      const newAnswers = { ...prev };
+      delete newAnswers[currentQuestion];
+      return newAnswers;
+    });
     if (currentQuestion < totalQuestions - 1) {
       setCurrentQuestion(currentQuestion + 1);
     }

@@ -40,6 +40,7 @@ interface UseDeleteWithUndoOptions {
 }
 
 export function useDeleteWithUndo({ type, onDelete, onSuccess }: UseDeleteWithUndoOptions) {
+  // Process any stale pending deletions from previous sessions on mount
   const processPendingDeletions = useCallback(async () => {
     const deletions = getPendingDeletions();
     const now = Date.now();
@@ -50,17 +51,21 @@ export function useDeleteWithUndo({ type, onDelete, onSuccess }: UseDeleteWithUn
           await onDelete(deletion.id);
           removePendingDeletion(deletion.id);
           toast.success(`${deletion.name} deleted successfully`);
+          onSuccess?.();
         } catch (error) {
+          // Remove on failure so we don't retry forever
+          removePendingDeletion(deletion.id);
+          const msg = error instanceof Error ? error.message : `Failed to delete ${deletion.name}`;
           console.error(`Failed to delete ${type}:`, error);
+          toast.error(msg);
         }
       }
     }
-  }, [type, onDelete]);
+  }, [type, onDelete, onSuccess]);
 
+  // Run once on mount to clear any stale items — no polling interval
   useEffect(() => {
     processPendingDeletions();
-    const interval = setInterval(processPendingDeletions, 1000);
-    return () => clearInterval(interval);
   }, [processPendingDeletions]);
 
   const deleteWithUndo = useCallback(
@@ -99,8 +104,11 @@ export function useDeleteWithUndo({ type, onDelete, onSuccess }: UseDeleteWithUn
               onSuccess?.();
             })
             .catch((error) => {
+              // Remove on failure — don't leave it stuck in localStorage
+              removePendingDeletion(id);
+              const msg = error instanceof Error ? error.message : `Failed to delete ${name}`;
               console.error(`Failed to delete ${type}:`, error);
-              toast.error(`Failed to delete ${name}`);
+              toast.error(msg);
             });
         }
       }, UNDO_DELAY);

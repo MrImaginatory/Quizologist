@@ -73,8 +73,35 @@ app.get("/api/internal/status", async (_req: Request, res: Response) => {
   });
 });
 
-app.get("/api/internal/status/history", (_req: Request, res: Response) => {
-  const statuses = getServiceStatuses();
+app.get("/api/internal/status/history", async (_req: Request, res: Response) => {
+  const services = [
+    { name: "user-service", url: env.USER_SERVICE_URL },
+    { name: "content-service", url: env.CONTENT_SERVICE_URL },
+    { name: "question-service", url: env.QUESTION_SERVICE_URL },
+    { name: "student-service", url: env.STUDENT_SERVICE_URL },
+    { name: "test-service", url: env.TEST_SERVICE_URL },
+    { name: "teacher-service", url: env.TEACHER_SERVICE_URL },
+    { name: "dashboard-service", url: env.DASHBOARD_SERVICE_URL },
+  ];
+
+  // Live-check each service to get accurate current status
+  const liveStatuses: Record<string, "UP" | "DOWN"> = {};
+  await Promise.all(
+    services.map(async (service) => {
+      try {
+        const response = await fetch(`${service.url}/health`, { signal: AbortSignal.timeout(5000) });
+        liveStatuses[service.name] = response.ok ? "UP" : "DOWN";
+      } catch {
+        liveStatuses[service.name] = "DOWN";
+      }
+    })
+  );
+
+  const statuses = getServiceStatuses().map((s) => ({
+    ...s,
+    currentStatus: liveStatuses[s.name] || s.currentStatus,
+  }));
+
   const incidents = getIncidents();
 
   res.json({

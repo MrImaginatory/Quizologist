@@ -103,6 +103,11 @@ export function TestScreen({ testSession, onSubmit, onTimeUp }: TestScreenProps)
 
   const handleSkip = () => {
     setSkipped((prev) => new Set(prev).add(currentQuestion));
+    setAnswers((prev) => {
+      const newAnswers = { ...prev };
+      delete newAnswers[currentQuestion];
+      return newAnswers;
+    });
     if (currentQuestion < totalQuestions - 1) {
       setCurrentQuestion(currentQuestion + 1);
     }
