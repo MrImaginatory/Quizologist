@@ -6,3 +6,4 @@ survey
 
 *.py
 *.sql
+.mimocode
