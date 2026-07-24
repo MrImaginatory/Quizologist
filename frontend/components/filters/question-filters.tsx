@@ -34,15 +34,23 @@ export function QuestionFilters({ onFilterChange }: QuestionFiltersProps) {
   const isTeacher = user?.role === "teacher";
 
   const { courses: allCourses, isLoading: allCoursesLoading } = useCourses({ limit: 100 });
-  const { subjects: allSubjects, isLoading: allSubjectsLoading } = useSubjects({ limit: 100 });
+  // Fetch subjects filtered by selected course (not all subjects)
+  const { subjects: courseSubjects, isLoading: courseSubjectsLoading } = useSubjects({
+    limit: 100,
+    courseId: courseId || undefined,
+  });
   const { topics: allTopics, isLoading: allTopicsLoading } = useTopics({ limit: 100 });
   const { courses: teacherCourses, subjects: teacherSubjects, isLoading: teachingLoading } = useTeachingCoursesAndSubjects();
 
-  // For teachers, use only their assigned courses/subjects; for admins, use all
+  // For teachers, use only their assigned courses; for admins, use all
   const courses = isTeacher ? teacherCourses : allCourses;
-  const subjects = isTeacher ? teacherSubjects : allSubjects;
   const isLoadingCourses = isTeacher ? teachingLoading : allCoursesLoading;
-  const isLoadingSubjects = isTeacher ? teachingLoading : allSubjectsLoading;
+
+  // For subjects: if teacher, filter course subjects by their assigned subjects
+  const subjects = isTeacher && courseId
+    ? courseSubjects.filter((s) => teacherSubjects.some((ts) => ts.id === s.id))
+    : courseSubjects;
+  const isLoadingSubjects = isTeacher ? teachingLoading : courseSubjectsLoading;
 
   // Filter topics based on selected subject (or all teacher's subjects for teachers)
   const topics = isTeacher
@@ -50,7 +58,6 @@ export function QuestionFilters({ onFilterChange }: QuestionFiltersProps) {
         if (subjectId) {
           return t.subject_id === subjectId;
         }
-        // If no subject selected, show topics for teacher's assigned subjects
         const teacherSubjectIds = teacherSubjects.map((s) => s.id);
         return teacherSubjectIds.includes(t.subject_id);
       })

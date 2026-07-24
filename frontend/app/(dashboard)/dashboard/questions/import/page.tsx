@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import * as XLSX from "xlsx";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -114,12 +114,29 @@ export default function ImportQuestionsPage() {
       .replace(/\u00A0/g, " "); // replace non-breaking spaces
   };
 
+  // Pre-compute lookup maps (rebuilt when data changes)
+  const courseMap = useMemo(
+    () => new Map(courses.map((c: Course) => [normalizeName(c.name), c])),
+    [courses]
+  );
+  const subjectMap = useMemo(
+    () => new Map(subjects.map((s: Subject) => [`${normalizeName(s.name)}|${s.course_id}`, s])),
+    [subjects]
+  );
+  // Build per-subject topic maps to avoid topic name collisions across courses
+  const topicsBySubject = useMemo(() => {
+    const map = new Map<string, Map<string, Topic>>();
+    for (const t of topics) {
+      if (!map.has(t.subject_id)) {
+        map.set(t.subject_id, new Map());
+      }
+      map.get(t.subject_id)!.set(normalizeName(t.name), t);
+    }
+    return map;
+  }, [topics]);
+
   const resolveRow = useCallback(
     (row: ParsedQuestion): ResolvedQuestion => {
-      const courseMap = new Map(courses.map((c: Course) => [normalizeName(c.name), c]));
-      const subjectMap = new Map(subjects.map((s: Subject) => [`${normalizeName(s.name)}|${s.course_id}`, s]));
-      const topicMap = new Map(topics.map((t: Topic) => [`${normalizeName(t.name)}|${t.subject_id}`, t]));
-
       const course = courseMap.get(normalizeName(row.courseName));
       if (!course) {
         return {
@@ -157,8 +174,9 @@ export default function ImportQuestionsPage() {
         };
       }
 
-      const topicKey = `${normalizeName(row.topicName)}|${subject.id}`;
-      const topic = topicMap.get(topicKey);
+      // Look up topic within the resolved subject only (prevents cross-course collisions)
+      const subjectTopics = topicsBySubject.get(subject.id);
+      const topic = subjectTopics?.get(normalizeName(row.topicName));
       if (!topic) {
         return {
           type: "mcq",
@@ -229,7 +247,7 @@ export default function ImportQuestionsPage() {
         status: "ready",
       };
     },
-    [courses, subjects, topics]
+    [courseMap, subjectMap, topicsBySubject]
   );
 
   const processFile = async (file: File) => {

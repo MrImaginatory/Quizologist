@@ -3,3 +3,6 @@ health-logs
 *.log
 *.logs
 survey
+
+*.py
+*.sql
