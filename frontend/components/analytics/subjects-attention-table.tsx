@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -75,8 +75,8 @@ export function SubjectsAttentionTable({ data, isLoading }: SubjectsAttentionTab
           </TableHeader>
           <TableBody>
             {data.subjects.map((subject) => (
-              <>
-                <TableRow key={subject.subjectId}>
+              <Fragment key={subject.subjectId}>
+                <TableRow>
                   <TableCell className="font-medium">{capitalize(subject.subjectName)}</TableCell>
                   <TableCell>{subject.courseName}</TableCell>
                   <TableCell>
@@ -135,7 +135,7 @@ export function SubjectsAttentionTable({ data, isLoading }: SubjectsAttentionTab
                     </TableCell>
                   </TableRow>
                 )}
-              </>
+              </Fragment>
             ))}
           </TableBody>
         </Table>

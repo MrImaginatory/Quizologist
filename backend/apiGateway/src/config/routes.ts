@@ -56,17 +56,37 @@ export const routes: RouteConfig[] = [
     roles: ["admin", "teacher", "student"],
     methods: ["GET"],
   },
+  // Subject — write operations admin only
+  {
+    path: "/content/subject",
+    target: `${env.CONTENT_SERVICE_URL}/api/content/subject`,
+    auth: true,
+    roles: ["admin"],
+    methods: ["POST", "PUT", "DELETE"],
+  },
+  // Subject — read operations all authenticated users
   {
     path: "/content/subject",
     target: `${env.CONTENT_SERVICE_URL}/api/content/subject`,
     auth: true,
     roles: ["admin", "teacher", "student"],
+    methods: ["GET"],
   },
+  // Topic — write operations admin only
+  {
+    path: "/content/topic",
+    target: `${env.CONTENT_SERVICE_URL}/api/content/topic`,
+    auth: true,
+    roles: ["admin"],
+    methods: ["POST", "PUT", "DELETE"],
+  },
+  // Topic — read operations all authenticated users
   {
     path: "/content/topic",
     target: `${env.CONTENT_SERVICE_URL}/api/content/topic`,
     auth: true,
     roles: ["admin", "teacher", "student"],
+    methods: ["GET"],
   },
 
   // ==================== Question Service ====================

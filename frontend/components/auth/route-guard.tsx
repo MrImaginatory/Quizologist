@@ -4,6 +4,7 @@ import { useEffect, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import { Loader2 } from "lucide-react";
+import { NotFound } from "@/components/not-found";
 
 interface RouteGuardProps {
   children: React.ReactNode;
@@ -33,11 +34,7 @@ export function RouteGuard({
     if (isPublicRoute && isAuthenticated) {
       router.push("/dashboard");
     }
-
-    if (isAuthenticated && allowedRoles && !allowedRoles.includes(user?.role!)) {
-      router.push("/dashboard");
-    }
-  }, [isLoading, isAuthenticated, pathname, router, allowedRoles, user, requireAuth, isPublicRoute]);
+  }, [isLoading, isAuthenticated, pathname, router, requireAuth, isPublicRoute]);
 
   if (isLoading) {
     return (
@@ -53,6 +50,11 @@ export function RouteGuard({
 
   if (isPublicRoute && isAuthenticated) {
     return null;
+  }
+
+  // Role check: show 404 if user's role is not allowed
+  if (allowedRoles && !allowedRoles.includes(user?.role!)) {
+    return <NotFound />;
   }
 
   return <>{children}</>;
