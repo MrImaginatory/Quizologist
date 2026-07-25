@@ -94,6 +94,16 @@ export class DashboardController {
     }
   }
 
+  static async getSkillRating(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { userId } = req.user!;
+      const data = await StudentAnalyticsService.getSkillRating(userId);
+      return ApiResponse.success(res, "Skill rating retrieved", data);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   // ==================== Admin Analytics ====================
 
   static async getTeacherStudentRatio(req: AuthRequest, res: Response, next: NextFunction) {

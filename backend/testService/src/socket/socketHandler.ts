@@ -4,6 +4,8 @@ import { sessionManager } from "./sessionManager";
 import { TestSessionService } from "../modules/testSession/testSession.service";
 import TestSession from "../modules/testSession/testSession.model";
 import TestAnswer from "../modules/testAnswer/testAnswer.model";
+import Question from "../modules/question/question.model";
+import { UserSkillRatingService } from "../modules/userSkillRating/userSkillRating.service";
 
 interface JoinTestPayload {
   testId: string;
@@ -186,11 +188,34 @@ export function registerSocketHandlers(socket: Socket, studentId: string, logger
       // Calculate remaining time
       const timeRemaining = getTimeRemaining(session.ends_at);
 
+      // Adaptive skill score update
+      let skillScore: number | null = null;
+      if (session.skill_score_snapshot !== null) {
+        try {
+          const question = await Question.findByPk(questionId);
+          if (question) {
+            const isCorrect = question.correctAnswer === answer;
+            const result = await UserSkillRatingService.updateScore({
+              userId: studentId,
+              isCorrect,
+              questionDifficultyScore: (question as any).difficulty_score || 3.0,
+              timeTaken,
+              totalQuestionsInTest: session.total_questions,
+              durationMinutes: session.duration_minutes,
+            });
+            skillScore = result.skillScore;
+          }
+        } catch (scoreErr: any) {
+          logger.error("Skill score update error", { error: scoreErr.message });
+        }
+      }
+
       socket.emit("answer_recorded", {
         testId,
         questionIndex,
         success: true,
         timeRemaining,
+        skillScore,
       });
     } catch (error: any) {
       logger.error("answer error", { error: error.message, stack: error.stack });

@@ -9,6 +9,7 @@ type QuestionCreationAttributes = Optional<
   | "explanation"
   | "videoUrl"
   | "difficulty"
+  | "difficulty_score"
   | "createdAt"
   | "updatedAt"
   | "deletedAt"
@@ -26,6 +27,7 @@ class Question
   declare explanation: string | null;
   declare videoUrl: string | null;
   declare difficulty: DifficultyLevel;
+  declare difficulty_score: number;
   declare topic_id: string;
   declare subject_id: string;
   declare course_id: string;
@@ -71,6 +73,11 @@ Question.init(
       type: DataTypes.ENUM("beginner", "normal", "mid", "hard", "expert"),
       allowNull: false,
       defaultValue: "normal",
+    },
+    difficulty_score: {
+      type: DataTypes.FLOAT,
+      allowNull: false,
+      defaultValue: 3.0,
     },
     topic_id: {
       type: DataTypes.UUID,

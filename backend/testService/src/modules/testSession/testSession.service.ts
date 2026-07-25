@@ -11,6 +11,7 @@ import Course from "../course/course.model";
 import Subject from "../subject/subject.model";
 import Topic from "../topic/topic.model";
 import TeacherAssignment from "../teacherAssignment/teacherAssignment.model";
+import { UserSkillRatingService } from "../userSkillRating/userSkillRating.service";
 import {
   StartTestInput,
   TestIdParam,
@@ -171,25 +172,117 @@ export class TestSessionService {
       questionConditions.push(condition);
     }
 
-    const questions = await Question.findAll({
-      where: {
-        [Op.or]: questionConditions,
-      },
-      include: [
-        { model: Topic, as: "topic", attributes: ["id", "name"] },
-        { model: Subject, as: "subject", attributes: ["id", "name"] },
-        { model: Course, as: "course", attributes: ["id", "name"] },
-      ],
-      order: sequelize.random(),
-    });
+    let selectedQuestions: any[] = [];
+    let skillScoreSnapshot: number | null = null;
 
-    if (questions.length === 0) {
-      throw ApiError.badRequest(RESPONSE_MESSAGES.ERROR.NO_QUESTIONS);
+    if (data.adaptive) {
+      // Adaptive mode: fetch questions based on user's skill score
+      skillScoreSnapshot = await UserSkillRatingService.getScore(studentId);
+
+      const WINDOW_SIZE = 2.0;
+      const MAX_RETRIES = 3;
+      const WINDOW_EXPAND = 0.5;
+
+      let currentWindowMin = skillScoreSnapshot - WINDOW_SIZE;
+      let currentWindowMax = skillScoreSnapshot + WINDOW_SIZE;
+      const neededCount = data.question_limit;
+
+      for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+        // Query questions within the score range for each selection
+        const adaptiveQuestions: any[] = [];
+
+        for (const condition of questionConditions) {
+          const whereClause: any = {
+            ...condition,
+            difficulty_score: { [Op.between]: [currentWindowMin, currentWindowMax] },
+          };
+
+          const batch = await Question.findAll({
+            where: whereClause,
+            include: [
+              { model: Topic, as: "topic", attributes: ["id", "name"] },
+              { model: Subject, as: "subject", attributes: ["id", "name"] },
+              { model: Course, as: "course", attributes: ["id", "name"] },
+            ],
+            order: sequelize.random(),
+          });
+
+          adaptiveQuestions.push(...batch);
+        }
+
+        // Deduplicate by question id
+        const seen = new Set<string>();
+        const unique = adaptiveQuestions.filter((q: any) => {
+          if (seen.has(q.id)) return false;
+          seen.add(q.id);
+          return true;
+        });
+
+        if (unique.length >= neededCount) {
+          // Shuffle and take what we need
+          const shuffled = unique.sort(() => Math.random() - 0.5);
+          selectedQuestions = shuffled.slice(0, neededCount);
+          break;
+        }
+
+        // Expand window and retry
+        currentWindowMin -= WINDOW_EXPAND;
+        currentWindowMax += WINDOW_EXPAND;
+        selectedQuestions = unique; // Use whatever we have so far
+      }
+
+      // If still not enough, fill remaining with random questions
+      if (selectedQuestions.length < neededCount) {
+        const existingIds = new Set(selectedQuestions.map((q: any) => q.id));
+        const remaining = neededCount - selectedQuestions.length;
+
+        const fillConditions = questionConditions.map((c) => {
+          const where: any = { ...c };
+          if (existingIds.size > 0) {
+            where.id = { [Op.notIn]: Array.from(existingIds) };
+          }
+          return where;
+        });
+
+        const fillQuestions = await Question.findAll({
+          where: { [Op.or]: fillConditions },
+          include: [
+            { model: Topic, as: "topic", attributes: ["id", "name"] },
+            { model: Subject, as: "subject", attributes: ["id", "name"] },
+            { model: Course, as: "course", attributes: ["id", "name"] },
+          ],
+          order: sequelize.random(),
+          limit: remaining,
+        });
+
+        selectedQuestions.push(...fillQuestions);
+      }
+    } else {
+      // Non-adaptive mode: original random selection (unchanged behavior)
+      const questions = await Question.findAll({
+        where: {
+          [Op.or]: questionConditions,
+        },
+        include: [
+          { model: Topic, as: "topic", attributes: ["id", "name"] },
+          { model: Subject, as: "subject", attributes: ["id", "name"] },
+          { model: Course, as: "course", attributes: ["id", "name"] },
+        ],
+        order: sequelize.random(),
+      });
+
+      if (questions.length === 0) {
+        throw ApiError.badRequest(RESPONSE_MESSAGES.ERROR.NO_QUESTIONS);
+      }
+
+      // Apply question limit (use all available if less than requested)
+      const actualQuestionCount = Math.min(questions.length, data.question_limit);
+      selectedQuestions = questions.slice(0, actualQuestionCount);
     }
 
-    // Apply question limit (use all available if less than requested)
-    const actualQuestionCount = Math.min(questions.length, data.question_limit);
-    const selectedQuestions = questions.slice(0, actualQuestionCount);
+    if (selectedQuestions.length === 0) {
+      throw ApiError.badRequest(RESPONSE_MESSAGES.ERROR.NO_QUESTIONS);
+    }
 
     // Generate test ID
     const nameParts = studentName.split(" ");
@@ -201,6 +294,8 @@ export class TestSessionService {
     const startedAt = new Date();
     const endsAt = new Date(startedAt.getTime() + data.duration_minutes * 60 * 1000);
 
+    const actualQuestionCount = selectedQuestions.length;
+
     // Create test session
     const session = await TestSession.create({
       test_id: testId,
@@ -210,15 +305,16 @@ export class TestSessionService {
       question_limit: data.question_limit,
       ends_at: endsAt,
       total_questions: actualQuestionCount,
+      skill_score_snapshot: skillScoreSnapshot,
       started_at: startedAt,
     });
 
-    // Create answer stubs for each question
+    // Create answer stubs for each question (default to skipped until answered)
     const answerStubs = selectedQuestions.map((q) => ({
       test_session_id: session.id,
       question_id: q.id,
       time_taken: 0,
-      is_skipped: false,
+      is_skipped: true,
     }));
 
     await TestAnswer.bulkCreate(answerStubs);

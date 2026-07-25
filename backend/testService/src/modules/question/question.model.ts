@@ -10,6 +10,7 @@ class Question extends Model {
   declare explanation: string | null;
   declare videoUrl: string | null;
   declare difficulty: string;
+  declare difficulty_score: number;
   declare topic_id: string;
   declare subject_id: string;
   declare course_id: string;
@@ -25,6 +26,7 @@ Question.init(
     explanation: { type: DataTypes.TEXT, allowNull: true },
     videoUrl: { type: DataTypes.STRING(500), allowNull: true },
     difficulty: { type: DataTypes.ENUM("beginner", "normal", "mid", "hard", "expert") },
+    difficulty_score: { type: DataTypes.FLOAT, defaultValue: 3.0 },
     topic_id: { type: DataTypes.UUID },
     subject_id: { type: DataTypes.UUID },
     course_id: { type: DataTypes.UUID },

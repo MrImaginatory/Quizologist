@@ -127,6 +127,32 @@ Course.init(
   { sequelize, tableName: "courses", timestamps: false, paranoid: false }
 );
 
+// ============ User Skill Rating ============
+class UserSkillRating extends Model {
+  declare id: string;
+  declare user_id: string;
+  declare skill_score: number;
+  declare total_answers: number;
+  declare correct_answers: number;
+  declare current_streak: number;
+  declare best_streak: number;
+  declare last_answered_at: Date | null;
+}
+
+UserSkillRating.init(
+  {
+    id: { type: DataTypes.UUID, primaryKey: true },
+    user_id: { type: DataTypes.UUID },
+    skill_score: { type: DataTypes.FLOAT, defaultValue: 3.0 },
+    total_answers: { type: DataTypes.INTEGER, defaultValue: 0 },
+    correct_answers: { type: DataTypes.INTEGER, defaultValue: 0 },
+    current_streak: { type: DataTypes.INTEGER, defaultValue: 0 },
+    best_streak: { type: DataTypes.INTEGER, defaultValue: 0 },
+    last_answered_at: { type: DataTypes.DATE },
+  },
+  { sequelize, tableName: "user_skill_ratings", timestamps: true, paranoid: false }
+);
+
 // ============ Associations ============
 TestAnswer.belongsTo(TestSession, { foreignKey: "test_session_id" });
 TestAnswer.belongsTo(Question, { foreignKey: "question_id" });
@@ -140,4 +166,4 @@ Question.belongsTo(Course, { foreignKey: "course_id" });
 Topic.belongsTo(Subject, { foreignKey: "subject_id" });
 Subject.belongsTo(Course, { foreignKey: "course_id" });
 
-export { TestSession, TestAnswer, Question, Topic, Subject, Course };
+export { TestSession, TestAnswer, Question, Topic, Subject, Course, UserSkillRating };

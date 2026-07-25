@@ -600,12 +600,12 @@ export class PredefinedTestService {
       started_at: new Date(),
     });
 
-    // Create answer stubs
+    // Create answer stubs (default to skipped until answered)
     const answerStubs = questionIds.map((questionId) => ({
       test_session_id: testSession.id,
       question_id: questionId,
       selected_answer: null,
-      is_skipped: false,
+      is_skipped: true,
       time_taken: 0,
     }));
     await TestAnswer.bulkCreate(answerStubs);

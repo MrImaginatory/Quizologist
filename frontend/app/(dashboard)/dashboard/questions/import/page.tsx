@@ -44,6 +44,7 @@ interface ParsedQuestion {
   option4: string;
   option5: string;
   correctAnswer: string;
+  difficulty: string;
   explanation: string;
   videoUrl: string;
   questionAddedBy: string;
@@ -56,6 +57,7 @@ interface ResolvedQuestion {
   correctAnswer: string;
   explanation?: string;
   videoUrl?: string;
+  difficulty: string;
   topic_id: string;
   subject_id: string;
   course_id: string;
@@ -137,6 +139,12 @@ export default function ImportQuestionsPage() {
 
   const resolveRow = useCallback(
     (row: ParsedQuestion): ResolvedQuestion => {
+      // Validate difficulty value
+      const validDifficulties = ["beginner", "normal", "mid", "hard", "expert"];
+      const rawDifficulty = row.difficulty.toLowerCase().trim();
+      const difficulty = validDifficulties.includes(rawDifficulty) ? rawDifficulty : "normal";
+      const difficultyChanged = row.difficulty && rawDifficulty !== "" && !validDifficulties.includes(rawDifficulty);
+
       const course = courseMap.get(normalizeName(row.courseName));
       if (!course) {
         return {
@@ -144,6 +152,7 @@ export default function ImportQuestionsPage() {
           question: row.question,
           choices: [],
           correctAnswer: row.correctAnswer,
+          difficulty,
           topic_id: "",
           subject_id: "",
           course_id: "",
@@ -163,6 +172,7 @@ export default function ImportQuestionsPage() {
           question: row.question,
           choices: [],
           correctAnswer: row.correctAnswer,
+          difficulty,
           topic_id: "",
           subject_id: "",
           course_id: course.id,
@@ -183,6 +193,7 @@ export default function ImportQuestionsPage() {
           question: row.question,
           choices: [],
           correctAnswer: row.correctAnswer,
+          difficulty,
           topic_id: "",
           subject_id: subject.id,
           course_id: course.id,
@@ -203,6 +214,7 @@ export default function ImportQuestionsPage() {
           question: row.question,
           choices,
           correctAnswer: row.correctAnswer,
+          difficulty,
           topic_id: topic.id,
           subject_id: subject.id,
           course_id: course.id,
@@ -220,6 +232,7 @@ export default function ImportQuestionsPage() {
           question: row.question,
           choices,
           correctAnswer: row.correctAnswer,
+          difficulty,
           topic_id: topic.id,
           subject_id: subject.id,
           course_id: course.id,
@@ -238,6 +251,7 @@ export default function ImportQuestionsPage() {
         correctAnswer: row.correctAnswer.trim(),
         explanation: row.explanation || undefined,
         videoUrl: row.videoUrl || undefined,
+        difficulty,
         topic_id: topic.id,
         subject_id: subject.id,
         course_id: course.id,
@@ -293,6 +307,7 @@ export default function ImportQuestionsPage() {
             option4: getFieldValue(["Option 4", "Option4", "option4", "Choice 4", "Choice4"]),
             option5: getFieldValue(["Option 5", "Option5", "option5", "Choice 5", "Choice5"]),
             correctAnswer: getFieldValue(["Correct Answer", "Correct", "correct_answer", "answer"]),
+            difficulty: getFieldValue(["Difficulty", "difficulty", "Level", "level"]),
             explanation: getFieldValue(["Explanation", "explanation", "Note", "note"]),
             videoUrl: getFieldValue(["Video URL", "Video", "video_url", "video"]),
             questionAddedBy: getFieldValue(["Question Added By", "Added By", "added_by"]),
@@ -353,7 +368,7 @@ export default function ImportQuestionsPage() {
         correctAnswer: q.correctAnswer,
         explanation: q.explanation || "",
         videoUrl: q.videoUrl || "",
-        difficulty: "normal",
+        difficulty: q.difficulty || "normal",
         topic_id: q.topic_id,
         subject_id: q.subject_id,
         course_id: q.course_id,
@@ -531,6 +546,7 @@ export default function ImportQuestionsPage() {
                     <TableHead>Subject</TableHead>
                     <TableHead>Topic</TableHead>
                     <TableHead>Question</TableHead>
+                    <TableHead>Difficulty</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="w-10"></TableHead>
                   </TableRow>
@@ -544,6 +560,18 @@ export default function ImportQuestionsPage() {
                       <TableCell>{capitalize(q.topicName)}</TableCell>
                       <TableCell className="max-w-[200px] truncate" title={q.question}>
                         {q.question}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={
+                          q.difficulty === "beginner" ? "bg-green-500/10 text-green-500" :
+                          q.difficulty === "normal" ? "bg-blue-500/10 text-blue-500" :
+                          q.difficulty === "mid" ? "bg-yellow-500/10 text-yellow-500" :
+                          q.difficulty === "hard" ? "bg-orange-500/10 text-orange-500" :
+                          q.difficulty === "expert" ? "bg-red-500/10 text-red-500" :
+                          "bg-muted"
+                        }>
+                          {capitalize(q.difficulty)}
+                        </Badge>
                       </TableCell>
                       <TableCell>
                         {q.status === "ready" ? (

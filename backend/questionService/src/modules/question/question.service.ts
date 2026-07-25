@@ -1,4 +1,5 @@
 import { Op } from "sequelize";
+import { sequelize } from "../../config/database";
 import { ApiError } from "../../utils/ApiError";
 import { RESPONSE_MESSAGES } from "../../utils/responseMessages";
 import Question from "./question.model";
@@ -17,6 +18,18 @@ import {
 } from "./question.validation";
 
 const TIMESTAMP_EXCLUDE = { exclude: ["createdAt", "updatedAt", "deletedAt"] };
+
+const DIFFICULTY_SCORE_MAP: Record<string, number> = {
+  beginner: 1.0,
+  normal: 3.0,
+  mid: 5.0,
+  hard: 7.0,
+  expert: 9.0,
+};
+
+function getDifficultyScore(difficulty: string): number {
+  return DIFFICULTY_SCORE_MAP[difficulty] ?? 3.0;
+}
 
 const TOPIC_INCLUDE = { model: Topic, as: "topic", attributes: ["id", "name"] };
 const SUBJECT_INCLUDE = { model: Subject, as: "subject", attributes: ["id", "name"] };
@@ -60,6 +73,7 @@ export class QuestionService {
       explanation: data.explanation || null,
       videoUrl: data.videoUrl || null,
       difficulty: data.difficulty,
+      difficulty_score: getDifficultyScore(data.difficulty),
       topic_id: data.topic_id,
       subject_id: data.subject_id,
       course_id: data.course_id,
@@ -281,7 +295,10 @@ export class QuestionService {
     if (data.correctAnswer) question.set("correctAnswer", data.correctAnswer);
     if (data.explanation !== undefined) question.set("explanation", data.explanation);
     if (data.videoUrl !== undefined) question.set("videoUrl", data.videoUrl);
-    if (data.difficulty) question.set("difficulty", data.difficulty);
+    if (data.difficulty) {
+      question.set("difficulty", data.difficulty);
+      question.set("difficulty_score", getDifficultyScore(data.difficulty));
+    }
     if (data.topic_id) question.set("topic_id", data.topic_id);
     if (data.subject_id) question.set("subject_id", data.subject_id);
     if (data.course_id) question.set("course_id", data.course_id);
@@ -306,5 +323,28 @@ export class QuestionService {
     await question.destroy();
 
     return { message: RESPONSE_MESSAGES.SUCCESS.QUESTION_DELETED };
+  }
+
+  static async getQuestionsByScoreRange(
+    minScore: number,
+    maxScore: number,
+    filters: { course_id?: string; subject_id?: string; topic_id?: string },
+    limit: number = 30
+  ) {
+    const where: any = {
+      difficulty_score: { [Op.between]: [minScore, maxScore] },
+    };
+    if (filters.course_id) where.course_id = filters.course_id;
+    if (filters.subject_id) where.subject_id = filters.subject_id;
+    if (filters.topic_id) where.topic_id = filters.topic_id;
+
+    const questions = await Question.findAll({
+      where,
+      include: ALL_INCLUDES,
+      order: sequelize.random(),
+      limit,
+    });
+
+    return questions;
   }
 }

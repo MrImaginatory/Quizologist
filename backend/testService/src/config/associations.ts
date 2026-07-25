@@ -8,6 +8,7 @@ import Question from "../modules/question/question.model";
 import PredefinedTest from "../modules/predefinedTest/predefinedTest.model";
 import PredefinedTestQuestion from "../modules/predefinedTest/predefinedTestQuestion.model";
 import PredefinedTestStudent from "../modules/predefinedTest/predefinedTestStudent.model";
+import UserSkillRating from "../modules/userSkillRating/userSkillRating.model";
 
 TestSession.hasMany(TestAnswer, { foreignKey: "test_session_id", as: "answers" });
 TestAnswer.belongsTo(TestSession, { foreignKey: "test_session_id", as: "testSession" });

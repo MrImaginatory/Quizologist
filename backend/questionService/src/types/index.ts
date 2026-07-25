@@ -17,6 +17,7 @@ export interface QuestionAttributes {
   explanation: string | null;
   videoUrl: string | null;
   difficulty: DifficultyLevel;
+  difficulty_score: number;
   topic_id: string;
   subject_id: string;
   course_id: string;

@@ -1,7 +1,8 @@
 import { Op, fn, col, literal } from "sequelize";
-import { TestSession, TestAnswer, Question, Topic, Subject, Course } from "../models";
+import { TestSession, TestAnswer, Question, Topic, Subject, Course, UserSkillRating } from "../models";
+import { env } from "../../config/env";
 
-const MIN_ATTEMPTS = 3;
+const MIN_ATTEMPTS = env.MIN_ATTEMPTS;
 
 export class StudentAnalyticsService {
   static async getTopicPerformance(studentId: string) {
@@ -79,8 +80,8 @@ export class StudentAnalyticsService {
             : "weak"
           : "insufficient",
       }))
-      .filter((t) => t.totalAttempts >= MIN_ATTEMPTS)
-      .sort((a, b) => b.accuracy - a.accuracy);
+      .filter((t) => t.totalAttempts >= 1)
+      .sort((a, b) => a.accuracy - b.accuracy);
 
     return {
       topics,
@@ -153,8 +154,8 @@ export class StudentAnalyticsService {
               : "weak"
             : "insufficient",
       }))
-      .filter((s) => s.totalAttempts >= MIN_ATTEMPTS)
-      .sort((a, b) => b.accuracy - a.accuracy);
+      .filter((s) => s.totalAttempts >= 1)
+      .sort((a, b) => a.accuracy - b.accuracy);
 
     return {
       subjects,
@@ -336,6 +337,36 @@ export class StudentAnalyticsService {
       overallAccuracy,
       totalTopicsAttempted: topicData.topics.length,
       totalTests: topicData.totalTests,
+    };
+  }
+
+  static async getSkillRating(studentId: string) {
+    const rating = await UserSkillRating.findOne({
+      where: { user_id: studentId },
+    });
+
+    if (!rating) {
+      return {
+        skillScore: 3.0,
+        totalAnswers: 0,
+        correctAnswers: 0,
+        accuracy: 0,
+        currentStreak: 0,
+        bestStreak: 0,
+        lastAnsweredAt: null,
+      };
+    }
+
+    return {
+      skillScore: rating.skill_score,
+      totalAnswers: rating.total_answers,
+      correctAnswers: rating.correct_answers,
+      accuracy: rating.total_answers > 0
+        ? Math.round((rating.correct_answers / rating.total_answers) * 100)
+        : 0,
+      currentStreak: rating.current_streak,
+      bestStreak: rating.best_streak,
+      lastAnsweredAt: rating.last_answered_at,
     };
   }
 }

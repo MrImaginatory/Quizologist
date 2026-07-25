@@ -59,6 +59,7 @@ function LiveTestContent() {
   const [questionNavOpen, setQuestionNavOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [skillScore, setSkillScore] = useState<number | null>(null);
 
   const questionStartTime = useRef<number>(Date.now());
 
@@ -78,7 +79,9 @@ function LiveTestContent() {
       startHeartbeat(testId!, data.currentIndex);
     },
     onAnswerRecorded: (data) => {
-      // Timer is managed by client-side calculation from ends_at
+      if (data.skillScore !== null && data.skillScore !== undefined) {
+        setSkillScore(data.skillScore);
+      }
     },
     onTimeUpdate: (data) => {
       // Timer is managed by client-side calculation from ends_at
@@ -432,6 +435,11 @@ function LiveTestContent() {
             <Badge variant="secondary" className="font-mono text-xs hidden md:inline-flex">
               {testSession.test_id}
             </Badge>
+            {skillScore !== null && (
+              <Badge variant="outline" className="font-mono text-xs gap-1 hidden md:inline-flex">
+                Skill: {skillScore.toFixed(1)}
+              </Badge>
+            )}
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">

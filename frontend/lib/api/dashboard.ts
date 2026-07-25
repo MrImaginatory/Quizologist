@@ -27,6 +27,8 @@ export const dashboardApi = {
     apiRequest(API_ROUTES.DASHBOARD.STUDENT_PERFORMANCE_TRENDS, { token }),
   getStudentStrengthsWeaknesses: (token?: string) =>
     apiRequest(API_ROUTES.DASHBOARD.STUDENT_STRENGTHS_WEAKNESSES, { token }),
+  getStudentSkillRating: (token?: string) =>
+    apiRequest(API_ROUTES.DASHBOARD.STUDENT_SKILL_RATING, { token }),
 
   // Admin Analytics
   getTeacherStudentRatio: (params: { location_id?: string }, token?: string) => {

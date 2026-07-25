@@ -102,7 +102,7 @@ export interface TopicPerformance {
   correctAnswers: number;
   accuracy: number;
   avgTimePerQuestion: number;
-  status: "strong" | "moderate" | "weak";
+  status: "strong" | "moderate" | "weak" | "insufficient";
 }
 
 export interface SubjectPerformance {
@@ -112,7 +112,7 @@ export interface SubjectPerformance {
   correctAnswers: number;
   accuracy: number;
   avgTimePerQuestion: number;
-  status: "strong" | "moderate" | "weak";
+  status: "strong" | "moderate" | "weak" | "insufficient";
 }
 
 export interface PerformanceTrend {
@@ -207,6 +207,20 @@ export interface SubjectsAttentionResponse {
         avgScore: number;
       }[];
     }[];
+  };
+}
+
+export interface SkillRatingResponse {
+  success: boolean;
+  message: string;
+  data: {
+    skillScore: number;
+    totalAnswers: number;
+    correctAnswers: number;
+    accuracy: number;
+    currentStreak: number;
+    bestStreak: number;
+    lastAnsweredAt: string | null;
   };
 }
 
@@ -343,6 +357,7 @@ export interface Question {
   explanation: string | null;
   videoUrl: string | null;
   difficulty: string;
+  difficulty_score: number;
   topic_id: string;
   subject_id: string;
   course_id: string;
@@ -666,6 +681,7 @@ export interface StartTestPayload {
     subject_id?: string;
     topic_id?: string;
   }[];
+  adaptive?: boolean;
 }
 
 export interface TestSession {

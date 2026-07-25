@@ -7,6 +7,8 @@ import Subject from "../subject/subject.model";
 import Topic from "../topic/topic.model";
 import TeacherAssignment from "../teacherAssignment/teacherAssignment.model";
 
+const VALID_DIFFICULTIES = ["beginner", "normal", "mid", "hard", "expert"];
+
 const TEMPLATE_HEADERS = [
   "Course Name",
   "Subject Name",
@@ -18,6 +20,7 @@ const TEMPLATE_HEADERS = [
   "Option 4",
   "Option 5",
   "Correct Answer",
+  "Difficulty",
   "Explanation",
   "Video URL",
   "Question Added By",
@@ -170,8 +173,8 @@ export class QuestionImportService {
     });
 
     // Add 2 empty sample rows so user sees the format
-    qSheet.addRow(["", "", "", "", "", "", "", "", "", "", "", "", ""]);
-    qSheet.addRow(["", "", "", "", "", "", "", "", "", "", "", "", ""]);
+    qSheet.addRow(["", "", "", "", "", "", "", "", "", "", "", "", "", ""]);
+    qSheet.addRow(["", "", "", "", "", "", "", "", "", "", "", "", "", ""]);
 
     // Comment on Correct Answer header
     const headerCell = qSheet.getCell("J1");
@@ -181,6 +184,28 @@ export class QuestionImportService {
         { font: { size: 11 }, text: "Enter the exact text of one of the options above." },
       ],
     };
+
+    // Comment on Difficulty header
+    const difficultyCell = qSheet.getCell("K1");
+    difficultyCell.note = {
+      texts: [
+        { font: { bold: true, size: 11 }, text: "Required. One of: beginner, normal, mid, hard, expert\n" },
+        { font: { size: 11 }, text: "Use the dropdown to select. Defaults to 'normal' if left empty." },
+      ],
+    };
+
+    // Add data validation dropdown for Difficulty column (rows 2-1000)
+    for (let row = 2; row <= 1000; row++) {
+      const cell = qSheet.getCell(`K${row}`);
+      cell.dataValidation = {
+        type: "list",
+        allowBlank: true,
+        formulae: ['"beginner,normal,mid,hard,expert"'],
+        showErrorMessage: true,
+        errorTitle: "Invalid Difficulty",
+        error: "Please select one of: beginner, normal, mid, hard, expert",
+      };
+    }
 
     const buffer = await workbook.xlsx.writeBuffer();
     return Buffer.from(buffer);
@@ -234,6 +259,13 @@ export class QuestionImportService {
         continue;
       }
 
+      // Validate difficulty
+      const difficulty = q.difficulty ? q.difficulty.toLowerCase().trim() : "normal";
+      if (!VALID_DIFFICULTIES.includes(difficulty)) {
+        errors.push({ row, reason: `Invalid difficulty '${q.difficulty}'. Must be one of: ${VALID_DIFFICULTIES.join(", ")}` });
+        continue;
+      }
+
       validRows.push({
         index: i,
         data: {
@@ -243,7 +275,7 @@ export class QuestionImportService {
           correctAnswer: q.correctAnswer,
           explanation: q.explanation || null,
           videoUrl: q.videoUrl || null,
-          difficulty: q.difficulty || "normal",
+          difficulty,
           topic_id: q.topic_id,
           subject_id: q.subject_id,
           course_id: q.course_id,

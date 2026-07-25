@@ -38,6 +38,7 @@ const statusColors: Record<string, string> = {
   strong: "bg-green-500/10 text-green-500 border-green-500/20",
   moderate: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
   weak: "bg-red-500/10 text-red-500 border-red-500/20",
+  insufficient: "bg-gray-500/10 text-gray-500 border-gray-500/20",
 };
 
 export function StudentDashboard() {
@@ -246,17 +247,34 @@ export function StudentDashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {subjectPerformance.map((subject) => (
-                    <TableRow key={subject.subjectId}>
-                      <TableCell>{capitalize(subject.subjectName)}</TableCell>
-                      <TableCell>{subject.accuracy}%</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={statusColors[subject.status]}>
-                          {capitalize(subject.status)}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {subjectPerformance.map((subject) => {
+                    const accuracyColor = subject.accuracy < 50
+                      ? "bg-red-500"
+                      : subject.accuracy < 80
+                      ? "bg-orange-500"
+                      : "bg-green-500";
+                    return (
+                      <TableRow key={subject.subjectId}>
+                        <TableCell>{capitalize(subject.subjectName)}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                              <div
+                                className={`h-full rounded-full transition-all ${accuracyColor}`}
+                                style={{ width: `${subject.accuracy}%` }}
+                              />
+                            </div>
+                            <span className="text-xs font-medium w-10 text-right">{subject.accuracy}%</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={statusColors[subject.status]}>
+                            {capitalize(subject.status)}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             ) : (
@@ -285,18 +303,35 @@ export function StudentDashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {topicPerformance.slice(0, 5).map((topic) => (
-                    <TableRow key={topic.topicId}>
-                      <TableCell>{capitalize(topic.topicName)}</TableCell>
-                      <TableCell className="text-muted-foreground">{capitalize(topic.subjectName)}</TableCell>
-                      <TableCell>{topic.accuracy}%</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={statusColors[topic.status]}>
-                          {capitalize(topic.status)}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {topicPerformance.slice(0, 5).map((topic) => {
+                    const accuracyColor = topic.accuracy < 50
+                      ? "bg-red-500"
+                      : topic.accuracy < 80
+                      ? "bg-orange-500"
+                      : "bg-green-500";
+                    return (
+                      <TableRow key={topic.topicId}>
+                        <TableCell>{capitalize(topic.topicName)}</TableCell>
+                        <TableCell className="text-muted-foreground">{capitalize(topic.subjectName)}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                              <div
+                                className={`h-full rounded-full transition-all ${accuracyColor}`}
+                                style={{ width: `${topic.accuracy}%` }}
+                              />
+                            </div>
+                            <span className="text-xs font-medium w-10 text-right">{topic.accuracy}%</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={statusColors[topic.status]}>
+                            {capitalize(topic.status)}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             ) : (

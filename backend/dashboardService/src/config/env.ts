@@ -9,4 +9,5 @@ export const env = {
   DB_NAME: process.env.DB_NAME || "quizologist_database",
   DB_USER: process.env.DB_USER || "postgres",
   DB_PASSWORD: process.env.DB_PASSWORD || "root",
+  MIN_ATTEMPTS: parseInt(process.env.MIN_ATTEMPTS || "3", 10),
 };

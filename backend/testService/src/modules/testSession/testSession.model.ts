@@ -21,6 +21,7 @@ interface TestSessionAttributes {
   score: number;
   disconnect_count: number;
   last_question_index: number;
+  skill_score_snapshot: number | null;
   started_at: Date;
   completed_at: Date | null;
   createdAt?: Date;
@@ -42,6 +43,7 @@ type TestSessionCreationAttributes = Optional<
   | "score"
   | "disconnect_count"
   | "last_question_index"
+  | "skill_score_snapshot"
   | "completed_at"
   | "createdAt"
   | "updatedAt"
@@ -70,6 +72,7 @@ class TestSession
   declare score: number;
   declare disconnect_count: number;
   declare last_question_index: number;
+  declare skill_score_snapshot: number | null;
   declare started_at: Date;
   declare completed_at: Date | null;
   declare createdAt: Date;
@@ -159,6 +162,10 @@ TestSession.init(
     last_question_index: {
       type: DataTypes.INTEGER,
       defaultValue: 0,
+    },
+    skill_score_snapshot: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
     },
     started_at: {
       type: DataTypes.DATE,
