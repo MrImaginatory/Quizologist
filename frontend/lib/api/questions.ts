@@ -2,6 +2,20 @@ import { API_ROUTES } from "../api-routes";
 import { apiRequest } from "./client";
 import { QuestionsResponse, Question, CreateQuestionPayload } from "./types";
 
+interface BulkImportQuestion {
+  type: "mcq" | "descriptive";
+  question: string;
+  choices: string[] | null;
+  correctAnswer: string;
+  explanation?: string;
+  videoUrl?: string;
+  difficulty: string;
+  topic_id: string;
+  subject_id: string;
+  course_id: string;
+  questionAddedBy?: string;
+}
+
 export const questionsApi = {
   create: (data: CreateQuestionPayload, token?: string) =>
     apiRequest<{ success: boolean; message: string; data: Question }>(API_ROUTES.QUESTIONS.BASE, {
@@ -45,7 +59,7 @@ export const questionsApi = {
     if (!response.ok) throw new Error("Failed to download template");
     return response.blob();
   },
-  bulkImport: (questions: Omit<Question, "id">[], token?: string) =>
+  bulkImport: (questions: BulkImportQuestion[], token?: string) =>
     apiRequest<{
       success: boolean;
       message: string;
