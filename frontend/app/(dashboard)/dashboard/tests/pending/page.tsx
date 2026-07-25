@@ -157,7 +157,9 @@ export default function PendingTestsPage() {
       <div className="flex items-center gap-4">
         <Select value={filterStatus} onValueChange={(v) => { if (v) setFilterStatus(v); }}>
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter by status" />
+            <SelectValue placeholder="Filter by status">
+              {capitalize(filterStatus === "all" ? "All Tests" : filterStatus)}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Tests</SelectItem>

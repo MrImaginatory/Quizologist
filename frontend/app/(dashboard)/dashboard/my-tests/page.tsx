@@ -29,7 +29,7 @@ export default function MyTestsPage() {
   const [abandonTarget, setAbandonTarget] = useState<TestHistory | null>(null);
   const [showAbandonDialog, setShowAbandonDialog] = useState(false);
   const [isAbandoning, setIsAbandoning] = useState(false);
-  const { tests, total, totalPages, isLoading, error, refetch } = useTestHistory({ page, limit });
+  const { tests, total, completedCount, totalPages, isLoading, error, refetch } = useTestHistory({ page, limit });
 
   const columns = [
     { key: "sno", header: "#", render: (_t: TestHistory, index: number) => index + 1 },
@@ -150,7 +150,7 @@ export default function MyTestsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Tests</p>
-                <p className="text-2xl font-bold mt-1">{total}</p>
+                <p className="text-2xl font-bold mt-1">{completedCount}</p>
               </div>
               <ClipboardCheck className="h-8 w-8 text-blue-500" />
             </div>
@@ -161,7 +161,7 @@ export default function MyTestsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Completed</p>
-                <p className="text-2xl font-bold mt-1">{completedTests.length}</p>
+                <p className="text-2xl font-bold mt-1">{completedCount}</p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-500" />
             </div>

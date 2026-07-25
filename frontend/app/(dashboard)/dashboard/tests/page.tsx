@@ -109,6 +109,7 @@ export default function TestsPage() {
         correct: t.correct,
         total_questions: t.total_questions,
         started_at: t.started_at,
+        student: t.student,
       }));
 
   const total = isTeacher ? teachingTotal : allTotal;
@@ -167,20 +168,16 @@ export default function TestsPage() {
         <span className="font-mono text-sm">{t.test_id}</span>
       ),
     },
-    ...(isTeacher
-      ? [
-          {
-            key: "student",
-            header: "Student",
-            render: (t: TestRow) => (
-              <div>
-                <p className="font-medium">{capitalize(t.student?.fname || "")} {capitalize(t.student?.lname || "")}</p>
-                <p className="text-xs text-muted-foreground">{t.student?.email}</p>
-              </div>
-            ),
-          },
-        ]
-      : []),
+    {
+      key: "student",
+      header: "Student",
+      render: (t: TestRow) => (
+        <div>
+          <p className="font-medium">{capitalize(t.student?.fname || "")} {capitalize(t.student?.lname || "")}</p>
+          <p className="text-xs text-muted-foreground">{t.student?.email}</p>
+        </div>
+      ),
+    },
     {
       key: "status",
       header: "Status",
@@ -237,7 +234,7 @@ export default function TestsPage() {
         return <span>{date.toLocaleDateString()}</span>;
       },
     },
-    ...(hasStudentSelected
+    ...(isTeacher || hasStudentSelected
       ? [
           {
             key: "actions",
@@ -248,7 +245,7 @@ export default function TestsPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => router.push(`/test-result?id=${t.id}&studentId=${studentId}`)}
+                    onClick={() => router.push(`/test-result?id=${t.id}&studentId=${t.student?.id || studentId}`)}
                     className="gap-1"
                   >
                     <BookOpen className="h-4 w-4" />

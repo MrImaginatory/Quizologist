@@ -32,7 +32,7 @@ export const startTestSchema = z.object({
     .array(selectionSchema)
     .min(1, "At least one selection is required")
     .max(200, "Maximum 200 selections allowed"),
-  adaptive: z.boolean().optional().default(false),
+  adaptive: z.boolean().optional().default(true),
 });
 
 export const testIdParamSchema = z.object({
@@ -47,6 +47,7 @@ export const getAllTestsSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(10),
   status: z.enum(["pending", "in_progress", "completed", "abandoned"]).optional(),
+  studentId: z.string().uuid().optional(),
   subjectId: z.string().uuid().optional(),
   dateFrom: z.string().optional(),
   dateTo: z.string().optional(),

@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Switch } from "@/components/ui/switch";
 import { Loader2, Plus, X, Play, ChevronDown } from "lucide-react";
 import { useCourses } from "@/hooks/use-courses";
 import { useEnrollments } from "@/hooks/use-enrollments";
@@ -161,7 +160,6 @@ export function StartTestDialog({ open, onOpenChange, onStartTest }: StartTestDi
   const { token } = useAuth();
   const [duration, setDuration] = useState(30);
   const [questionLimit, setQuestionLimit] = useState(45);
-  const [adaptive, setAdaptive] = useState(true);
   const [selections, setSelections] = useState<Selection[]>([
     { courseId: "", subjectIds: [], topicIds: [] },
   ]);
@@ -423,7 +421,7 @@ export function StartTestDialog({ open, onOpenChange, onStartTest }: StartTestDi
         duration_minutes: duration,
         question_limit: questionLimit,
         selections: validSelections,
-        adaptive,
+        adaptive: true,
       };
 
       const response = await testsApi.start(payload, token || undefined);
@@ -515,20 +513,6 @@ export function StartTestDialog({ open, onOpenChange, onStartTest }: StartTestDi
                   Min: {durationConfig?.min} | Max: {durationConfig?.max}
                 </p>
               </div>
-            </div>
-
-            {/* Adaptive Difficulty Toggle */}
-            <div className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="space-y-0.5">
-                <Label className="text-sm font-medium">Adaptive Difficulty</Label>
-                <p className="text-xs text-muted-foreground">
-                  Questions adjust to your skill level as you answer
-                </p>
-              </div>
-              <Switch
-                checked={adaptive}
-                onCheckedChange={setAdaptive}
-              />
             </div>
 
             {/* Selections */}

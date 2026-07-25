@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
-import { predefinedTestsApi, questionsApi, usersApi, PredefinedTest, Question, User } from "@/lib/api";
+import { predefinedTestsApi, questionsApi, usersApi, coursesApi, subjectsApi, topicsApi, PredefinedTest, Question, User } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ArrowLeft, Play, Pause, Copy, Check, Plus, Trash2, Users } from "lucide-react";
+import { Loader2, ArrowLeft, Play, Pause, Copy, Check, Plus, Trash2, Users, BookOpen } from "lucide-react";
 import { capitalize } from "@/lib/utils";
 import { toast } from "sonner";
 import { QuestionSelectorDialog } from "@/components/dialogs/question-selector-dialog";
@@ -32,6 +32,9 @@ export default function PredefinedTestDetailPage() {
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [studentNames, setStudentNames] = useState<Map<string, string>>(new Map());
   const [isLoadingStudents, setIsLoadingStudents] = useState(false);
+  const [expandedCourses, setExpandedCourses] = useState<Set<string>>(new Set());
+  const [expandedSubjects, setExpandedSubjects] = useState<Set<string>>(new Set());
+  const [courseData, setCourseData] = useState<Map<string, { name: string; subjects: Map<string, { name: string; topics: { id: string; name: string }[] }> }>>(new Map());
 
   useEffect(() => {
     const fetchTest = async () => {
@@ -53,6 +56,52 @@ export default function PredefinedTestDetailPage() {
         // Load existing assigned students
         if ((response.data as any).assignedStudents) {
           setSelectedStudents((response.data as any).assignedStudents.map((s: any) => s.student_id));
+        }
+        // Fetch course, subject, and topic names for content selection
+        const testData = response.data as PredefinedTest;
+        const courseMap = new Map<string, { name: string; subjects: Map<string, { name: string; topics: { id: string; name: string }[] }> }>();
+
+        if (testData.course_ids && testData.course_ids.length > 0) {
+          // Fetch all courses
+          const coursesRes = await coursesApi.getAll(1, 1000, token || undefined);
+          const allCourses = coursesRes.data?.courses || [];
+
+          for (const courseId of testData.course_ids) {
+            const course = allCourses.find((c: any) => c.id === courseId);
+            if (!course) continue;
+
+            const subjectMap = new Map<string, { name: string; topics: { id: string; name: string }[] }>();
+
+            // Fetch subjects for this course
+            const subjectsRes = await subjectsApi.getAll(1, 1000, token || undefined);
+            const allSubjects = subjectsRes.data?.subjects || [];
+            const courseSubjects = allSubjects.filter((s: any) => s.course_id === courseId);
+
+            for (const subject of courseSubjects) {
+              // If subject_ids is specified, only include selected subjects
+              if (testData.subject_ids && testData.subject_ids.length > 0 && !testData.subject_ids.includes(subject.id)) {
+                continue;
+              }
+
+              // Fetch topics for this subject
+              const topicsRes = await topicsApi.getAll(1, 1000, token || undefined);
+              const allTopics = topicsRes.data?.topics || [];
+              const subjectTopics = allTopics
+                .filter((t: any) => t.subject_id === subject.id)
+                .map((t: any) => ({ id: t.id, name: t.name }));
+
+              // If topic_ids is specified, only include selected topics
+              const filteredTopics = testData.topic_ids && testData.topic_ids.length > 0
+                ? subjectTopics.filter((t: { id: string; name: string }) => testData.topic_ids!.includes(t.id))
+                : subjectTopics;
+
+              subjectMap.set(subject.id, { name: subject.name, topics: filteredTopics });
+            }
+
+            courseMap.set(courseId, { name: course.name, subjects: subjectMap });
+          }
+
+          setCourseData(courseMap);
         }
       } catch (err) {
         toast.error("Failed to fetch test details");
@@ -272,6 +321,104 @@ export default function PredefinedTestDetailPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Course/Subject/Topic Selection */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <BookOpen className="h-5 w-5" />
+            Content Selection
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {courseData.size === 0 ? (
+            <p className="text-sm text-muted-foreground">No specific content selected. Questions will be randomly selected from all available content.</p>
+          ) : (
+            <div className="space-y-2">
+              {Array.from(courseData.entries()).map(([courseId, course]) => (
+                <div key={courseId} className="border rounded-lg overflow-hidden">
+                  {/* Course Header */}
+                  <button
+                    onClick={() => {
+                      const next = new Set(expandedCourses);
+                      if (next.has(courseId)) next.delete(courseId);
+                      else next.add(courseId);
+                      setExpandedCourses(next);
+                    }}
+                    className="w-full flex items-center justify-between p-3 hover:bg-muted/50 transition-colors text-left"
+                  >
+                    <div className="flex items-center gap-2">
+                      <svg
+                        className={`h-4 w-4 text-muted-foreground transition-transform ${expandedCourses.has(courseId) ? "rotate-90" : ""}`}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                      <span className="font-medium">{course.name}</span>
+                    </div>
+                    <Badge variant="outline" className="text-xs">
+                      {course.subjects.size} subject{course.subjects.size !== 1 ? "s" : ""}
+                    </Badge>
+                  </button>
+
+                  {/* Subjects (collapsible) */}
+                  {expandedCourses.has(courseId) && (
+                    <div className="border-t bg-muted/20">
+                      {Array.from(course.subjects.entries()).map(([subjectId, subject]) => (
+                        <div key={subjectId}>
+                          {/* Subject Header */}
+                          <button
+                            onClick={() => {
+                              const next = new Set(expandedSubjects);
+                              if (next.has(subjectId)) next.delete(subjectId);
+                              else next.add(subjectId);
+                              setExpandedSubjects(next);
+                            }}
+                            className="w-full flex items-center justify-between pl-10 pr-3 py-2.5 hover:bg-muted/50 transition-colors text-left"
+                          >
+                            <div className="flex items-center gap-2">
+                              <svg
+                                className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${expandedSubjects.has(subjectId) ? "rotate-90" : ""}`}
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                              </svg>
+                              <span className="text-sm">{subject.name}</span>
+                            </div>
+                            <Badge variant="outline" className="text-xs">
+                              {subject.topics.length} topic{subject.topics.length !== 1 ? "s" : ""}
+                            </Badge>
+                          </button>
+
+                          {/* Topics (collapsible) */}
+                          {expandedSubjects.has(subjectId) && (
+                            <div className="pl-16 pr-3 pb-2 space-y-1">
+                              {subject.topics.length === 0 ? (
+                                <p className="text-xs text-muted-foreground py-1">No topics selected</p>
+                              ) : (
+                                subject.topics.map((topic) => (
+                                  <div key={topic.id} className="flex items-center gap-2 py-1">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40" />
+                                    <span className="text-xs text-muted-foreground">{capitalize(topic.name)}</span>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Fixed Questions Section */}
       {test.use_fixed_questions && (

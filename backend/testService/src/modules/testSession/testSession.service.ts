@@ -429,10 +429,16 @@ export class TestSessionService {
       order: [["started_at", "DESC"]],
     });
 
+    // Get count of completed tests only
+    const completedCount = await TestSession.count({
+      where: { student_id: studentId, status: "completed" },
+    });
+
     return {
       tests: rows.map((t) => flattenSelections(t)),
       pagination: {
         total: count,
+        completedCount,
         page,
         limit,
         totalPages: Math.ceil(count / limit),
@@ -465,11 +471,12 @@ export class TestSessionService {
   }
 
   static async getAll(data: GetAllTestsInput) {
-    const { page, limit, status, subjectId, dateFrom, dateTo } = data;
+    const { page, limit, status, studentId, subjectId, dateFrom, dateTo } = data;
     const offset = (page - 1) * limit;
 
     const whereClause: any = {};
     if (status) whereClause.status = status;
+    if (studentId) whereClause.student_id = studentId;
     if (subjectId) whereClause.subject_id = subjectId;
     if (dateFrom || dateTo) {
       whereClause.started_at = {};
@@ -486,8 +493,36 @@ export class TestSessionService {
       order: [["started_at", "DESC"]],
     });
 
+    // Fetch student details for these test sessions
+    const studentIds = [...new Set(rows.map((t: any) => t.student_id))];
+    const [students] = await sequelize.query(
+      `SELECT id, fname, lname, email FROM users WHERE id IN (:studentIds)`,
+      { replacements: { studentIds } }
+    ) as any[];
+    const studentMap = new Map(students.map((s: any) => [s.id, s]));
+
+    const testsWithStudents = rows.map((t: any) => {
+      const plain = t.toJSON ? t.toJSON() : t;
+      const student = studentMap.get(plain.student_id);
+      // Flatten selections
+      const selections = plain.selections || [];
+      if (selections.length > 0) {
+        plain.course = selections[0].course || null;
+        plain.subject = selections[0].subject || null;
+        plain.topic = selections[0].topic || null;
+      } else {
+        plain.course = null;
+        plain.subject = null;
+        plain.topic = null;
+      }
+      delete plain.selections;
+      // Add student info
+      plain.student = student || null;
+      return plain;
+    });
+
     return {
-      tests: rows.map((t) => flattenSelections(t)),
+      tests: testsWithStudents,
       pagination: {
         total: count,
         page,

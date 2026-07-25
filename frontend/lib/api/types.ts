@@ -51,6 +51,7 @@ export interface User {
 
 export interface Pagination {
   total: number;
+  completedCount?: number;
   page: number;
   limit: number;
   totalPages: number;

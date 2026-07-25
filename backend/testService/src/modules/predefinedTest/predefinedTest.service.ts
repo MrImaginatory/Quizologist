@@ -3,10 +3,12 @@ import crypto from "crypto";
 import PredefinedTest from "./predefinedTest.model";
 import PredefinedTestQuestion from "./predefinedTestQuestion.model";
 import PredefinedTestStudent from "./predefinedTestStudent.model";
+import TestSession from "../testSession/testSession.model";
 import Question from "../question/question.model";
 import Course from "../course/course.model";
 import Subject from "../subject/subject.model";
 import Topic from "../topic/topic.model";
+import Enrollment from "../enrollment/enrollment.model";
 import { ApiError } from "../../utils/ApiError";
 import { env } from "../../config/env";
 import {
@@ -367,7 +369,6 @@ export class PredefinedTestService {
         const existingStudentTests = await PredefinedTestStudent.findAll({
           where: { predefined_test_id: test.id, student_id: studentId },
         });
-        const TestSession = require("../testSession/testSession.model").default;
         const sessionCount = await TestSession.count({
           where: {
             predefined_test_id: test.id,
@@ -397,8 +398,54 @@ export class PredefinedTestService {
       }
 
       // Check auto-eligibility via enrollment
-      // This would require enrollment table - for now, skip auto-eligibility
-      // Will be implemented when enrollment integration is added
+      if (!test.use_specific_students) {
+        // Test is open to all students enrolled in matching courses/subjects
+        const enrollmentConditions: any[] = [];
+
+        if (test.course_ids && test.course_ids.length > 0) {
+          enrollmentConditions.push({ course_id: { [Op.in]: test.course_ids } });
+        }
+
+        const isEnrolled = await Enrollment.findOne({
+          where: {
+            student_id: studentId,
+            [Op.and]: enrollmentConditions.length > 0 ? [{ [Op.or]: enrollmentConditions }] : [],
+          },
+        });
+
+        if (isEnrolled) {
+          // Check if student has exceeded max attempts
+          const sessionCount = await TestSession.count({
+            where: {
+              predefined_test_id: test.id,
+              student_id: studentId,
+              status: { [Op.in]: ["completed", "abandoned"] },
+            },
+          });
+
+          if (sessionCount >= test.max_attempts) {
+            continue; // No attempts remaining
+          }
+
+          // Check if student has an in-progress session
+          const hasInProgress = await TestSession.findOne({
+            where: {
+              predefined_test_id: test.id,
+              student_id: studentId,
+              status: "in_progress",
+            },
+          });
+
+          if (hasInProgress) {
+            continue; // Already taking this test
+          }
+
+          pendingTests.push({
+            ...test.toJSON(),
+            student_status: "eligible",
+          });
+        }
+      }
     }
 
     return { tests: pendingTests };
@@ -511,6 +558,7 @@ export class PredefinedTestService {
         baseWhere.course_id = { [Op.in]: test.course_ids };
       }
 
+      // Only apply subject/topic filters if they have valid values
       if (test.subject_ids && test.subject_ids.length > 0) {
         baseWhere.subject_id = { [Op.in]: test.subject_ids };
       }
@@ -520,7 +568,7 @@ export class PredefinedTestService {
       }
 
       // Check if difficulty_ratio is set
-      const hasRatio = test.difficulty_ratio && 
+      const hasRatio = test.difficulty_ratio &&
         Object.values(test.difficulty_ratio).some((v) => v && v > 0);
 
       if (hasRatio) {
@@ -561,22 +609,90 @@ export class PredefinedTestService {
           allSelectedQuestions = [...allSelectedQuestions, ...additionalQuestions.map((q) => q.id)];
         }
 
+        // If still no questions, try with just course filter (remove subject/topic filters)
+        if (allSelectedQuestions.length === 0 && (baseWhere.subject_id || baseWhere.topic_id)) {
+          const fallbackWhere: any = {};
+          if (test.course_ids && test.course_ids.length > 0) {
+            fallbackWhere.course_id = { [Op.in]: test.course_ids };
+          }
+
+          for (const [difficulty, percentage] of Object.entries(ratio)) {
+            if (!percentage || percentage <= 0) continue;
+
+            const count = Math.round((percentage / 100) * totalQuestions);
+            if (count <= 0) continue;
+
+            const questions = await Question.findAll({
+              where: { ...fallbackWhere, difficulty },
+              order: sequelize.random(),
+              limit: count,
+            });
+
+            allSelectedQuestions = [...allSelectedQuestions, ...questions.map((q) => q.id)];
+          }
+
+          // Fill remaining if needed
+          if (allSelectedQuestions.length < totalQuestions) {
+            const remaining = totalQuestions - allSelectedQuestions.length;
+            const existingIds = new Set(allSelectedQuestions);
+
+            const additionalQuestions = await Question.findAll({
+              where: {
+                ...fallbackWhere,
+                id: { [Op.notIn]: Array.from(existingIds) },
+              },
+              order: sequelize.random(),
+              limit: remaining,
+            });
+
+            allSelectedQuestions = [...allSelectedQuestions, ...additionalQuestions.map((q) => q.id)];
+          }
+        }
+
         questionIds = allSelectedQuestions.slice(0, totalQuestions);
       } else if (test.difficulty !== "mixed") {
         // Use single difficulty level
-        const questions = await Question.findAll({
+        let questions = await Question.findAll({
           where: { ...baseWhere, difficulty: test.difficulty },
           order: sequelize.random(),
           limit: test.question_limit,
         });
+
+        // Fallback: remove subject/topic filters if no questions found
+        if (questions.length === 0 && (baseWhere.subject_id || baseWhere.topic_id)) {
+          const fallbackWhere: any = {};
+          if (test.course_ids && test.course_ids.length > 0) {
+            fallbackWhere.course_id = { [Op.in]: test.course_ids };
+          }
+          questions = await Question.findAll({
+            where: { ...fallbackWhere, difficulty: test.difficulty },
+            order: sequelize.random(),
+            limit: test.question_limit,
+          });
+        }
+
         questionIds = questions.map((q) => q.id);
       } else {
         // Mixed difficulty - random selection
-        const questions = await Question.findAll({
+        let questions = await Question.findAll({
           where: baseWhere,
           order: sequelize.random(),
           limit: test.question_limit,
         });
+
+        // Fallback: remove subject/topic filters if no questions found
+        if (questions.length === 0 && (baseWhere.subject_id || baseWhere.topic_id)) {
+          const fallbackWhere: any = {};
+          if (test.course_ids && test.course_ids.length > 0) {
+            fallbackWhere.course_id = { [Op.in]: test.course_ids };
+          }
+          questions = await Question.findAll({
+            where: fallbackWhere,
+            order: sequelize.random(),
+            limit: test.question_limit,
+          });
+        }
+
         questionIds = questions.map((q) => q.id);
       }
     }

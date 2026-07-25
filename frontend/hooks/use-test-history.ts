@@ -26,6 +26,7 @@ export function useTestHistory({ page = 1, limit = 10 }: UseTestHistoryOptions =
   return {
     tests: data?.data?.tests || [],
     total: data?.data?.pagination?.total || 0,
+    completedCount: data?.data?.pagination?.completedCount || 0,
     totalPages: data?.data?.pagination?.totalPages || 0,
     isLoading,
     error: error?.message || "",
