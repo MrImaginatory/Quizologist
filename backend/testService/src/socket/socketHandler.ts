@@ -188,23 +188,21 @@ export function registerSocketHandlers(socket: Socket, studentId: string, logger
       // Calculate remaining time
       const timeRemaining = getTimeRemaining(session.ends_at);
 
-      // Adaptive skill score update
-      let skillScore: number | null = null;
-      if (session.skill_score_snapshot !== null) {
+      // Lookup question once for both skill update and difficulty advancement
+      const answeredQuestion = await Question.findByPk(questionId);
+      const isCorrectAnswer = answeredQuestion ? answeredQuestion.correctAnswer === answer : false;
+
+      // Update internal skill rating (for history/dashboard only — not sent to frontend)
+      if (session.skill_score_snapshot !== null && answeredQuestion) {
         try {
-          const question = await Question.findByPk(questionId);
-          if (question) {
-            const isCorrect = question.correctAnswer === answer;
-            const result = await UserSkillRatingService.updateScore({
-              userId: studentId,
-              isCorrect,
-              questionDifficultyScore: (question as any).difficulty_score || 3.0,
-              timeTaken,
-              totalQuestionsInTest: session.total_questions,
-              durationMinutes: session.duration_minutes,
-            });
-            skillScore = result.skillScore;
-          }
+          await UserSkillRatingService.updateScore({
+            userId: studentId,
+            isCorrect: isCorrectAnswer,
+            questionDifficultyScore: (answeredQuestion as any).difficulty_score || 3.0,
+            timeTaken,
+            totalQuestionsInTest: session.total_questions,
+            durationMinutes: session.duration_minutes,
+          });
         } catch (scoreErr: any) {
           logger.error("Skill score update error", { error: scoreErr.message });
         }
@@ -214,13 +212,11 @@ export function registerSocketHandlers(socket: Socket, studentId: string, logger
       let nextQuestion: any = null;
       if (session.skill_score_snapshot !== null && questionIndex + 1 < session.total_questions) {
         try {
-          const questionForDifficulty = await Question.findByPk(questionId);
-          const isCorrectForNext = questionForDifficulty ? questionForDifficulty.correctAnswer === answer : false;
           nextQuestion = await TestSessionService.getOrGenerateNextQuestion(
             session.id,
             studentId,
             questionIndex,
-            isCorrectForNext
+            isCorrectAnswer
           );
         } catch (nextErr: any) {
           logger.error("Next question generation error", { error: nextErr.message });
@@ -232,7 +228,6 @@ export function registerSocketHandlers(socket: Socket, studentId: string, logger
         questionIndex,
         success: true,
         timeRemaining,
-        skillScore,
         nextQuestion,
       });
     } catch (error: any) {

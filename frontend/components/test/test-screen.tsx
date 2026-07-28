@@ -46,10 +46,9 @@ interface TestScreenProps {
   testSession: TestSession;
   onSubmit: (answers: Record<number, string>) => void;
   onTimeUp: () => void;
-  skillScore?: number | null;
 }
 
-export function TestScreen({ testSession, onSubmit, onTimeUp, skillScore }: TestScreenProps) {
+export function TestScreen({ testSession, onSubmit, onTimeUp }: TestScreenProps) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [skipped, setSkipped] = useState<Set<number>>(new Set());
@@ -159,11 +158,6 @@ export function TestScreen({ testSession, onSubmit, onTimeUp, skillScore }: Test
             <Badge variant="outline" className="font-mono text-xs">
               {testSession.test_id}
             </Badge>
-            {skillScore !== null && skillScore !== undefined && (
-              <Badge variant="secondary" className="font-mono text-xs gap-1">
-                Skill: {skillScore.toFixed(1)}
-              </Badge>
-            )}
           </div>
 
           <div className="flex items-center gap-4">

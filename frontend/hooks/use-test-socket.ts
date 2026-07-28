@@ -17,7 +17,6 @@ interface AnswerRecordedData {
   questionIndex: number;
   success: boolean;
   timeRemaining: number;
-  skillScore: number | null;
 }
 
 interface TimeUpdateData {

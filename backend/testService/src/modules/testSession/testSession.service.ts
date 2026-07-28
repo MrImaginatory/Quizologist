@@ -88,12 +88,29 @@ function flattenSelections(session: any) {
   return plain;
 }
 
-// Discrete difficulty levels in fixed order (ponytail: 5 levels, no abstraction needed)
+// Discrete difficulty levels in fixed order
 const DIFFICULTY_LEVELS = ["beginner", "normal", "mid", "hard", "expert"] as const;
 type DifficultyLevel = typeof DIFFICULTY_LEVELS[number];
 
 function clampLevelIndex(idx: number): number {
   return Math.max(0, Math.min(DIFFICULTY_LEVELS.length - 1, idx));
+}
+
+// Snapshot encoding: level(0-4)*1000 + threshold(2-4)*100 + correctCount(0-9)
+// e.g. level=0, threshold=3, correct=1 → 0*1000 + 3*100 + 1 = 301
+function encodeSnapshot(level: number, threshold: number, correct: number): number {
+  return level * 1000 + threshold * 100 + correct;
+}
+function decodeSnapshot(snapshot: number | null): { level: number; threshold: number; correct: number } {
+  const s = Math.max(0, Math.round(snapshot ?? 0));
+  const level = clampLevelIndex(Math.floor(s / 1000));
+  const threshold = Math.min(4, Math.max(2, Math.floor((s % 1000) / 100)));
+  const correct = s % 100;
+  return { level, threshold, correct };
+}
+function randomThreshold(): number {
+  // ponytail: 2-4 correct needed per level — user can't detect fixed number
+  return 2 + Math.floor(Math.random() * 3);
 }
 
 function stripQuestionForTest(q: any) {
@@ -184,9 +201,10 @@ export class TestSessionService {
     let skillScoreSnapshot: number | null = null;
 
     if (data.adaptive) {
-      // Adaptive mode: always start at beginner (level index 0)
-      // skill_score_snapshot stores the current difficulty level index (0=beginner...4=expert)
-      skillScoreSnapshot = 0; // beginner
+      // Adaptive mode: always start at beginner.
+      // skill_score_snapshot encodes {level, threshold, correctCount} as level*1000 + threshold*100 + correct
+      // threshold is random 2-4 so user cannot predict when difficulty advances
+      skillScoreSnapshot = encodeSnapshot(0, randomThreshold(), 0);
 
       const firstDifficulty = DIFFICULTY_LEVELS[0]; // "beginner"
       const questionConditionsWithDifficulty = questionConditions.map((c) => ({
@@ -412,12 +430,23 @@ export class TestSessionService {
       if (nextQ) return stripQuestionForTest({ _index: currentQuestionIndex + 1, ...nextQ.toJSON() });
     }
 
-    // Determine next difficulty level:
-    // skill_score_snapshot stores current level index (0=beginner … 4=expert)
-    const currentLevelIndex = clampLevelIndex(session.skill_score_snapshot ?? 0);
-    // Correct → advance one level (never exceed expert). Wrong/skip → stay same.
-    const nextLevelIndex = isCorrect ? clampLevelIndex(currentLevelIndex + 1) : currentLevelIndex;
-    const targetDifficulty: DifficultyLevel = DIFFICULTY_LEVELS[nextLevelIndex];
+    // Decode snapshot: {level, threshold, correctCount}
+    const { level: currentLevel, threshold, correct: correctCount } = decodeSnapshot(session.skill_score_snapshot);
+
+    // Tally correct answers at current level
+    const newCorrectCount = isCorrect ? correctCount + 1 : 0;
+
+    // Advance level only when enough correct answers accumulated (threshold is random 2-4)
+    let nextLevel = currentLevel;
+    let nextThreshold = threshold;
+    let nextCorrect = newCorrectCount;
+    if (newCorrectCount >= threshold) {
+      nextLevel = clampLevelIndex(currentLevel + 1);
+      nextThreshold = randomThreshold(); // new random threshold for next level
+      nextCorrect = 0; // reset counter
+    }
+
+    const targetDifficulty: DifficultyLevel = DIFFICULTY_LEVELS[nextLevel];
 
     const selections = (session as any).selections || [];
     if (selections.length === 0) throw ApiError.badRequest("No selections found for this test");
@@ -474,8 +503,8 @@ export class TestSessionService {
 
     if (!selectedQuestion) return null;
 
-    // Persist next level index on session
-    await session.update({ skill_score_snapshot: nextLevelIndex });
+    // Persist updated snapshot
+    await session.update({ skill_score_snapshot: encodeSnapshot(nextLevel, nextThreshold, nextCorrect) });
 
     // Save question stub
     await TestAnswer.create({
