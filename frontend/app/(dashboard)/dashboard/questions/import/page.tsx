@@ -79,9 +79,9 @@ interface ImportResult {
 
 export default function ImportQuestionsPage() {
   const { token } = useAuth();
-  const { courses } = useCourses({ limit: 1000 });
-  const { subjects } = useSubjects({ limit: 1000 });
-  const { topics } = useTopics({ limit: 1000 });
+  const { courses } = useCourses({ limit: 10000 });
+  const { subjects } = useSubjects({ limit: 10000 });
+  const { topics } = useTopics({ limit: 10000 });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [step, setStep] = useState<ImportStep>("upload");
