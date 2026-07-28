@@ -1,6 +1,9 @@
 import UserSkillRating from "./userSkillRating.model";
 
-const DEFAULT_SKILL_SCORE = 3.0;
+// ponytail: skill_score is now only used for getHistory/dashboard display
+// Difficulty progression is controlled by session.skill_score_snapshot (level index 0-4)
+// These constants kept for backward-compatible score tracking (not used for question selection)
+const DEFAULT_SKILL_SCORE = 1.0;
 const CORRECT_DELTA = 0.15;
 const WRONG_DELTA = 0.00;
 const FAST_BONUS = 0.07;
@@ -48,7 +51,7 @@ export class UserSkillRatingService {
 
     let delta = isCorrect ? CORRECT_DELTA : WRONG_DELTA;
 
-    // Fast correct bonus: answered in less than 60% of average time per question
+    // Fast correct bonus
     const avgTimePerQuestion = (durationMinutes * 60) / totalQuestionsInTest;
     if (isCorrect && timeTaken < avgTimePerQuestion * 0.6) {
       delta += FAST_BONUS;
@@ -79,11 +82,11 @@ export class UserSkillRatingService {
       last_answered_at: new Date(),
     });
 
-    return { skillScore: rating.skill_score };
+    // Return the NEW score (post-update), not the stale pre-update value
+    return { skillScore: Math.round(newScore * 100) / 100 };
   }
 
   static async getHistory(userId: string) {
-    // For now, return current rating — history can be extended with a separate log table
     const rating = await this.getOrCreate(userId);
     return {
       currentScore: rating.skill_score,

@@ -210,12 +210,30 @@ export function registerSocketHandlers(socket: Socket, studentId: string, logger
         }
       }
 
+      // Adaptive next question generation
+      let nextQuestion: any = null;
+      if (session.skill_score_snapshot !== null && questionIndex + 1 < session.total_questions) {
+        try {
+          const questionForDifficulty = await Question.findByPk(questionId);
+          const isCorrectForNext = questionForDifficulty ? questionForDifficulty.correctAnswer === answer : false;
+          nextQuestion = await TestSessionService.getOrGenerateNextQuestion(
+            session.id,
+            studentId,
+            questionIndex,
+            isCorrectForNext
+          );
+        } catch (nextErr: any) {
+          logger.error("Next question generation error", { error: nextErr.message });
+        }
+      }
+
       socket.emit("answer_recorded", {
         testId,
         questionIndex,
         success: true,
         timeRemaining,
         skillScore,
+        nextQuestion,
       });
     } catch (error: any) {
       logger.error("answer error", { error: error.message, stack: error.stack });
@@ -266,11 +284,27 @@ export function registerSocketHandlers(socket: Socket, studentId: string, logger
 
       const timeRemaining = getTimeRemaining(session.ends_at);
 
+      // Adaptive next question generation (skip = wrong = same difficulty level)
+      let nextQuestion: any = null;
+      if (session.skill_score_snapshot !== null && questionIndex + 1 < session.total_questions) {
+        try {
+          nextQuestion = await TestSessionService.getOrGenerateNextQuestion(
+            session.id,
+            studentId,
+            questionIndex,
+            false // skipped = stay at same difficulty
+          );
+        } catch (nextErr: any) {
+          logger.error("Next question generation error", { error: nextErr.message });
+        }
+      }
+
       socket.emit("answer_recorded", {
         testId,
         questionIndex,
         success: true,
         timeRemaining,
+        nextQuestion,
       });
     } catch (error: any) {
       logger.error("skip error", { error: error.message, stack: error.stack });

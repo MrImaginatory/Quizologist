@@ -82,6 +82,17 @@ function LiveTestContent() {
       if (data.skillScore !== null && data.skillScore !== undefined) {
         setSkillScore(data.skillScore);
       }
+      if ((data as any).nextQuestion) {
+        setTestSession((prev) => {
+          if (!prev) return prev;
+          const exists = prev.questions.some((q) => q.questionId === (data as any).nextQuestion.questionId);
+          if (exists) return prev;
+          return {
+            ...prev,
+            questions: [...prev.questions, (data as any).nextQuestion],
+          };
+        });
+      }
     },
     onTimeUpdate: (data) => {
       // Timer is managed by client-side calculation from ends_at
@@ -157,7 +168,7 @@ function LiveTestContent() {
   }, [testSession?.ends_at, testCompleted]);
 
   const question = testSession?.questions?.[currentQuestion];
-  const totalQuestions = testSession?.questions?.length || 0;
+  const totalQuestions = testSession?.totalQuestions || testSession?.questions?.length || 0;
   const answeredCount = Object.keys(answers).length;
   const skippedCount = skipped.size;
 
@@ -210,6 +221,12 @@ function LiveTestContent() {
 
   const handleNext = () => {
     if (currentQuestion < totalQuestions - 1) {
+      // If no answer is selected, send a skip event to generate the next question
+      if (!answers[currentQuestion] && question && testId) {
+        const timeTaken = Math.floor((Date.now() - questionStartTime.current) / 1000);
+        sendSkip(testId, currentQuestion, question.questionId, timeTaken);
+        setSkipped((prev) => new Set(prev).add(currentQuestion));
+      }
       setCurrentQuestion(currentQuestion + 1);
       questionStartTime.current = Date.now();
     }
@@ -406,7 +423,16 @@ function LiveTestContent() {
     );
   }
 
-  if (!question) return null;
+  if (!question) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading next question...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
@@ -497,22 +523,27 @@ function LiveTestContent() {
             <CollapsibleContent>
               <div className="px-3 pb-3 overflow-x-auto">
                 <div className="flex gap-2 min-w-max justify-center">
-                  {testSession.questions.map((_, index) => {
-                    const status = getQuestionStatus(index);
+                  {Array.from({ length: totalQuestions }).map((_, index) => {
+                    const isAvailable = index < (testSession?.questions?.length || 0);
+                    const status = isAvailable ? getQuestionStatus(index) : "unanswered";
                     return (
                       <button
                         key={index}
+                        disabled={!isAvailable}
                         onClick={() => {
-                          setCurrentQuestion(index);
-                          setQuestionNavOpen(false);
-                          questionStartTime.current = Date.now();
+                          if (isAvailable) {
+                            setCurrentQuestion(index);
+                            setQuestionNavOpen(false);
+                            questionStartTime.current = Date.now();
+                          }
                         }}
                         className={cn(
                           "w-10 h-10 rounded-lg text-sm font-medium transition-all shrink-0",
                           status === "current" && "bg-primary text-primary-foreground shadow-md",
                           status === "answered" && "bg-primary/15 text-primary border border-primary/30",
                           status === "skipped" && "bg-amber-500/15 text-amber-500 border border-amber-500/30",
-                          status === "unanswered" && "bg-muted text-muted-foreground hover:bg-muted/80"
+                          status === "unanswered" && "bg-muted text-muted-foreground hover:bg-muted/80",
+                          !isAvailable && "opacity-40 cursor-not-allowed"
                         )}
                       >
                         {index + 1}
@@ -673,24 +704,29 @@ function LiveTestContent() {
           </div>
           <ScrollArea className="flex-1 p-4">
             <div className="grid grid-cols-4 gap-2">
-              {testSession.questions.map((_, index) => {
-                const status = getQuestionStatus(index);
+              {Array.from({ length: totalQuestions }).map((_, index) => {
+                const isAvailable = index < (testSession?.questions?.length || 0);
+                const status = isAvailable ? getQuestionStatus(index) : "unanswered";
                 return (
                   <motion.button
                     key={index}
+                    disabled={!isAvailable}
                     onClick={() => {
-                      setCurrentQuestion(index);
-                      questionStartTime.current = Date.now();
+                      if (isAvailable) {
+                        setCurrentQuestion(index);
+                        questionStartTime.current = Date.now();
+                      }
                     }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={isAvailable ? { scale: 1.05 } : {}}
+                    whileTap={isAvailable ? { scale: 0.95 } : {}}
                     className={cn(
                       "aspect-square rounded-xl text-sm font-medium transition-all duration-200",
                       "flex items-center justify-center",
                       status === "current" && "bg-primary text-primary-foreground shadow-lg shadow-primary/25",
                       status === "answered" && "bg-primary/15 text-primary border border-primary/30",
                       status === "skipped" && "bg-amber-500/15 text-amber-500 border border-amber-500/30",
-                      status === "unanswered" && "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent"
+                      status === "unanswered" && "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent",
+                      !isAvailable && "opacity-40 cursor-not-allowed"
                     )}
                   >
                     {index + 1}

@@ -88,6 +88,14 @@ function flattenSelections(session: any) {
   return plain;
 }
 
+// Discrete difficulty levels in fixed order (ponytail: 5 levels, no abstraction needed)
+const DIFFICULTY_LEVELS = ["beginner", "normal", "mid", "hard", "expert"] as const;
+type DifficultyLevel = typeof DIFFICULTY_LEVELS[number];
+
+function clampLevelIndex(idx: number): number {
+  return Math.max(0, Math.min(DIFFICULTY_LEVELS.length - 1, idx));
+}
+
 function stripQuestionForTest(q: any) {
   return {
     index: q._index,
@@ -176,87 +184,46 @@ export class TestSessionService {
     let skillScoreSnapshot: number | null = null;
 
     if (data.adaptive) {
-      // Adaptive mode: fetch questions based on user's skill score
-      skillScoreSnapshot = await UserSkillRatingService.getScore(studentId);
+      // Adaptive mode: always start at beginner (level index 0)
+      // skill_score_snapshot stores the current difficulty level index (0=beginner...4=expert)
+      skillScoreSnapshot = 0; // beginner
 
-      const WINDOW_SIZE = 2.0;
-      const MAX_RETRIES = 3;
-      const WINDOW_EXPAND = 0.5;
+      const firstDifficulty = DIFFICULTY_LEVELS[0]; // "beginner"
+      const questionConditionsWithDifficulty = questionConditions.map((c) => ({
+        ...c,
+        difficulty: firstDifficulty,
+      }));
 
-      let currentWindowMin = skillScoreSnapshot - WINDOW_SIZE;
-      let currentWindowMax = skillScoreSnapshot + WINDOW_SIZE;
-      const neededCount = data.question_limit;
+      let firstQuestion: any = null;
+      const batch = await Question.findAll({
+        where: { [Op.or]: questionConditionsWithDifficulty },
+        include: [
+          { model: Topic, as: "topic", attributes: ["id", "name"] },
+          { model: Subject, as: "subject", attributes: ["id", "name"] },
+          { model: Course, as: "course", attributes: ["id", "name"] },
+        ],
+        order: sequelize.random(),
+        limit: 1,
+      });
 
-      for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-        // Query questions within the score range for each selection
-        const adaptiveQuestions: any[] = [];
-
-        for (const condition of questionConditions) {
-          const whereClause: any = {
-            ...condition,
-            difficulty_score: { [Op.between]: [currentWindowMin, currentWindowMax] },
-          };
-
-          const batch = await Question.findAll({
-            where: whereClause,
-            include: [
-              { model: Topic, as: "topic", attributes: ["id", "name"] },
-              { model: Subject, as: "subject", attributes: ["id", "name"] },
-              { model: Course, as: "course", attributes: ["id", "name"] },
-            ],
-            order: sequelize.random(),
-          });
-
-          adaptiveQuestions.push(...batch);
-        }
-
-        // Deduplicate by question id
-        const seen = new Set<string>();
-        const unique = adaptiveQuestions.filter((q: any) => {
-          if (seen.has(q.id)) return false;
-          seen.add(q.id);
-          return true;
-        });
-
-        if (unique.length >= neededCount) {
-          // Shuffle and take what we need
-          const shuffled = unique.sort(() => Math.random() - 0.5);
-          selectedQuestions = shuffled.slice(0, neededCount);
-          break;
-        }
-
-        // Expand window and retry
-        currentWindowMin -= WINDOW_EXPAND;
-        currentWindowMax += WINDOW_EXPAND;
-        selectedQuestions = unique; // Use whatever we have so far
-      }
-
-      // If still not enough, fill remaining with random questions
-      if (selectedQuestions.length < neededCount) {
-        const existingIds = new Set(selectedQuestions.map((q: any) => q.id));
-        const remaining = neededCount - selectedQuestions.length;
-
-        const fillConditions = questionConditions.map((c) => {
-          const where: any = { ...c };
-          if (existingIds.size > 0) {
-            where.id = { [Op.notIn]: Array.from(existingIds) };
-          }
-          return where;
-        });
-
-        const fillQuestions = await Question.findAll({
-          where: { [Op.or]: fillConditions },
+      if (batch.length > 0) {
+        firstQuestion = batch[0];
+      } else {
+        // No beginner questions exist — fallback: any question from selections
+        const fallback = await Question.findAll({
+          where: { [Op.or]: questionConditions },
           include: [
             { model: Topic, as: "topic", attributes: ["id", "name"] },
             { model: Subject, as: "subject", attributes: ["id", "name"] },
             { model: Course, as: "course", attributes: ["id", "name"] },
           ],
           order: sequelize.random(),
-          limit: remaining,
+          limit: 1,
         });
-
-        selectedQuestions.push(...fillQuestions);
+        if (fallback.length > 0) firstQuestion = fallback[0];
       }
+
+      if (firstQuestion) selectedQuestions = [firstQuestion];
     } else {
       // Non-adaptive mode: original random selection (unchanged behavior)
       const questions = await Question.findAll({
@@ -295,6 +262,7 @@ export class TestSessionService {
     const endsAt = new Date(startedAt.getTime() + data.duration_minutes * 60 * 1000);
 
     const actualQuestionCount = selectedQuestions.length;
+    const totalQuestionsCount = data.adaptive ? data.question_limit : actualQuestionCount;
 
     // Create test session
     const session = await TestSession.create({
@@ -304,7 +272,7 @@ export class TestSessionService {
       duration_minutes: data.duration_minutes,
       question_limit: data.question_limit,
       ends_at: endsAt,
-      total_questions: actualQuestionCount,
+      total_questions: totalQuestionsCount,
       skill_score_snapshot: skillScoreSnapshot,
       started_at: startedAt,
     });
@@ -409,9 +377,116 @@ export class TestSessionService {
 
     return {
       ...plain,
-      totalQuestions: questions.length,
+      totalQuestions: session.total_questions,
       questions,
     };
+  }
+
+  static async getOrGenerateNextQuestion(
+    sessionId: string,
+    studentId: string,
+    currentQuestionIndex: number,
+    isCorrect?: boolean // whether the last answer was correct
+  ) {
+    const session = await TestSession.findByPk(sessionId, {
+      include: [{ model: TestSelection, as: "selections" }],
+    });
+
+    if (!session) throw ApiError.notFound(RESPONSE_MESSAGES.ERROR.TEST_NOT_FOUND);
+
+    const existingAnswers = await TestAnswer.findAll({
+      where: { test_session_id: sessionId },
+      order: [["createdAt", "ASC"]],
+    });
+
+    // If next question already generated, return it (user navigating back then forward)
+    if (existingAnswers.length > currentQuestionIndex + 1) {
+      const nextRecord = existingAnswers[currentQuestionIndex + 1];
+      const nextQ = await Question.findByPk(nextRecord.question_id, {
+        include: [
+          { model: Topic, as: "topic", attributes: ["id", "name"] },
+          { model: Subject, as: "subject", attributes: ["id", "name"] },
+          { model: Course, as: "course", attributes: ["id", "name"] },
+        ],
+      });
+      if (nextQ) return stripQuestionForTest({ _index: currentQuestionIndex + 1, ...nextQ.toJSON() });
+    }
+
+    // Determine next difficulty level:
+    // skill_score_snapshot stores current level index (0=beginner … 4=expert)
+    const currentLevelIndex = clampLevelIndex(session.skill_score_snapshot ?? 0);
+    // Correct → advance one level (never exceed expert). Wrong/skip → stay same.
+    const nextLevelIndex = isCorrect ? clampLevelIndex(currentLevelIndex + 1) : currentLevelIndex;
+    const targetDifficulty: DifficultyLevel = DIFFICULTY_LEVELS[nextLevelIndex];
+
+    const selections = (session as any).selections || [];
+    if (selections.length === 0) throw ApiError.badRequest("No selections found for this test");
+
+    const questionConditions = selections.map((s: any) => {
+      const cond: any = { course_id: s.course_id, difficulty: targetDifficulty };
+      if (s.subject_id) cond.subject_id = s.subject_id;
+      if (s.topic_id) cond.topic_id = s.topic_id;
+      return cond;
+    });
+
+    const excludedIds = existingAnswers.map((a) => a.question_id);
+
+    let selectedQuestion: any = null;
+
+    // Primary: question at target difficulty, not yet seen
+    const primaryWhere: any = { [Op.or]: questionConditions };
+    if (excludedIds.length > 0) primaryWhere.id = { [Op.notIn]: excludedIds };
+
+    const primaryBatch = await Question.findAll({
+      where: primaryWhere,
+      include: [
+        { model: Topic, as: "topic", attributes: ["id", "name"] },
+        { model: Subject, as: "subject", attributes: ["id", "name"] },
+        { model: Course, as: "course", attributes: ["id", "name"] },
+      ],
+      order: sequelize.random(),
+      limit: 1,
+    });
+    if (primaryBatch.length > 0) selectedQuestion = primaryBatch[0];
+
+    // Fallback: any unseen question from selections (no difficulty filter)
+    if (!selectedQuestion) {
+      const selConditions = selections.map((s: any) => {
+        const cond: any = { course_id: s.course_id };
+        if (s.subject_id) cond.subject_id = s.subject_id;
+        if (s.topic_id) cond.topic_id = s.topic_id;
+        return cond;
+      });
+      const fallbackWhere: any = { [Op.or]: selConditions };
+      if (excludedIds.length > 0) fallbackWhere.id = { [Op.notIn]: excludedIds };
+      const fallback = await Question.findAll({
+        where: fallbackWhere,
+        include: [
+          { model: Topic, as: "topic", attributes: ["id", "name"] },
+          { model: Subject, as: "subject", attributes: ["id", "name"] },
+          { model: Course, as: "course", attributes: ["id", "name"] },
+        ],
+        order: sequelize.random(),
+        limit: 1,
+      });
+      if (fallback.length > 0) selectedQuestion = fallback[0];
+    }
+
+    if (!selectedQuestion) return null;
+
+    // Persist next level index on session
+    await session.update({ skill_score_snapshot: nextLevelIndex });
+
+    // Save question stub
+    await TestAnswer.create({
+      test_session_id: sessionId,
+      question_id: selectedQuestion.id,
+      time_taken: 0,
+      is_skipped: true,
+    });
+
+    const plain = selectedQuestion.toJSON ? selectedQuestion.toJSON() : selectedQuestion;
+    return stripQuestionForTest({ _index: currentQuestionIndex + 1, ...plain });
   }
 
 

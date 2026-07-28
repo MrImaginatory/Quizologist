@@ -58,7 +58,7 @@ UserSkillRating.init(
     skill_score: {
       type: DataTypes.FLOAT,
       allowNull: false,
-      defaultValue: 3.0,
+      defaultValue: 1.0,
     },
     total_answers: {
       type: DataTypes.INTEGER,
