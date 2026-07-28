@@ -1,7 +1,7 @@
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **QuizNew** (2737 symbols, 5211 relationships, 139 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **Quizologist** (5479 symbols, 10720 relationships, 254 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 
@@ -24,10 +24,10 @@ This project is indexed by GitNexus as **QuizNew** (2737 symbols, 5211 relations
 
 | Resource | Use for |
 |----------|---------|
-| `gitnexus://repo/QuizNew/context` | Codebase overview, check index freshness |
-| `gitnexus://repo/QuizNew/clusters` | All functional areas |
-| `gitnexus://repo/QuizNew/processes` | All execution flows |
-| `gitnexus://repo/QuizNew/process/{name}` | Step-by-step execution trace |
+| `gitnexus://repo/Quizologist/context` | Codebase overview, check index freshness |
+| `gitnexus://repo/Quizologist/clusters` | All functional areas |
+| `gitnexus://repo/Quizologist/processes` | All execution flows |
+| `gitnexus://repo/Quizologist/process/{name}` | Step-by-step execution trace |
 
 ## CLI
 

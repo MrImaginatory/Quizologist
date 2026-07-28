@@ -2,10 +2,10 @@ import UserSkillRating from "./userSkillRating.model";
 
 const DEFAULT_SKILL_SCORE = 3.0;
 const CORRECT_DELTA = 0.15;
-const WRONG_DELTA = -0.10;
+const WRONG_DELTA = 0.00;
 const FAST_BONUS = 0.07;
 const HARD_QUESTION_BONUS = 0.05;
-const EASY_QUESTION_PENALTY = -0.05;
+const EASY_QUESTION_PENALTY = 0.00;
 const STREAK_MULTIPLIER = 1.2;
 const STREAK_THRESHOLD = 3;
 const MIN_SKILL_SCORE = 1.0;
