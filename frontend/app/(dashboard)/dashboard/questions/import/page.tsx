@@ -629,13 +629,25 @@ export default function ImportQuestionsPage() {
               Would you like to add them before importing the questions?
               <div className="mt-3 flex gap-3">
                 <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-200 dark:text-blue-400 dark:border-blue-800">
-                  {missingHierarchy.length} New Course{missingHierarchy.length !== 1 ? 's' : ''}
+                  {missingHierarchy.filter(c => !courseMap.has(normalizeName(c.name))).length} New Course{missingHierarchy.filter(c => !courseMap.has(normalizeName(c.name))).length !== 1 ? 's' : ''}
                 </Badge>
                 <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-200 dark:text-purple-400 dark:border-purple-800">
-                  {missingHierarchy.reduce((acc, c) => acc + c.subjects.length, 0)} New Subject{missingHierarchy.reduce((acc, c) => acc + c.subjects.length, 0) !== 1 ? 's' : ''}
+                  {missingHierarchy.reduce((acc, c) => {
+                    const courseExists = courseMap.has(normalizeName(c.name));
+                    const courseId = courseExists ? courseMap.get(normalizeName(c.name))!.id : null;
+                    return acc + c.subjects.filter(s => !(courseId && subjectMap.has(`${normalizeName(s.name)}|${courseId}`))).length;
+                  }, 0)} New Subject{/* Add suffix conditionally later */}
                 </Badge>
                 <Badge variant="outline" className="bg-pink-500/10 text-pink-600 border-pink-200 dark:text-pink-400 dark:border-pink-800">
-                  {missingHierarchy.reduce((acc, c) => acc + c.subjects.reduce((sa, s) => sa + s.topics.length, 0), 0)} New Topic{missingHierarchy.reduce((acc, c) => acc + c.subjects.reduce((sa, s) => sa + s.topics.length, 0), 0) !== 1 ? 's' : ''}
+                  {missingHierarchy.reduce((acc, c) => {
+                    const courseExists = courseMap.has(normalizeName(c.name));
+                    const courseId = courseExists ? courseMap.get(normalizeName(c.name))!.id : null;
+                    return acc + c.subjects.reduce((sAcc, s) => {
+                      const subjectExists = courseId && subjectMap.has(`${normalizeName(s.name)}|${courseId}`);
+                      const subjectId = subjectExists ? subjectMap.get(`${normalizeName(s.name)}|${courseId}`)!.id : null;
+                      return sAcc + s.topics.filter(t => !(subjectId && topicsBySubject.get(subjectId)?.has(normalizeName(t)))).length;
+                    }, 0);
+                  }, 0)} New Topic{/* Add suffix conditionally later */}
                 </Badge>
               </div>
             </CardDescription>

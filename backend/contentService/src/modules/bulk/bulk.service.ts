@@ -1,6 +1,7 @@
 import Course from "../course/course.model";
 import Subject from "../subject/subject.model";
 import Topic from "../topic/topic.model";
+import { Op } from "sequelize";
 import { BulkHierarchyInput } from "./bulk.validation";
 
 export class BulkService {
@@ -12,28 +13,34 @@ export class BulkService {
     };
 
     for (const courseData of data.courses) {
-      // Find or create course
-      const [course, courseCreated] = await Course.findOrCreate({
-        where: { name: courseData.name },
-        defaults: { name: courseData.name, description: "Auto-created during Excel import" }
+      // Find or create course case-insensitively
+      let course = await Course.findOne({
+        where: { name: { [Op.iLike]: courseData.name } }
       });
-      if (courseCreated) results.coursesCreated++;
+      if (!course) {
+        course = await Course.create({ name: courseData.name, description: "Auto-created during Excel import" });
+        results.coursesCreated++;
+      }
 
       for (const subjectData of courseData.subjects) {
-        // Find or create subject within the course
-        const [subject, subjectCreated] = await Subject.findOrCreate({
-          where: { name: subjectData.name, course_id: course.id },
-          defaults: { name: subjectData.name, course_id: course.id, description: "Auto-created during Excel import" }
+        // Find or create subject within the course case-insensitively
+        let subject = await Subject.findOne({
+          where: { name: { [Op.iLike]: subjectData.name }, course_id: course.id }
         });
-        if (subjectCreated) results.subjectsCreated++;
+        if (!subject) {
+          subject = await Subject.create({ name: subjectData.name, course_id: course.id, description: "Auto-created during Excel import" });
+          results.subjectsCreated++;
+        }
 
         for (const topicName of subjectData.topics) {
-          // Find or create topic within the subject
-          const [topic, topicCreated] = await Topic.findOrCreate({
-            where: { name: topicName, subject_id: subject.id },
-            defaults: { name: topicName, subject_id: subject.id, description: "Auto-created during Excel import" }
+          // Find or create topic within the subject case-insensitively
+          let topic = await Topic.findOne({
+            where: { name: { [Op.iLike]: topicName }, subject_id: subject.id }
           });
-          if (topicCreated) results.topicsCreated++;
+          if (!topic) {
+            topic = await Topic.create({ name: topicName, subject_id: subject.id, description: "Auto-created during Excel import" });
+            results.topicsCreated++;
+          }
         }
       }
     }
