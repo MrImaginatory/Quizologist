@@ -599,10 +599,14 @@ export class TestSessionService {
 
     // Fetch student details for these test sessions
     const studentIds = [...new Set(rows.map((t: any) => t.student_id))];
-    const [students] = await sequelize.query(
-      `SELECT id, fname, lname, email FROM users WHERE id IN (:studentIds)`,
-      { replacements: { studentIds } }
-    ) as any[];
+    let students: any[] = [];
+    if (studentIds.length > 0) {
+      const [result] = await sequelize.query(
+        `SELECT id, fname, lname, email FROM users WHERE id IN (:studentIds)`,
+        { replacements: { studentIds } }
+      ) as any[];
+      students = result;
+    }
     const studentMap = new Map(students.map((s: any) => [s.id, s]));
 
     const testsWithStudents = rows.map((t: any) => {
