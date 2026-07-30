@@ -104,6 +104,16 @@ export class DashboardController {
     }
   }
 
+  static async getRepeatedQuestions(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { userId } = req.user!;
+      const data = await StudentAnalyticsService.getRepeatedQuestions(userId);
+      return ApiResponse.success(res, "Repeated questions retrieved", data);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   // ==================== Admin Analytics ====================
 
   static async getTeacherStudentRatio(req: AuthRequest, res: Response, next: NextFunction) {

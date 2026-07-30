@@ -16,6 +16,7 @@ interface StudentDashboardData {
   };
   overallAccuracy: number;
   totalTopicsAttempted: number;
+  repeatedQuestions: any[];
   isLoading: boolean;
   error: string;
 }
@@ -54,8 +55,14 @@ export function useStudentDashboard(): StudentDashboardData {
     swrOptions
   );
 
+  const { data: repeatedRes, error: repeatedErr } = useSWR(
+    token ? API_ROUTES.DASHBOARD.STUDENT_REPEATED_QUESTIONS : null,
+    fetcher,
+    swrOptions
+  );
+
   // Check for token errors and logout
-  const errors = [statsErr, topicErr, subjectErr, trendsErr, swErr].filter(Boolean);
+  const errors = [statsErr, topicErr, subjectErr, trendsErr, swErr, repeatedErr].filter(Boolean);
   for (const err of errors) {
     const message = err.message || "";
     if (message.toLowerCase().includes("invalid") && message.toLowerCase().includes("token")) {
@@ -67,13 +74,14 @@ export function useStudentDashboard(): StudentDashboardData {
         performanceTrends: { last15Days: [], last30Days: [], last60Days: [] },
         overallAccuracy: 0,
         totalTopicsAttempted: 0,
+        repeatedQuestions: [],
         isLoading: false,
         error: "",
       };
     }
   }
 
-  const isLoading = !statsRes && !topicRes && !subjectRes && !trendsRes && !swRes && !statsErr;
+  const isLoading = !statsRes && !topicRes && !subjectRes && !trendsRes && !swRes && !repeatedRes && !statsErr;
   const error = errors.length > 0 ? errors[0].message : "";
 
   return {
@@ -83,6 +91,7 @@ export function useStudentDashboard(): StudentDashboardData {
     performanceTrends: trendsRes?.data || { last15Days: [], last30Days: [], last60Days: [] },
     overallAccuracy: swRes?.data?.overallAccuracy || 0,
     totalTopicsAttempted: swRes?.data?.totalTopicsAttempted || 0,
+    repeatedQuestions: repeatedRes?.data?.repeatedQuestions || [],
     isLoading,
     error,
   };

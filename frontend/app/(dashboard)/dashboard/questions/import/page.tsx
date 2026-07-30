@@ -25,7 +25,10 @@ import {
   AlertCircle,
   ChevronDown,
   ChevronUp,
+  XCircle,
+  HelpCircle
 } from "lucide-react";
+import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth-context";
 import { useCourses } from "@/hooks/use-courses";
 import { useSubjects } from "@/hooks/use-subjects";
@@ -78,7 +81,7 @@ interface ImportResult {
 }
 
 export default function ImportQuestionsPage() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const { courses, refetch: refetchCourses } = useCourses({ limit: 10000 });
   const { subjects, refetch: refetchSubjects } = useSubjects({ limit: 10000 });
   const { topics, refetch: refetchTopics } = useTopics({ limit: 10000 });
@@ -105,8 +108,9 @@ export default function ImportQuestionsPage() {
       a.download = "question_import_template.xlsx";
       a.click();
       window.URL.revokeObjectURL(url);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to download template:", error);
+      toast.error(error.message || "Failed to download template");
     }
   };
 
@@ -287,8 +291,9 @@ export default function ImportQuestionsPage() {
       await coursesApi.bulkCreateHierarchy({ courses: missingHierarchy }, token || undefined);
       await Promise.all([refetchCourses(), refetchSubjects(), refetchTopics()]);
       setIsResolvingMissing(true);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to create missing entities", err);
+      toast.error(err.message || "Failed to create missing entities");
     } finally {
       setIsLoading(false);
     }
@@ -410,7 +415,7 @@ export default function ImportQuestionsPage() {
         }
       });
 
-      if (missingCoursesMap.size > 0) {
+      if (missingCoursesMap.size > 0 && user?.role === "admin") {
         const missingList = Array.from(missingCoursesMap.entries()).map(([cName, sMap]) => {
           const originalCourseName = allRowsToCheck.find((p) => normalizeName(p.courseName) === cName)?.courseName || cName;
           return {

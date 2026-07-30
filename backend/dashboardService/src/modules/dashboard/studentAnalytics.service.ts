@@ -369,4 +369,77 @@ export class StudentAnalyticsService {
       lastAnsweredAt: rating.last_answered_at,
     };
   }
+
+  static async getRepeatedQuestions(studentId: string) {
+    const lastTest = await TestSession.findOne({
+      where: { student_id: studentId, status: "completed" },
+      order: [["created_at", "DESC"]],
+      attributes: ["id"],
+    });
+
+    if (!lastTest) {
+      return { repeatedQuestions: [] };
+    }
+
+    const answers = await TestAnswer.findAll({
+      where: {
+        test_session_id: lastTest.id,
+        is_skipped: false,
+      },
+      include: [
+        {
+          model: Question,
+          attributes: ["id", "question"],
+          include: [
+            { model: Subject, attributes: ["name"] },
+            { model: Topic, attributes: ["name"] },
+          ],
+        },
+      ],
+    });
+
+    // Group by test_session_id + question_id
+    const groupMap = new Map<
+      string,
+      {
+        questionId: string;
+        question: string;
+        subjectName: string;
+        topicName: string;
+        totalAttempts: number;
+        incorrectAttempts: number;
+      }
+    >();
+
+    for (const answer of answers) {
+      const q = (answer as any).Question;
+      if (!q) continue;
+
+      const key = `${answer.test_session_id}_${q.id}`;
+
+      if (!groupMap.has(key)) {
+        groupMap.set(key, {
+          questionId: q.id,
+          question: q.question || "Unknown question text",
+          subjectName: q.Subject?.name || "-",
+          topicName: q.Topic?.name || "-",
+          totalAttempts: 0,
+          incorrectAttempts: 0,
+        });
+      }
+
+      const group = groupMap.get(key)!;
+      group.totalAttempts++;
+      if (answer.is_correct === false) {
+        group.incorrectAttempts++;
+      }
+    }
+
+    const repeatedQuestions = Array.from(groupMap.values())
+      .filter((g) => g.totalAttempts > 1)
+      .sort((a, b) => b.incorrectAttempts - a.incorrectAttempts || b.totalAttempts - a.totalAttempts)
+      .slice(0, 10);
+
+    return { repeatedQuestions };
+  }
 }

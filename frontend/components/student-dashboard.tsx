@@ -19,6 +19,7 @@ import { usePendingTests } from "@/hooks/use-pending-tests";
 import { capitalize } from "@/lib/utils";
 import { Loader2, Target, BookOpen, CheckCircle, Play, Clock, TrendingUp } from "lucide-react";
 import { ViewToggle } from "@/components/dashboard/view-toggle";
+import { RepeatedQuestionsTable } from "@/components/analytics/repeated-questions-table";
 import dynamic from "next/dynamic";
 
 const PerformanceTrendChart = dynamic(
@@ -50,6 +51,7 @@ export function StudentDashboard() {
     performanceTrends,
     overallAccuracy,
     totalTopicsAttempted,
+    repeatedQuestions,
     isLoading,
     error,
   } = useStudentDashboard();
@@ -225,6 +227,24 @@ export function StudentDashboard() {
           </Tabs>
         </CardContent>
       </Card>
+
+      {/* Repeated Questions */}
+      {repeatedQuestions && repeatedQuestions.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5" />
+              Repeated Questions
+            </CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              Questions that appeared multiple times during time-based tests.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <RepeatedQuestionsTable data={repeatedQuestions} />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Subject Performance & Topic Performance */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

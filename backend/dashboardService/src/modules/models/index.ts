@@ -68,6 +68,7 @@ class Question extends Model {
   declare subject_id: string;
   declare course_id: string;
   declare difficulty: string;
+  declare question: string;
 }
 
 Question.init(
@@ -77,6 +78,7 @@ Question.init(
     subject_id: { type: DataTypes.UUID },
     course_id: { type: DataTypes.UUID },
     difficulty: { type: DataTypes.STRING },
+    question: { type: DataTypes.TEXT },
   },
   { sequelize, tableName: "questions", timestamps: false, paranoid: false }
 );
