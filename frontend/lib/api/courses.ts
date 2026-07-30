@@ -13,6 +13,6 @@ export const coursesApi = {
     apiRequest(API_ROUTES.COURSES.BY_ID(id), { method: "PUT", body: JSON.stringify(data), token }),
   delete: (id: string, token?: string) =>
     apiRequest(API_ROUTES.COURSES.BY_ID(id), { method: "DELETE", token }),
-  bulkCreateHierarchy: (data: { courses: Array<{ name: string; subjects: Array<{ name: string; topics: string[] }> }> }, token?: string) =>
+  bulkCreateHierarchy: (data: { courses: Array<{ name: string; description?: string; subjects: Array<{ name: string; description?: string; topics: Array<{ name: string; description?: string } | string> }> }> }, token?: string) =>
     apiRequest(API_ROUTES.COURSES.BULK_HIERARCHY, { method: "POST", body: JSON.stringify(data), token }),
 };

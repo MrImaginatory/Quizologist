@@ -125,7 +125,7 @@ export class QuestionImportService {
       properties: { defaultColWidth: 25 },
     });
 
-    const refHeaders = ["Course Name", "Subject Name", "Topic Name"];
+    const refHeaders = ["Course Name", "Subject Name", "Topic Name", "Description"];
     const refHeaderRow = refSheet.addRow(refHeaders);
     refHeaderRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
     refHeaderRow.fill = {
@@ -145,10 +145,10 @@ export class QuestionImportService {
 
         const subjectTopics = topicBySubject.get(subject.id) || [];
         if (subjectTopics.length === 0) {
-          refSheet.addRow([course.name, subjectName, ""]);
+          refSheet.addRow([course.name, subjectName, "", ""]);
         } else {
           for (const topicName of subjectTopics) {
-            refSheet.addRow([course.name, subjectName, topicName]);
+            refSheet.addRow([course.name, subjectName, topicName, ""]);
           }
         }
       }

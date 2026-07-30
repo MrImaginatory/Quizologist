@@ -50,6 +50,8 @@ export const questionsApi = {
     }),
   delete: (id: string, token?: string) =>
     apiRequest(API_ROUTES.QUESTIONS.BY_ID(id), { method: "DELETE", token }),
+  getActiveFilters: (token?: string) =>
+    apiRequest<{ courseIds: string[], subjectIds: string[], topicIds: string[] }>(API_ROUTES.QUESTIONS.ACTIVE_FILTERS, { token }),
   getTemplate: async (token?: string): Promise<Blob> => {
     const response = await fetch(API_ROUTES.QUESTIONS.IMPORT_TEMPLATE, {
       headers: {

@@ -9,6 +9,7 @@ router.use(questionImportRoutes);
 
 router.post("/", QuestionController.create);
 router.get("/", QuestionController.getAll);
+router.get("/active-filters", QuestionController.getActiveFilters);
 router.get("/search", QuestionController.search);
 router.get("/filter", QuestionController.filter);
 router.get("/topic/:topicId", QuestionController.getByTopicId);

@@ -75,6 +75,15 @@ export class QuestionController {
     }
   }
 
+  static async getActiveFilters(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const activeFilters = await QuestionService.getActiveFilters();
+      return res.json(activeFilters);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async filter(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const data = filterQuestionsSchema.parse(req.query);

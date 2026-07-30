@@ -209,6 +209,32 @@ export class QuestionService {
     };
   }
 
+  static async getActiveFilters() {
+    const courseIds = await Question.findAll({
+      attributes: ['course_id'],
+      group: ['course_id'],
+      raw: true
+    });
+    
+    const subjectIds = await Question.findAll({
+      attributes: ['subject_id'],
+      group: ['subject_id'],
+      raw: true
+    });
+    
+    const topicIds = await Question.findAll({
+      attributes: ['topic_id'],
+      group: ['topic_id'],
+      raw: true
+    });
+
+    return {
+      courseIds: courseIds.map((c: any) => c.course_id),
+      subjectIds: subjectIds.map((s: any) => s.subject_id),
+      topicIds: topicIds.map((t: any) => t.topic_id)
+    };
+  }
+
   static async filter(data: FilterQuestionsInput, user?: { userId: string; role: string }) {
     const { course_id, subject_id, topic_id, page, limit } = data;
     const offset = (page - 1) * limit;

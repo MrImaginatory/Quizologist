@@ -18,7 +18,7 @@ export class BulkService {
         where: { name: { [Op.iLike]: courseData.name } }
       });
       if (!course) {
-        course = await Course.create({ name: courseData.name, description: "Auto-created during Excel import" });
+        course = await Course.create({ name: courseData.name, description: courseData.description || "Auto-created during Excel import" });
         results.coursesCreated++;
       }
 
@@ -28,17 +28,19 @@ export class BulkService {
           where: { name: { [Op.iLike]: subjectData.name }, course_id: course.id }
         });
         if (!subject) {
-          subject = await Subject.create({ name: subjectData.name, course_id: course.id, description: "Auto-created during Excel import" });
+          subject = await Subject.create({ name: subjectData.name, course_id: course.id, description: subjectData.description || "Auto-created during Excel import" });
           results.subjectsCreated++;
         }
 
-        for (const topicName of subjectData.topics) {
+        for (const topicData of subjectData.topics) {
+          const tName = typeof topicData === 'string' ? topicData : topicData.name;
+          const tDesc = typeof topicData === 'string' ? undefined : topicData.description;
           // Find or create topic within the subject case-insensitively
           let topic = await Topic.findOne({
-            where: { name: { [Op.iLike]: topicName }, subject_id: subject.id }
+            where: { name: { [Op.iLike]: tName }, subject_id: subject.id }
           });
           if (!topic) {
-            topic = await Topic.create({ name: topicName, subject_id: subject.id, description: "Auto-created during Excel import" });
+            topic = await Topic.create({ name: tName, subject_id: subject.id, description: tDesc || "Auto-created during Excel import" });
             results.topicsCreated++;
           }
         }

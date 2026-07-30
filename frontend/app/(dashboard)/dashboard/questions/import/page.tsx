@@ -90,7 +90,7 @@ export default function ImportQuestionsPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [parsedQuestions, setParsedQuestions] = useState<ResolvedQuestion[]>([]);
   const [rawParsedQuestions, setRawParsedQuestions] = useState<ParsedQuestion[]>([]);
-  const [missingHierarchy, setMissingHierarchy] = useState<{ name: string; subjects: { name: string; topics: string[] }[] }[]>([]);
+  const [missingHierarchy, setMissingHierarchy] = useState<{ name: string; description?: string; subjects: { name: string; description?: string; topics: { name: string; description?: string }[] }[] }[]>([]);
   const [isResolvingMissing, setIsResolvingMissing] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [importProgress, setImportProgress] = useState({ current: 0, total: 0 });
@@ -357,6 +357,7 @@ export default function ImportQuestionsPage() {
           courseName: row["Course Name"] || row["Course"] || row["course_name"] || row["course"] || "",
           subjectName: row["Subject Name"] || row["Subject"] || row["subject_name"] || row["subject"] || "",
           topicName: row["Topic Name"] || row["Topic"] || row["topic_name"] || row["topic"] || "",
+          description: row["Description"] || row["description"] || "",
         })).filter(r => r.courseName.trim() !== "");
       }
 
@@ -368,10 +369,22 @@ export default function ImportQuestionsPage() {
 
       // Detect missing hierarchy
       const missingCoursesMap = new Map<string, Map<string, Set<string>>>();
+      const courseDescMap = new Map<string, string>();
+      const subjectDescMap = new Map<string, string>();
+      const topicDescMap = new Map<string, string>();
+
       allRowsToCheck.forEach((row) => {
         const cName = normalizeName(row.courseName);
         const sName = normalizeName(row.subjectName);
         const tName = normalizeName(row.topicName);
+        const desc = row.description?.trim();
+        
+        if (desc) {
+          if (tName) topicDescMap.set(`${cName}|${sName}|${tName}`, desc);
+          else if (sName) subjectDescMap.set(`${cName}|${sName}`, desc);
+          else if (cName) courseDescMap.set(cName, desc);
+        }
+
 
         if (!cName || !sName) return;
 
@@ -402,12 +415,17 @@ export default function ImportQuestionsPage() {
           const originalCourseName = allRowsToCheck.find((p) => normalizeName(p.courseName) === cName)?.courseName || cName;
           return {
             name: originalCourseName,
+            description: courseDescMap.get(cName),
             subjects: Array.from(sMap.entries()).map(([sName, tSet]) => {
               const originalSubjectName = allRowsToCheck.find((p) => normalizeName(p.subjectName) === sName)?.subjectName || sName;
               return {
                 name: originalSubjectName,
+                description: subjectDescMap.get(`${cName}|${sName}`),
                 topics: Array.from(tSet).map((tName) => {
-                  return allRowsToCheck.find((p) => normalizeName(p.topicName) === tName)?.topicName || tName;
+                  return {
+                    name: allRowsToCheck.find((p) => normalizeName(p.topicName) === tName)?.topicName || tName,
+                    description: topicDescMap.get(`${cName}|${sName}|${tName}`)
+                  };
                 })
               };
             })
@@ -645,7 +663,7 @@ export default function ImportQuestionsPage() {
                     return acc + c.subjects.reduce((sAcc, s) => {
                       const subjectExists = courseId && subjectMap.has(`${normalizeName(s.name)}|${courseId}`);
                       const subjectId = subjectExists ? subjectMap.get(`${normalizeName(s.name)}|${courseId}`)!.id : null;
-                      return sAcc + s.topics.filter(t => !(subjectId && topicsBySubject.get(subjectId)?.has(normalizeName(t)))).length;
+                      return sAcc + s.topics.filter(t => !(subjectId && topicsBySubject.get(subjectId)?.has(normalizeName(t.name)))).length;
                     }, 0);
                   }, 0)} New Topic{/* Add suffix conditionally later */}
                 </Badge>
@@ -666,7 +684,7 @@ export default function ImportQuestionsPage() {
                       {subject.topics.map((topic, tIdx) => (
                         <div key={tIdx} className="ml-8 mt-1 flex items-center gap-2">
                           <span className="text-muted-foreground">{tIdx === subject.topics.length - 1 ? '└──' : '├──'}</span>
-                          <span>{topic}</span>
+                          <span>{topic.name}</span>
                         </div>
                       ))}
                     </div>

@@ -1,13 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
+import { useActiveFilters } from "@/hooks/use-active-filters";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { X } from "lucide-react";
@@ -33,27 +28,24 @@ export function QuestionFilters({ onFilterChange }: QuestionFiltersProps) {
   const { user } = useAuth();
   const isTeacher = user?.role === "teacher";
 
-  const { courses: allCourses, isLoading: allCoursesLoading } = useCourses({ limit: 100 });
-  // Fetch subjects filtered by selected course (not all subjects)
-  const { subjects: courseSubjects, isLoading: courseSubjectsLoading } = useSubjects({
-    limit: 100,
-    courseId: courseId || undefined,
-  });
-  const { topics: allTopics, isLoading: allTopicsLoading } = useTopics({ limit: 100 });
+  const { activeFilters, isLoading: filtersLoading } = useActiveFilters();
+  
+  // Use limit: 10000 to get all available entities for filtering
+  const { courses: allCourses, isLoading: allCoursesLoading } = useCourses({ limit: 10000 });
+  const { subjects: courseSubjects, isLoading: courseSubjectsLoading } = useSubjects({ limit: 10000, courseId: courseId || undefined });
+  const { topics: allTopics, isLoading: allTopicsLoading } = useTopics({ limit: 10000 });
   const { courses: teacherCourses, subjects: teacherSubjects, isLoading: teachingLoading } = useTeachingCoursesAndSubjects();
 
   // For teachers, use only their assigned courses; for admins, use all
-  const courses = isTeacher ? teacherCourses : allCourses;
-  const isLoadingCourses = isTeacher ? teachingLoading : allCoursesLoading;
+  let courses = isTeacher ? teacherCourses : allCourses;
+  const isLoadingCourses = (isTeacher ? teachingLoading : allCoursesLoading) || filtersLoading;
 
-  // For subjects: if teacher, filter course subjects by their assigned subjects
-  const subjects = isTeacher && courseId
+  let subjects = isTeacher && courseId
     ? courseSubjects.filter((s) => teacherSubjects.some((ts) => ts.id === s.id))
     : courseSubjects;
-  const isLoadingSubjects = isTeacher ? teachingLoading : courseSubjectsLoading;
+  const isLoadingSubjects = (isTeacher ? teachingLoading : courseSubjectsLoading) || filtersLoading;
 
-  // Filter topics based on selected subject (or all teacher's subjects for teachers)
-  const topics = isTeacher
+  let topics = isTeacher
     ? allTopics.filter((t) => {
         if (subjectId) {
           return t.subject_id === subjectId;
@@ -62,7 +54,12 @@ export function QuestionFilters({ onFilterChange }: QuestionFiltersProps) {
         return teacherSubjectIds.includes(t.subject_id);
       })
     : allTopics;
-  const isLoadingTopics = isTeacher ? teachingLoading : allTopicsLoading;
+  const isLoadingTopics = (isTeacher ? teachingLoading : allTopicsLoading) || filtersLoading;
+  
+  // Apply Active Filters (only show those that have at least one question)
+  courses = courses.filter(c => activeFilters.courseIds.includes(c.id));
+  subjects = subjects.filter(s => activeFilters.subjectIds.includes(s.id));
+  topics = topics.filter(t => activeFilters.topicIds.includes(t.id));
 
   const selectedCourse = courses.find((c) => c.id === courseId);
   const selectedSubject = subjects.find((s) => s.id === subjectId);
@@ -86,72 +83,48 @@ export function QuestionFilters({ onFilterChange }: QuestionFiltersProps) {
         <Label htmlFor="course" className="text-sm font-medium mb-2 block">
           Course
         </Label>
-        <Select value={courseId || "all"} onValueChange={(value) => {
-          setCourseId(value === "all" ? "" : (value ?? ""));
-          setSubjectId("");
-          setTopicId("");
-        }}>
-          <SelectTrigger className="w-full">
-            <SelectValue>
-              {selectedCourse ? capitalize(selectedCourse.name) : isLoadingCourses ? "Loading..." : "All Courses"}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Courses</SelectItem>
-            {courses.map((course) => (
-              <SelectItem key={course.id} value={course.id}>
-                {capitalize(course.name)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <SearchableSelect
+          value={courseId}
+          onValueChange={(value) => {
+            setCourseId(value === "all" ? "" : (value ?? ""));
+            setSubjectId("");
+            setTopicId("");
+          }}
+          placeholder={isLoadingCourses ? "Loading..." : "All Courses"}
+          options={courses.map(c => ({ value: c.id, label: capitalize(c.name) }))}
+          disabled={isLoadingCourses}
+        />
       </div>
 
       <div className="flex-1 min-w-[200px]">
         <Label htmlFor="subject" className="text-sm font-medium mb-2 block">
           Subject
         </Label>
-        <Select value={subjectId || "all"} onValueChange={(value) => {
-          setSubjectId(value === "all" ? "" : (value ?? ""));
-          setTopicId("");
-        }} disabled={!courseId}>
-          <SelectTrigger className="w-full">
-            <SelectValue>
-              {selectedSubject ? capitalize(selectedSubject.name) : !courseId ? "Select course first" : isLoadingSubjects ? "Loading..." : "All Subjects"}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Subjects</SelectItem>
-            {subjects.map((subject) => (
-              <SelectItem key={subject.id} value={subject.id}>
-                {capitalize(subject.name)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <SearchableSelect
+          value={subjectId}
+          onValueChange={(value) => {
+            setSubjectId(value === "all" ? "" : (value ?? ""));
+            setTopicId("");
+          }}
+          placeholder={!courseId ? "Select course first" : isLoadingSubjects ? "Loading..." : "All Subjects"}
+          options={subjects.map(s => ({ value: s.id, label: capitalize(s.name) }))}
+          disabled={!courseId || isLoadingSubjects}
+        />
       </div>
 
       <div className="flex-1 min-w-[200px]">
         <Label htmlFor="topic" className="text-sm font-medium mb-2 block">
           Topic
         </Label>
-        <Select value={topicId || "all"} onValueChange={(value) => {
-          setTopicId(value === "all" ? "" : (value ?? ""));
-        }} disabled={!subjectId}>
-          <SelectTrigger className="w-full">
-            <SelectValue>
-              {selectedTopic ? capitalize(selectedTopic.name) : !subjectId ? "Select subject first" : isLoadingTopics ? "Loading..." : "All Topics"}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Topics</SelectItem>
-            {topics.map((topic) => (
-              <SelectItem key={topic.id} value={topic.id}>
-                {capitalize(topic.name)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <SearchableSelect
+          value={topicId}
+          onValueChange={(value) => {
+            setTopicId(value === "all" ? "" : (value ?? ""));
+          }}
+          placeholder={!subjectId ? "Select subject first" : isLoadingTopics ? "Loading..." : "All Topics"}
+          options={topics.map(t => ({ value: t.id, label: capitalize(t.name) }))}
+          disabled={!subjectId || isLoadingTopics}
+        />
       </div>
 
       {hasFilters && (
