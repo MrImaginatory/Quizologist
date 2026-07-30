@@ -527,14 +527,18 @@ export class TeacherAssignmentService {
 
     // Filter by teacher's location
     const teacherLocationId = await getTeacherLocationId(teacherId);
-    if (teacherLocationId) {
-      studentIds = await filterStudentIdsByLocation(studentIds, teacherLocationId);
-      if (studentIds.length === 0) {
-        return {
-          students: [],
-          pagination: { total: 0, page, limit, totalPages: 0 },
-        };
-      }
+    if (!teacherLocationId) {
+      return {
+        students: [],
+        pagination: { total: 0, page, limit, totalPages: 0 },
+      };
+    }
+    studentIds = await filterStudentIdsByLocation(studentIds, teacherLocationId);
+    if (studentIds.length === 0) {
+      return {
+        students: [],
+        pagination: { total: 0, page, limit, totalPages: 0 },
+      };
     }
 
     // Build student where conditions
@@ -656,14 +660,18 @@ export class TeacherAssignmentService {
 
     // Filter by teacher's location
     const teacherLocationId = await getTeacherLocationId(teacherId);
-    if (teacherLocationId) {
-      studentIds = await filterStudentIdsByLocation(studentIds, teacherLocationId);
-      if (studentIds.length === 0) {
-        return {
-          tests: [],
-          pagination: { total: 0, page, limit, totalPages: 0 },
-        };
-      }
+    if (!teacherLocationId) {
+      return {
+        tests: [],
+        pagination: { total: 0, page, limit, totalPages: 0 },
+      };
+    }
+    studentIds = await filterStudentIdsByLocation(studentIds, teacherLocationId);
+    if (studentIds.length === 0) {
+      return {
+        tests: [],
+        pagination: { total: 0, page, limit, totalPages: 0 },
+      };
     }
 
     // If searching by student name/email, filter student IDs first
@@ -797,11 +805,12 @@ export class TeacherAssignmentService {
 
     // Filter by teacher's location
     const teacherLocationId = await getTeacherLocationId(teacherId);
-    if (teacherLocationId) {
-      studentIds = await filterStudentIdsByLocation(studentIds, teacherLocationId);
-      if (studentIds.length === 0) {
-        return { students: [] };
-      }
+    if (!teacherLocationId) {
+      return { students: [] };
+    }
+    studentIds = await filterStudentIdsByLocation(studentIds, teacherLocationId);
+    if (studentIds.length === 0) {
+      return { students: [] };
     }
 
     const testSessions = await TestSession.findAll({
@@ -908,11 +917,12 @@ export class TeacherAssignmentService {
 
     // Filter by teacher's location
     const teacherLocationId = await getTeacherLocationId(teacherId);
-    if (teacherLocationId) {
-      studentIds = await filterStudentIdsByLocation(studentIds, teacherLocationId);
-      if (studentIds.length === 0) {
-        return { weakTopics: [] };
-      }
+    if (!teacherLocationId) {
+      return { weakTopics: [] };
+    }
+    studentIds = await filterStudentIdsByLocation(studentIds, teacherLocationId);
+    if (studentIds.length === 0) {
+      return { weakTopics: [] };
     }
 
     // Get test sessions with their answers to calculate per-topic accuracy

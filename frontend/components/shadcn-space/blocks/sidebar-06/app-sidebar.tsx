@@ -141,29 +141,31 @@ export function AppSidebar() {
         </SidebarContent>
 
         {/* Footer */}
-        <SidebarFooter className="px-4 pb-4">
-          <div className="px-4 py-3 rounded-lg bg-secondary">
-            <div className="flex items-center gap-3">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-card-foreground truncate">
-                  {capitalize(user?.fname || "")} {capitalize(user?.lname || "")}
-                </p>
-                <p className="text-xs text-muted-foreground truncate capitalize">
-                  {user?.role}
-                </p>
+        {user?.role !== "student" && (
+          <SidebarFooter className="px-4 pb-4">
+            <div className="px-4 py-3 rounded-lg bg-secondary">
+              <div className="flex items-center gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-card-foreground truncate">
+                    {capitalize(user?.fname || "")} {capitalize(user?.lname || "")}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate capitalize">
+                    {user?.role}
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={logout}
+                  className="h-8 w-8 shrink-0 cursor-pointer"
+                  aria-label="Logout"
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={logout}
-                className="h-8 w-8 shrink-0 cursor-pointer"
-                aria-label="Logout"
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
             </div>
-          </div>
-        </SidebarFooter>
+          </SidebarFooter>
+        )}
       </div>
     </Sidebar>
   );
