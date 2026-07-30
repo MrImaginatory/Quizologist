@@ -9,3 +9,4 @@ survey
 .mimocode
 requirements.txt
 *.xlsx
+venv
