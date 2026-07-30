@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import * as XLSX from "xlsx";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,7 +30,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { useCourses } from "@/hooks/use-courses";
 import { useSubjects } from "@/hooks/use-subjects";
 import { useTopics } from "@/hooks/use-topics";
-import { questionsApi, Course, Subject, Topic } from "@/lib/api";
+import { questionsApi, coursesApi, Course, Subject, Topic } from "@/lib/api";
 import { capitalize } from "@/lib/utils";
 
 interface ParsedQuestion {
@@ -68,7 +68,7 @@ interface ResolvedQuestion {
   error?: string;
 }
 
-type ImportStep = "upload" | "preview" | "result";
+type ImportStep = "upload" | "confirm_missing" | "preview" | "result";
 
 interface ImportResult {
   totalRows: number;
@@ -79,9 +79,9 @@ interface ImportResult {
 
 export default function ImportQuestionsPage() {
   const { token } = useAuth();
-  const { courses } = useCourses({ limit: 10000 });
-  const { subjects } = useSubjects({ limit: 10000 });
-  const { topics } = useTopics({ limit: 10000 });
+  const { courses, refetch: refetchCourses } = useCourses({ limit: 10000 });
+  const { subjects, refetch: refetchSubjects } = useSubjects({ limit: 10000 });
+  const { topics, refetch: refetchTopics } = useTopics({ limit: 10000 });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [step, setStep] = useState<ImportStep>("upload");
@@ -89,6 +89,9 @@ export default function ImportQuestionsPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [parsedQuestions, setParsedQuestions] = useState<ResolvedQuestion[]>([]);
+  const [rawParsedQuestions, setRawParsedQuestions] = useState<ParsedQuestion[]>([]);
+  const [missingHierarchy, setMissingHierarchy] = useState<{ name: string; subjects: { name: string; topics: string[] }[] }[]>([]);
+  const [isResolvingMissing, setIsResolvingMissing] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [importProgress, setImportProgress] = useState({ current: 0, total: 0 });
   const [showErrors, setShowErrors] = useState(false);
@@ -264,6 +267,33 @@ export default function ImportQuestionsPage() {
     [courseMap, subjectMap, topicsBySubject]
   );
 
+
+  useEffect(() => {
+    if (isResolvingMissing) {
+      // Check if missing items are now in maps
+      const allCoursesPresent = missingHierarchy.every((mc) => courseMap.has(normalizeName(mc.name)));
+      if (allCoursesPresent) {
+        const resolved = rawParsedQuestions.map((row) => resolveRow(row));
+        setParsedQuestions(resolved);
+        setStep("preview");
+        setIsResolvingMissing(false);
+      }
+    }
+  }, [isResolvingMissing, missingHierarchy, courseMap, subjectMap, topicsBySubject, rawParsedQuestions, resolveRow]);
+
+  const handleCreateMissing = async () => {
+    setIsLoading(true);
+    try {
+      await coursesApi.bulkCreateHierarchy({ courses: missingHierarchy }, token || undefined);
+      await Promise.all([refetchCourses(), refetchSubjects(), refetchTopics()]);
+      setIsResolvingMissing(true);
+    } catch (err) {
+      console.error("Failed to create missing entities", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const processFile = async (file: File) => {
     setSelectedFile(file);
     setIsLoading(true);
@@ -315,9 +345,82 @@ export default function ImportQuestionsPage() {
         })
         .filter((row) => row.question.trim() !== "");
 
-      const resolved = parsed.map((row) => resolveRow(row));
-      setParsedQuestions(resolved);
-      setStep("preview");
+      // Parse Reference sheet if it exists
+      let refSheetName = workbook.SheetNames.find(
+        (name) => name.toLowerCase() === "reference" || name.toLowerCase() === "references"
+      );
+      let parsedRefs: any[] = [];
+      if (refSheetName) {
+        const refSheet = workbook.Sheets[refSheetName];
+        const rawRefs = XLSX.utils.sheet_to_json(refSheet);
+        parsedRefs = rawRefs.map((row: any) => ({
+          courseName: row["Course Name"] || row["Course"] || row["course_name"] || row["course"] || "",
+          subjectName: row["Subject Name"] || row["Subject"] || row["subject_name"] || row["subject"] || "",
+          topicName: row["Topic Name"] || row["Topic"] || row["topic_name"] || row["topic"] || "",
+        })).filter(r => r.courseName.trim() !== "");
+      }
+
+      // Combine questions and references for missing hierarchy detection
+      const allRowsToCheck = [
+        ...parsed.map(r => ({ courseName: r.courseName, subjectName: r.subjectName, topicName: r.topicName })),
+        ...parsedRefs
+      ];
+
+      // Detect missing hierarchy
+      const missingCoursesMap = new Map<string, Map<string, Set<string>>>();
+      allRowsToCheck.forEach((row) => {
+        const cName = normalizeName(row.courseName);
+        const sName = normalizeName(row.subjectName);
+        const tName = normalizeName(row.topicName);
+
+        if (!cName || !sName) return;
+
+        let courseFound = courseMap.has(cName);
+        let subjectFound = false;
+        let topicFound = false;
+
+        if (courseFound) {
+          const course = courseMap.get(cName)!;
+          const subjectKey = `${sName}|${course.id}`;
+          subjectFound = subjectMap.has(subjectKey);
+          if (subjectFound) {
+            const subject = subjectMap.get(subjectKey)!;
+            topicFound = topicsBySubject.get(subject.id)?.has(tName) || false;
+          }
+        }
+
+        if (!courseFound || !subjectFound || !topicFound) {
+          if (!missingCoursesMap.has(cName)) missingCoursesMap.set(cName, new Map());
+          const sMap = missingCoursesMap.get(cName)!;
+          if (!sMap.has(sName)) sMap.set(sName, new Set());
+          if (!topicFound && tName !== "") sMap.get(sName)!.add(tName);
+        }
+      });
+
+      if (missingCoursesMap.size > 0) {
+        const missingList = Array.from(missingCoursesMap.entries()).map(([cName, sMap]) => {
+          const originalCourseName = allRowsToCheck.find((p) => normalizeName(p.courseName) === cName)?.courseName || cName;
+          return {
+            name: originalCourseName,
+            subjects: Array.from(sMap.entries()).map(([sName, tSet]) => {
+              const originalSubjectName = allRowsToCheck.find((p) => normalizeName(p.subjectName) === sName)?.subjectName || sName;
+              return {
+                name: originalSubjectName,
+                topics: Array.from(tSet).map((tName) => {
+                  return allRowsToCheck.find((p) => normalizeName(p.topicName) === tName)?.topicName || tName;
+                })
+              };
+            })
+          };
+        });
+        setMissingHierarchy(missingList);
+        setRawParsedQuestions(parsed);
+        setStep("confirm_missing");
+      } else {
+        const resolved = parsed.map((row) => resolveRow(row));
+        setParsedQuestions(resolved);
+        setStep("preview");
+      }
     } catch (error) {
       console.error("Failed to parse Excel:", error);
     } finally {
@@ -512,6 +615,70 @@ export default function ImportQuestionsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Step 2.5: Confirm Missing */}
+      {step === "confirm_missing" && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-orange-500">
+              <AlertCircle className="h-5 w-5" />
+              Missing Entities Detected
+            </CardTitle>
+            <CardDescription>
+              Some Courses, Subjects, or Topics in the uploaded file do not exist in the system.
+              Would you like to add them before importing the questions?
+              <div className="mt-3 flex gap-3">
+                <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-200 dark:text-blue-400 dark:border-blue-800">
+                  {missingHierarchy.length} New Course{missingHierarchy.length !== 1 ? 's' : ''}
+                </Badge>
+                <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-200 dark:text-purple-400 dark:border-purple-800">
+                  {missingHierarchy.reduce((acc, c) => acc + c.subjects.length, 0)} New Subject{missingHierarchy.reduce((acc, c) => acc + c.subjects.length, 0) !== 1 ? 's' : ''}
+                </Badge>
+                <Badge variant="outline" className="bg-pink-500/10 text-pink-600 border-pink-200 dark:text-pink-400 dark:border-pink-800">
+                  {missingHierarchy.reduce((acc, c) => acc + c.subjects.reduce((sa, s) => sa + s.topics.length, 0), 0)} New Topic{missingHierarchy.reduce((acc, c) => acc + c.subjects.reduce((sa, s) => sa + s.topics.length, 0), 0) !== 1 ? 's' : ''}
+                </Badge>
+              </div>
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="max-h-[300px] overflow-auto bg-muted/30 rounded-lg p-4 mb-4 font-mono text-sm border">
+              {missingHierarchy.map((course, cIdx) => (
+                <div key={cIdx} className="mb-4 last:mb-0">
+                  <div className="font-bold text-primary">{course.name}</div>
+                  {course.subjects.map((subject, sIdx) => (
+                    <div key={sIdx} className="ml-4 mt-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground">├──</span>
+                        <span className="font-semibold">{subject.name}</span>
+                      </div>
+                      {subject.topics.map((topic, tIdx) => (
+                        <div key={tIdx} className="ml-8 mt-1 flex items-center gap-2">
+                          <span className="text-muted-foreground">{tIdx === subject.topics.length - 1 ? '└──' : '├──'}</span>
+                          <span>{topic}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+            
+            <div className="flex justify-end gap-4">
+              <Button variant="outline" onClick={() => setStep("upload")} disabled={isLoading}>
+                Cancel Import
+              </Button>
+              <Button onClick={handleCreateMissing} disabled={isLoading || isResolvingMissing}>
+                {(isLoading || isResolvingMissing) ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                )}
+                Create Missing Entities
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Step 3: Preview */}
       {step === "preview" && (

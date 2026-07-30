@@ -6,6 +6,7 @@ import "./config/associations";
 import courseRoutes from "./modules/course/course.routes";
 import subjectRoutes from "./modules/subject/subject.routes";
 import topicRoutes from "./modules/topic/topic.routes";
+import bulkRoutes from "./modules/bulk/bulk.routes";
 import { ApiError } from "./utils/ApiError";
 import { ApiResponse } from "./utils/ApiResponse";
 import { createLogger, requestLogger } from "./utils/logger";
@@ -21,6 +22,7 @@ app.use(requestLogger(logger));
 app.use("/api/content/course", courseRoutes);
 app.use("/api/content/subject", subjectRoutes);
 app.use("/api/content/topic", topicRoutes);
+app.use("/api/content/bulk-hierarchy", bulkRoutes);
 
 app.get("/health", (_req: Request, res: Response) => {
   ApiResponse.success(res, "Service is healthy", {

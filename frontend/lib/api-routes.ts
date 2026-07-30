@@ -22,6 +22,7 @@ export const API_ROUTES = {
   COURSES: {
     BASE: `${BASE_URL}/api/content/course`,
     BY_ID: (id: string) => `${BASE_URL}/api/content/course/${id}`,
+    BULK_HIERARCHY: `${BASE_URL}/api/content/bulk-hierarchy`,
   },
 
   // Subjects

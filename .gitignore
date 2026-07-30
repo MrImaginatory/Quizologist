@@ -7,3 +7,5 @@ survey
 *.py
 *.sql
 .mimocode
+requirements.txt
+*.xlsx

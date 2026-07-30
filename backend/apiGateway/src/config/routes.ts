@@ -40,6 +40,14 @@ export const routes: RouteConfig[] = [
   },
 
   // ==================== Content Service ====================
+  // Bulk hierarchy import — admin only
+  {
+    path: "/content/bulk-hierarchy",
+    target: `${env.CONTENT_SERVICE_URL}/api/content/bulk-hierarchy`,
+    auth: true,
+    roles: ["admin"],
+    methods: ["POST"],
+  },
   // Course — write operations admin only
   {
     path: "/content/course",
