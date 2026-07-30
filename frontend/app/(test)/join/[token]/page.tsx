@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Clock, BookOpen, Play, AlertCircle } from "lucide-react";
 import { capitalize } from "@/lib/utils";
 import { toast } from "sonner";
+import { predefinedTestsApi } from "@/lib/api";
 
 interface TestInfo {
   id: string;
@@ -34,8 +35,8 @@ export default function JoinTestPage() {
   const fetcher = createFetcher(authToken);
 
   const { data: response, error, isLoading } = useSWR<{ data: TestInfo }>(
-    token && authToken ? `/api/predefined-tests/token/${token}` : null,
-    (url) => fetcher(url),
+    token && authToken ? [token, authToken] : null,
+    ([t, authT]: [string, string]) => predefinedTestsApi.getByToken(t, authT) as Promise<{ data: TestInfo }>,
     { ...swrOptions, revalidateOnFocus: false }
   );
 

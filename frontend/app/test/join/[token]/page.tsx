@@ -11,6 +11,7 @@ import { Loader2, Clock, BookOpen, Play, AlertCircle, Shield } from "lucide-reac
 import { capitalize } from "@/lib/utils";
 import { toast } from "sonner";
 import { AppLogo } from "@/components/app-logo";
+import { predefinedTestsApi } from "@/lib/api";
 
 interface TestInfo {
   id: string;
@@ -29,6 +30,22 @@ export default function JoinTestPage() {
   const router = useRouter();
   const params = useParams();
   const { token: authToken, isLoading: authLoading, user } = useAuth();
+  const rawToken = params.token as string;
+
+  // Extract the actual token from the URL format: test_name_start_end_uuid
+  const token = rawToken.includes("_") ? rawToken.split("_").pop() || rawToken : rawToken;
+
+  const fetcher = createFetcher(authToken);
+
+  const { data: response, error: swrError, isLoading } = useSWR<{ data: TestInfo }>(
+    token && authToken ? [token, authToken] : null,
+    ([t, authT]: [string, string]) => predefinedTestsApi.getByToken(t, authT) as Promise<{ data: TestInfo }>,
+    { ...swrOptions, revalidateOnFocus: false }
+  );
+
+  const testInfo = response?.data;
+  const isStarting = false;
+  const error = swrError?.message || "";
 
   if (authLoading) {
     return (
@@ -47,23 +64,6 @@ export default function JoinTestPage() {
     router.push("/signin");
     return null;
   }
-
-  const rawToken = params.token as string;
-
-  // Extract the actual token from the URL format: test_name_start_end_uuid
-  const token = rawToken.includes("_") ? rawToken.split("_").pop() || rawToken : rawToken;
-
-  const fetcher = createFetcher(authToken);
-
-  const { data: response, error: swrError, isLoading } = useSWR<{ data: TestInfo }>(
-    token ? `/api/predefined-tests/token/${token}` : null,
-    (url) => fetcher(url),
-    { ...swrOptions, revalidateOnFocus: false }
-  );
-
-  const testInfo = response?.data;
-  const isStarting = false;
-  const error = swrError?.message || "";
 
   if (isLoading) {
     return (

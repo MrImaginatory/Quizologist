@@ -10,6 +10,19 @@ export const authMiddleware = async (
   next: NextFunction
 ) => {
   try {
+    const gatewayUserId = req.headers["x-user-id"] as string;
+    const gatewayUserEmail = req.headers["x-user-email"] as string;
+    const gatewayUserRole = req.headers["x-user-role"] as string;
+
+    if (gatewayUserId && gatewayUserEmail && gatewayUserRole) {
+      req.user = {
+        userId: gatewayUserId,
+        email: gatewayUserEmail,
+        role: gatewayUserRole,
+      };
+      return next();
+    }
+
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {

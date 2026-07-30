@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { usersApi } from "../lib/api/users";
 
 interface User {
   id: string;
@@ -28,14 +29,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem("token");
-    const storedUser = localStorage.getItem("user");
+    const checkAuth = async () => {
+      const storedToken = localStorage.getItem("token");
+      const storedUser = localStorage.getItem("user");
 
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
-    }
-    setIsLoading(false);
+      if (storedToken && storedUser) {
+        try {
+          const res = await usersApi.getMe(storedToken);
+          if (res.data) {
+            localStorage.setItem("user", JSON.stringify(res.data));
+            setUser(res.data);
+            setToken(storedToken);
+          }
+        } catch (error: any) {
+          console.error("Session verification failed:", error);
+          if (error.status === 401 || error.status === 404) {
+            logout();
+            return;
+          }
+          // On other errors (e.g. gateway offline), keep local session
+          setToken(storedToken);
+          setUser(JSON.parse(storedUser));
+        }
+      }
+      setIsLoading(false);
+    };
+
+    checkAuth();
   }, []);
 
   const login = (newToken: string, newUser: User) => {

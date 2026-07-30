@@ -1,7 +1,9 @@
 import { Request, Response, NextFunction } from "express";
+import { AuthRequest } from "../../types";
 import { UserService } from "./user.service";
 import { ApiResponse } from "../../utils/ApiResponse";
 import { RESPONSE_MESSAGES } from "../../utils/responseMessages";
+import { ApiError } from "../../utils/ApiError";
 import {
   signupSchema,
   loginSchema,
@@ -102,6 +104,19 @@ export class UserController {
         : RESPONSE_MESSAGES.SUCCESS.LOCATION_REMOVED;
 
       return ApiResponse.success(res, message, result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getMe(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        throw ApiError.unauthorized(RESPONSE_MESSAGES.ERROR.UNAUTHORIZED);
+      }
+      const result = await UserService.getMe(userId);
+      return ApiResponse.success(res, RESPONSE_MESSAGES.SUCCESS.USER_FOUND, result);
     } catch (error) {
       next(error);
     }

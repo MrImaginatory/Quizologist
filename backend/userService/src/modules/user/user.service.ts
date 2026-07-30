@@ -222,4 +222,17 @@ export class UserService {
 
     return updated!.toJSON();
   }
+
+  static async getMe(userId: string) {
+    const user = await User.findByPk(userId, {
+      attributes: USER_EXCLUDE,
+      include: [LOCATION_INCLUDE],
+    });
+
+    if (!user) {
+      throw ApiError.unauthorized(RESPONSE_MESSAGES.ERROR.USER_NOT_FOUND);
+    }
+
+    return user.toJSON();
+  }
 }

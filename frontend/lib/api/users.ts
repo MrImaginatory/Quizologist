@@ -15,4 +15,6 @@ export const usersApi = {
       body: JSON.stringify({ location_id: locationId }),
       token,
     }),
+  getMe: (token?: string) =>
+    apiRequest<any>(API_ROUTES.USERS.ME, { token }),
 };

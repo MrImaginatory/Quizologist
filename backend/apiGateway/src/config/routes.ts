@@ -11,6 +11,11 @@ export interface RouteConfig {
 export const routes: RouteConfig[] = [
   // ==================== User Service ====================
   {
+    path: "/user/me",
+    target: `${env.USER_SERVICE_URL}/api/user/me`,
+    auth: true,
+  },
+  {
     path: "/user/signup",
     target: `${env.USER_SERVICE_URL}/api/user/signup`,
     auth: false,

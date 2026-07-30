@@ -13,6 +13,7 @@ export const API_ROUTES = {
   // Users
   USERS: {
     BASE: `${BASE_URL}/api/user`,
+    ME: `${BASE_URL}/api/user/me`,
     BY_ID: (id: string) => `${BASE_URL}/api/user/${id}`,
     BY_ROLE: (role: string) => `${BASE_URL}/api/user/role/${role}`,
     ASSIGN_LOCATION: (id: string) => `${BASE_URL}/api/user/${id}/location`,
