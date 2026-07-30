@@ -104,8 +104,12 @@ export default function MyTestsPage() {
     ? completedTests.reduce((sum, t) => sum + (parseFloat(String(t.score)) || 0), 0) / completedTests.length
     : 0;
 
-  const handleStartTest = (testId: string) => {
-    router.push(`/live-test?id=${testId}`);
+  const handleStartTest = (testId: string, testType?: "standard" | "time_based") => {
+    if (testType === "time_based") {
+       router.push(`/tb-live-test?id=${testId}`);
+    } else {
+       router.push(`/live-test?id=${testId}`);
+    }
   };
 
   const handleAbandonClick = (test: TestHistory) => {
@@ -137,10 +141,13 @@ export default function MyTestsPage() {
           <h1 className="text-3xl font-bold">My Tests</h1>
           <p className="text-muted-foreground">View your test history and performance</p>
         </div>
-        <Button onClick={() => setShowStartDialog(true)}>
-          <Play className="mr-2 h-4 w-4" />
-          Start Test
-        </Button>
+        <div className="flex items-center gap-2">
+
+          <Button onClick={() => setShowStartDialog(true)}>
+            <Play className="mr-2 h-4 w-4" />
+            Start Test
+          </Button>
+        </div>
       </div>
 
       {/* KPI Cards */}

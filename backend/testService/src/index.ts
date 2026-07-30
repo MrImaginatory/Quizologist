@@ -12,6 +12,8 @@ import { ApiError } from "./utils/ApiError";
 import { ApiResponse } from "./utils/ApiResponse";
 import { createLogger, requestLogger } from "./utils/logger";
 
+import timeBasedRoutes from "./modules/timeBased/timeBased.routes";
+
 const logger = createLogger("test-service");
 const app = express();
 
@@ -21,6 +23,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(requestLogger(logger));
 
 app.use("/api/test/predefined", extractGatewayUser, predefinedTestRoutes);
+app.use("/api/test/time-based", extractGatewayUser, timeBasedRoutes);
 app.use("/api/test", extractGatewayUser, testSessionRoutes);
 
 app.get("/health", (_req: Request, res: Response) => {

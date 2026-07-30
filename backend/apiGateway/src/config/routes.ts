@@ -229,6 +229,14 @@ export const routes: RouteConfig[] = [
     roles: ["student"],
     methods: ["POST"],
   },
+  // Start time-based test - student only
+  {
+    path: "/test/time-based/start",
+    target: `${env.TEST_SERVICE_URL}/api/test/time-based/start`,
+    auth: true,
+    roles: ["student"],
+    methods: ["POST"],
+  },
   // Submit test — student only
   {
     path: "/test/submit",

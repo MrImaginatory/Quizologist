@@ -21,11 +21,13 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, Plus, X, Play, ChevronDown } from "lucide-react";
+import { SearchableSelect } from "@/components/ui/searchable-select";
+import { Loader2, Plus, X, Play, ChevronDown, Search } from "lucide-react";
 import { useCourses } from "@/hooks/use-courses";
 import { useEnrollments } from "@/hooks/use-enrollments";
 import { useAuth } from "@/contexts/auth-context";
 import { testsApi, StartTestPayload, Subject, Topic, enrollmentsApi } from "@/lib/api";
+import { timeBasedTestsApi } from "@/lib/api/timeBased";
 import { capitalize } from "@/lib/utils";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -39,7 +41,7 @@ interface Selection {
 interface StartTestDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onStartTest: (testId: string) => void;
+  onStartTest: (testId: string, testType?: "standard" | "time_based") => void;
 }
 
 const DURATION_OPTIONS = [
@@ -59,6 +61,7 @@ function GroupedCheckboxList({
   getName,
   getId,
   isLoading,
+  searchPlaceholder,
 }: {
   items: Record<string, { id: string; name: string }[]>;
   selectedIds: string[];
@@ -67,8 +70,10 @@ function GroupedCheckboxList({
   getName: (item: { id: string; name: string }) => string;
   getId: (item: { id: string; name: string }) => string;
   isLoading?: boolean;
+  searchPlaceholder?: string;
 }) {
   const [openGroups, setOpenGroups] = useState<Set<string>>(new Set(["all"]));
+  const [searchQuery, setSearchQuery] = useState("");
 
   const toggleGroup = (groupName: string) => {
     setOpenGroups((prev) => {
@@ -82,6 +87,27 @@ function GroupedCheckboxList({
     });
   };
 
+  const filteredItems = useMemo(() => {
+    if (!searchQuery.trim()) return items;
+    const lowerQuery = searchQuery.toLowerCase();
+    const result: Record<string, { id: string; name: string }[]> = {};
+    for (const [groupName, groupItems] of Object.entries(items)) {
+      const filtered = groupItems.filter(
+        (item) =>
+          getName(item).toLowerCase().includes(lowerQuery) ||
+          groupName.toLowerCase().includes(lowerQuery)
+      );
+      if (filtered.length > 0) {
+        result[groupName] = filtered;
+      }
+    }
+    return result;
+  }, [items, searchQuery, getName]);
+
+  const allItems = Object.values(filteredItems).flat();
+  const allIds = allItems.map(getId);
+  const allSelected = allItems.length > 0 && allIds.every((id) => selectedIds.includes(id));
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-4">
@@ -91,13 +117,22 @@ function GroupedCheckboxList({
     );
   }
 
-  const allItems = Object.values(items).flat();
-  const allIds = allItems.map(getId);
-  const allSelected = allItems.length > 0 && allIds.every((id) => selectedIds.includes(id));
+
 
   return (
-    <div className="border rounded-lg p-2 max-h-48 overflow-y-auto">
-      <div className="space-y-1">
+    <div className="border rounded-lg max-h-56 flex flex-col">
+      <div className="p-2 border-b bg-muted/30">
+        <div className="relative">
+          <Search className="absolute left-2 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+          <Input
+            placeholder={searchPlaceholder || "Search..."}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-8 h-8 text-xs"
+          />
+        </div>
+      </div>
+      <div className="p-2 overflow-y-auto space-y-1">
         {/* Select All */}
         <div className="flex items-center gap-2 p-2 hover:bg-muted/50 rounded-lg">
           <Checkbox
@@ -108,7 +143,7 @@ function GroupedCheckboxList({
         </div>
 
         {/* Groups */}
-        {Object.entries(items).map(([groupName, groupItems]) => {
+        {Object.entries(filteredItems).map(([groupName, groupItems]) => {
           const groupAllSelected = groupItems.every((item) => selectedIds.includes(getId(item)));
           const isOpen = openGroups.has(groupName);
 
@@ -158,7 +193,8 @@ function GroupedCheckboxList({
 
 export function StartTestDialog({ open, onOpenChange, onStartTest }: StartTestDialogProps) {
   const { token } = useAuth();
-  const [duration, setDuration] = useState(30);
+  const [testMode, setTestMode] = useState<"standard" | "time_based">("standard");
+  const [duration, setDuration] = useState<number | "">(30);
   const [questionLimit, setQuestionLimit] = useState(45);
   const [selections, setSelections] = useState<Selection[]>([
     { courseId: "", subjectIds: [], topicIds: [] },
@@ -417,16 +453,28 @@ export function StartTestDialog({ open, onOpenChange, onStartTest }: StartTestDi
         return;
       }
 
-      const payload: StartTestPayload = {
-        duration_minutes: duration,
-        question_limit: questionLimit,
-        selections: validSelections,
-        adaptive: true,
-      };
+      if (testMode === "time_based") {
+         const response = await timeBasedTestsApi.start(
+           {
+             duration_minutes: Number(duration),
+             selections: validSelections as any,
+           },
+           token || undefined
+         );
+         toast.success("Time-Based Test started successfully!");
+         onStartTest((response.data as any).session.id, "time_based");
+      } else {
+         const payload: StartTestPayload = {
+           duration_minutes: Number(duration),
+           question_limit: questionLimit,
+           selections: validSelections,
+           adaptive: true,
+         };
 
-      const response = await testsApi.start(payload, token || undefined);
-      toast.success("Test started successfully!");
-      onStartTest(response.data.id);
+         const response = await testsApi.start(payload, token || undefined);
+         toast.success("Test started successfully!");
+         onStartTest(response.data.id, "standard");
+      }
       onOpenChange(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to start test");
@@ -434,6 +482,10 @@ export function StartTestDialog({ open, onOpenChange, onStartTest }: StartTestDi
       setIsLoading(false);
     }
   };
+
+  const hasCourseSelected = selections.some(s => s.courseId !== "");
+  const isValidDuration = duration !== "" && Number(duration) > 0;
+  const isFormValid = hasCourseSelected && isValidDuration;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -456,38 +508,80 @@ export function StartTestDialog({ open, onOpenChange, onStartTest }: StartTestDi
               </div>
             )}
 
+            {/* Test Mode Selection */}
+            <div className="space-y-2">
+              <Label>Test Type</Label>
+              <div className="flex bg-muted p-1 rounded-full w-ful">
+                <button
+                  type="button"
+                  onClick={() => setTestMode("standard")}
+                  className={cn(
+                    "flex-1 text-sm font-medium py-1.5 rounded-full transition-all",
+                    testMode === "standard" ? "bg-background shadow-sm text-foreground ring-1 ring-border" : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  Standard
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTestMode("time_based")}
+                  className={cn(
+                    "flex-1 text-sm font-medium py-1.5 rounded-full transition-all",
+                    testMode === "time_based" ? "bg-background shadow-sm text-foreground ring-1 ring-border" : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  Time-Based
+                </button>
+              </div>
+            </div>
+
             {/* Duration & Question Limit */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Duration *</Label>
-                <Select
-                  value={duration.toString()}
-                  onValueChange={(value) => {
-                    if (value) {
-                      const newDuration = parseInt(value);
-                      setDuration(newDuration);
-                      const config = DURATION_OPTIONS.find((d) => d.value === newDuration);
-                      if (config && questionLimit > config.max) {
-                        setQuestionLimit(config.max);
-                      } else if (config && questionLimit < config.min) {
-                        setQuestionLimit(config.min);
+                <Label>Duration (Minutes) *</Label>
+                {testMode === "standard" ? (
+                  <Select
+                    value={duration.toString()}
+                    onValueChange={(value) => {
+                      if (value) {
+                        const newDuration = parseInt(value);
+                        setDuration(newDuration);
+                        const config = DURATION_OPTIONS.find((d) => d.value === newDuration);
+                        if (config && questionLimit > config.max) {
+                          setQuestionLimit(config.max);
+                        } else if (config && questionLimit < config.min) {
+                          setQuestionLimit(config.min);
+                        }
                       }
-                    }
-                  }}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DURATION_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value.toString()}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                    }}
+                  >
+                    <SelectTrigger className="w-full h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DURATION_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value.toString()}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    type="number"
+                    value={duration}
+                    onChange={(e) => {
+                       const val = e.target.value;
+                       setDuration(val === "" ? "" : Math.max(1, parseInt(val) || 0));
+                    }}
+                    placeholder="e.g. 30"
+                    min={1}
+                    className="h-9"
+                  />
+                )}
               </div>
 
+              {testMode === "standard" && (
               <div className="space-y-2">
                 <Label>Questions *</Label>
                 <Input
@@ -513,6 +607,7 @@ export function StartTestDialog({ open, onOpenChange, onStartTest }: StartTestDi
                   Min: {durationConfig?.min} | Max: {durationConfig?.max}
                 </p>
               </div>
+              )}
             </div>
 
             {/* Selections */}
@@ -570,25 +665,20 @@ export function StartTestDialog({ open, onOpenChange, onStartTest }: StartTestDi
                     {/* Course Selection */}
                     <div className="space-y-1">
                       <Label className="text-xs">Course *</Label>
-                      <Select
+                      <SearchableSelect
+                        options={enrolledCourses.map((c) => ({
+                          value: c.id,
+                          label: capitalize(c.name),
+                        }))}
                         value={selection.courseId}
-                        onValueChange={(value) => { if (value) updateCourseSelection(index, value); }}
-                      >
-                        <SelectTrigger className="w-full h-9">
-                          <SelectValue>
-                            {selection.courseId
-                              ? capitalize(courses.find((c) => c.id === selection.courseId)?.name || "")
-                              : "Select Course"}
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {enrolledCourses.map((course) => (
-                            <SelectItem key={course.id} value={course.id}>
-                              {capitalize(course.name)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        onValueChange={(val) => {
+                           if (val && val !== "all") {
+                             updateCourseSelection(index, val);
+                           }
+                        }}
+                        placeholder="Search course..."
+                        emptyText="No courses found."
+                      />
                     </div>
 
                     {/* Subjects Selection */}
@@ -610,6 +700,7 @@ export function StartTestDialog({ open, onOpenChange, onStartTest }: StartTestDi
                           getName={(item) => item.name}
                           getId={(item) => item.id}
                           isLoading={loadingSubjects}
+                          searchPlaceholder="Search subjects..."
                         />
                       </div>
                     )}
@@ -633,6 +724,7 @@ export function StartTestDialog({ open, onOpenChange, onStartTest }: StartTestDi
                           getName={(item) => item.name}
                           getId={(item) => item.id}
                           isLoading={loadingTopics}
+                          searchPlaceholder="Search topics..."
                         />
                       </div>
                     )}
@@ -646,7 +738,7 @@ export function StartTestDialog({ open, onOpenChange, onStartTest }: StartTestDi
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading || !isFormValid}>
               {isLoading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (

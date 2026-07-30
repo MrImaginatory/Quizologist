@@ -9,6 +9,7 @@ export { questionsApi } from "./questions";
 export { enrollmentsApi } from "./enrollments";
 export { teachersApi } from "./teachers";
 export { testsApi, predefinedTestsApi } from "./tests";
+export { timeBasedTestsApi } from "./timeBased";
 
 // Re-export all types for backward compatibility
 export * from "./types";

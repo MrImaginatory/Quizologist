@@ -97,6 +97,11 @@ export const API_ROUTES = {
     STUDENT_RESULTS: (studentId: string) => `${BASE_URL}/api/test/student/${studentId}/results`,
   },
 
+  // Time Based Tests
+  TIME_BASED: {
+    START: `${BASE_URL}/api/test/time-based/start`,
+  },
+
   // Predefined Tests
   PREDEFINED_TESTS: {
     BASE: `${BASE_URL}/api/test/predefined`,

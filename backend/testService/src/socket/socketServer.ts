@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import winston from "winston";
 import { env } from "../config/env";
 import { registerSocketHandlers } from "./socketHandler";
+import { registerTimeBasedHandlers } from "./timeBasedSocketHandler";
 import { sessionManager } from "./sessionManager";
 
 interface DecodedToken {
@@ -46,6 +47,7 @@ export function createSocketServer(httpServer: HttpServer, logger: winston.Logge
     logger.info("Socket connected", { socketId: socket.id, userId });
 
     registerSocketHandlers(socket, userId, logger);
+    registerTimeBasedHandlers(socket, userId, logger);
   });
 
   // Start heartbeat checker
