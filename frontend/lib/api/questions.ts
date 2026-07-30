@@ -58,7 +58,18 @@ export const questionsApi = {
         Authorization: token ? `Bearer ${token}` : "",
       },
     });
-    if (!response.ok) throw new Error("Failed to download template");
+    if (!response.ok) {
+      let errorMsg = "Failed to download template";
+      try {
+        const errorData = await response.json();
+        if (errorData.message) {
+          errorMsg = errorData.message;
+        }
+      } catch (e) {
+        // ignore
+      }
+      throw new Error(errorMsg);
+    }
     return response.blob();
   },
   bulkImport: (questions: BulkImportQuestion[], token?: string) =>
