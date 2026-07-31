@@ -12,7 +12,7 @@ export const signupSchema = z.object({
     .min(1, "Last name is required")
     .max(50, "Last name must be at most 50 characters"),
   role: userRoleSchema,
-  email: z.string().email("Invalid email format"),
+  email: z.string().regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, "Invalid email format"),
   mobileNumber: z
     .string()
     .min(10, "Mobile number must be at least 10 digits")
@@ -24,7 +24,7 @@ export const signupSchema = z.object({
 });
 
 export const loginSchema = z.object({
-  email: z.string().email("Invalid email format"),
+  email: z.string().regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, "Invalid email format"),
   password: z.string().min(1, "Password is required"),
 });
 

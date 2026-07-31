@@ -44,10 +44,11 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 
   if (err.name === "ZodError") {
     const zodError = err as any;
-    const structuredErrors = zodError.errors?.map((e: any) => ({
-      field: e.path.join("."),
+    const issues = zodError.issues || zodError.errors || [];
+    const structuredErrors = issues.map((e: any) => ({
+      field: e.path?.join(".") || "",
       message: e.message,
-    })) || [];
+    }));
 
     return res.status(400).json({
       statusCode: 400,

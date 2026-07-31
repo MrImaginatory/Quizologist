@@ -25,8 +25,16 @@ export async function apiRequest<T>(
   const data = await response.json();
 
   if (!response.ok) {
-    const error = new Error(data.message || "An error occurred") as any;
+    let errorMessage = data.message || "An error occurred";
+    if (errorMessage === "Validation failed" && Array.isArray(data.data)) {
+       const details = data.data.map((e: any) => e.message).join(", ");
+       if (details) {
+         errorMessage = `Validation failed: ${details}`;
+       }
+    }
+    const error = new Error(errorMessage) as any;
     error.status = response.status;
+    error.data = data.data;
     throw error;
   }
 
