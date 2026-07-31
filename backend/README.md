@@ -52,7 +52,7 @@ the correct service and enforces authentication and role-based access control (R
 
 ### Key design characteristics
 
-- **Gateway pattern** — one public port (`:3000`); internal services are not meant to be
+- **Gateway pattern** — one public port (`:5001`); internal services are not meant to be
   called directly by clients.
 - **Shared database, separate "owners"** — each table has a *owning* service, but several
   services read the same tables (mostly via read-only models / raw SQL).
@@ -74,18 +74,18 @@ graph TB
         SIO["Socket.IO Client"]
     end
 
-    subgraph "API Gateway :3000"
+    subgraph "API Gateway :5001"
         GW["Auth + RBAC + Proxy"]
     end
 
     subgraph "Services"
-        US["User :3001"]
-        CS["Content :3002"]
-        QS["Question :3003"]
-        SS["Student :3004"]
-        TS["Test :3005"]
-        TCH["Teacher :3006"]
-        DS["Dashboard :3007"]
+        US["User :3011"]
+        CS["Content :3012"]
+        QS["Question :3013"]
+        SS["Student :3014"]
+        TS["Test :3015"]
+        TCH["Teacher :3016"]
+        DS["Dashboard :3017"]
     end
 
     DB[("PostgreSQL\nquizologist_database")]
@@ -154,16 +154,31 @@ Each service follows the same internal layout:
 
 ### Service ports
 
+#### Development
+
 | Service | Port | Default base path |
 |---------|------|-------------------|
-| API Gateway | 3000 | `/api/*` |
-| User Service | 3001 | `/api/user` |
-| Content Service | 3002 | `/api/content` |
-| Question Service | 3003 | `/api/question` |
-| Student Service | 3004 | `/api/student`, `/api/enrollment` |
-| Test Service | 3005 | `/api/test` (+ Socket.IO on 3005) |
-| Teacher Service | 3006 | `/api/teacher` |
-| Dashboard Service | 3007 | `/api/dashboard` |
+| API Gateway | 5001 | `/api/*` |
+| User Service | 3011 | `/api/user` |
+| Content Service | 3012 | `/api/content` |
+| Question Service | 3013 | `/api/question` |
+| Student Service | 3014 | `/api/student`, `/api/enrollment` |
+| Test Service | 3015 | `/api/test` (+ Socket.IO on 3015) |
+| Teacher Service | 3016 | `/api/teacher` |
+| Dashboard Service | 3017 | `/api/dashboard` |
+
+#### Production (PM2)
+
+| Service | Port |
+|---------|------|
+| API Gateway | 5001 |
+| User Service | 3011 |
+| Content Service | 3012 |
+| Question Service | 3013 |
+| Student Service | 3014 |
+| Test Service | 3015 |
+| Teacher Service | 3016 |
+| Dashboard Service | 3017 |
 
 Gateway → service upstream URLs are configured in
 [`apiGateway/src/config/env.ts`](apiGateway/src/config/env.ts) (and `.env`).
@@ -223,7 +238,7 @@ Centralized `ApiError` → `ApiResponse.error` mapping produces consistent JSON:
 
 ## Microservices
 
-### 1. User Service (Port 3001)
+### 1. User Service (Port 3011)
 
 > Full contract: **[`userService/API.md`](userService/API.md)**
 
@@ -246,7 +261,7 @@ Owns the `users` table and auth.
 - Passwords hashed with bcrypt (`BCRYPT_SALT_ROUNDS`, default 10).
 - JWT payload: `{ userId, email, role, iat, exp }`; expiry `JWT_EXPIRES_IN` (default `7d`).
 
-### 2. Content Service (Port 3002)
+### 2. Content Service (Port 3012)
 
 > Full contract: **[`contentService/API.md`](contentService/API.md)**
 
@@ -266,7 +281,7 @@ Owns the **academic hierarchy**: `faculties` → `subjects` → `topics`.
   faculty) rather than raw foreign keys.
 - Soft-deletes cascade logically (children become inaccessible) rather than physically.
 
-### 3. Question Service (Port 3003)
+### 3. Question Service (Port 3013)
 
 > Full contract: **[`questionService/API.md`](questionService/API.md)**
 
@@ -290,7 +305,7 @@ Owns the `questions` table. Supports **MCQ** and **descriptive** question types,
 - MCQ requires 2–5 `choices`; `correctAnswer` must match one of them; descriptive questions
   must not carry `choices`.
 
-### 4. Student Service (Port 3004)
+### 4. Student Service (Port 3014)
 
 > Full contract: **[`studentService/API.md`](studentService/API.md)**
 
@@ -315,7 +330,7 @@ Owns the `enrollments` table and the admin student directory.
 - Composite unique index `(student_id, faculty_id, subject_id, topic_id)` prevents
   duplicates.
 
-### 5. Test Service (Port 3005)
+### 5. Test Service (Port 3015)
 
 > Full contract: **[`testService/API.md`](testService/API.md)** ·
 > Implementation plan: **[`testService/PLAN.md`](testService/PLAN.md)**
@@ -352,7 +367,7 @@ lifecycle** — creation, real-time session, grading, and history.
 - Tests older than 24h are auto-abandoned.
 - Score = `(correct / total_questions) * 100`.
 
-### 6. Teacher Service (Port 3006)
+### 6. Teacher Service (Port 3016)
 
 > Full contract: **[`teacherService/API.md`](teacherService/API.md)**
 
@@ -373,7 +388,7 @@ Owns `teacher_assignments` (teacher → faculty, optionally faculty → subject)
 - Aggregation counts (`facultyCount`, `subjectCount`, `totalAssignments`) use raw SQL.
 - Subject assignment must reference a subject that belongs to an already-assigned faculty.
 
-### 7. Dashboard Service (Port 3007)
+### 7. Dashboard Service (Port 3017)
 
 > Full contract: **[`dashboardService/API.md`](dashboardService/API.md)**
 
@@ -453,8 +468,8 @@ has one owning service; others read it.
    over HTTP to validate foreign keys (faculty/subject/topic existence & ownership).
 3. **Service → Database** — every service opens its own Sequelize connection to the shared DB
    (read-only models for cross-service reads).
-4. **Client → Test Service (WebSocket)** — Socket.IO connects **directly** to `:3005`,
-   bypassing the gateway, using the JWT for auth.
+4. **Client → Test Service (WebSocket)** — Socket.IO connects **directly** to the Test Service
+   (dev: `:3015`, prod: `:3015`), bypassing the gateway, using the JWT for auth.
 
 ### Real-Time (Socket.IO)
 
@@ -493,7 +508,7 @@ use `timestamps: false` read-only models for analytics. On first run, `DB_ALTER_
 
 - Node.js (LTS) + pnpm
 - PostgreSQL 16 (database `quizologist_database`)
-- Optional seed data: `backend/Data/FacultyData.json`, `backend/Data/Questions.json`
+- Optional seed data: `Data/FacultyData.json`, `Data/Questions.json`
 
 ### Install
 
@@ -523,21 +538,26 @@ JWT_EXPIRES_IN=7d
 For the gateway, set the upstream URLs (`USER_SERVICE_URL`, `CONTENT_SERVICE_URL`, …) — see
 [`apiGateway/.env.example`](apiGateway/.env.example).
 
-### Run (all services)
+### Run (development)
+
+```bash
+pnpm dev       # ts-node + nodemon watch mode (all services)
+```
+
+The gateway listens on `:5001`; individual services on `:3011`–`:3017`.
+
+### Run (production build)
 
 ```bash
 pnpm start     # production build + run (concurrently)
-pnpm dev       # ts-node + nodemon watch mode
 ```
-
-The gateway listens on `:3000`; individual services on `:3001`–`:3007`.
 
 ### Health checks
 
 ```bash
-curl http://localhost:3000/health                    # gateway
-curl http://localhost:3000/api/internal/status       # all downstream services
-curl http://localhost:3001/health                     # a single service
+curl http://localhost:5001/health                    # gateway
+curl http://localhost:5001/api/internal/status       # all downstream services
+curl http://localhost:3011/health                     # a single service
 ```
 
 ### Seeding
@@ -549,6 +569,46 @@ Several services ship seed scripts:
 - `contentService/src/seed/importFacultyData.ts` — import from `Data/FacultyData.json`
 - `teacherService/src/seed/randomTeacherAssignments.ts` — demo teacher assignments
 
+### Testing
+
+No automated test suite is currently configured. To add tests:
+
+1. Install a test runner (e.g. Jest, Vitest, or Mocha) in the root or per-service.
+2. Place tests alongside source files or in a dedicated `tests/` directory.
+3. Example command to add per service:
+
+```bash
+pnpm add -D jest @types/jest ts-jest
+```
+
+### Production Deployment
+
+Services can be orchestrated with PM2 using [`ecosystem.config.js`](ecosystem.config.js):
+
+```bash
+pnpm run pm2:start    # start all services
+pnpm run pm2:stop     # stop all services
+pnpm run pm2:restart  # restart all services
+pnpm run pm2:logs     # tail logs
+pnpm run pm2:status   # view process status
+```
+
+Production ports (configured in `ecosystem.config.js`):
+
+| Service | Port |
+|---------|------|
+| API Gateway | 5001 |
+| User Service | 3011 |
+| Content Service | 3012 |
+| Question Service | 3013 |
+| Student Service | 3014 |
+| Test Service | 3015 |
+| Teacher Service | 3016 |
+| Dashboard Service | 3017 |
+| Frontend | 5002 |
+
+For Nginx reverse-proxy setup, see [`../NGINX_CONFIG.md`](../NGINX_CONFIG.md).
+
 ---
 
 ## API Documentation Index
@@ -558,14 +618,14 @@ Always refer to these for field requirements, status codes, and examples:
 
 | Service | API Documentation | Base URL (gateway) |
 |---------|-------------------|--------------------|
-| API Gateway | [apiGateway/API.md](apiGateway/API.md) | `http://localhost:3000` |
-| User Service | [userService/API.md](userService/API.md) | `http://localhost:3000/api/user` |
-| Content Service | [contentService/API.md](contentService/API.md) | `http://localhost:3000/api/content` |
-| Question Service | [questionService/API.md](questionService/API.md) | `http://localhost:3000/api/question` |
-| Student Service | [studentService/API.md](studentService/API.md) | `http://localhost:3000/api/student`, `/api/enrollment` |
-| Test Service | [testService/API.md](testService/API.md) · [PLAN.md](testService/PLAN.md) | `http://localhost:3000/api/test` |
-| Teacher Service | [teacherService/API.md](teacherService/API.md) | `http://localhost:3000/api/teacher` |
-| Dashboard Service | [dashboardService/API.md](dashboardService/API.md) | `http://localhost:3000/api/dashboard` |
+| API Gateway | [apiGateway/API.md](apiGateway/API.md) | `http://localhost:5001` |
+| User Service | [userService/API.md](userService/API.md) | `http://localhost:5001/api/user` |
+| Content Service | [contentService/API.md](contentService/API.md) | `http://localhost:5001/api/content` |
+| Question Service | [questionService/API.md](questionService/API.md) | `http://localhost:5001/api/question` |
+| Student Service | [studentService/API.md](studentService/API.md) | `http://localhost:5001/api/student`, `/api/enrollment` |
+| Test Service | [testService/API.md](testService/API.md) · [PLAN.md](testService/PLAN.md) | `http://localhost:5001/api/test` |
+| Teacher Service | [teacherService/API.md](teacherService/API.md) | `http://localhost:5001/api/teacher` |
+| Dashboard Service | [dashboardService/API.md](dashboardService/API.md) | `http://localhost:5001/api/dashboard` |
 
 ---
 
