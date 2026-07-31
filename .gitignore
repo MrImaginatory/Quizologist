@@ -10,3 +10,4 @@ survey
 requirements.txt
 *.xlsx
 venv
+.claude
