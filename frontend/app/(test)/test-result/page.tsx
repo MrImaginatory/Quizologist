@@ -134,7 +134,7 @@ function TestResultContent() {
             <DropdownMenu>
               <DropdownMenuTrigger
                 render={
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" className="hidden sm:inline-flex">
                     <Download className="h-4 w-4 mr-1.5" />
                     Download
                   </Button>
@@ -352,7 +352,7 @@ function TestResultContent() {
 
           {/* Bottom Navigation */}
           <div className="shrink-0 border-t bg-card p-3 sm:p-4 relative z-10">
-            <div className=" mx-auto flex items-center justify-between">
+            <div className="mx-auto flex items-center justify-between">
               <Button
                 variant="outline"
                 onClick={() => setCurrentQuestion(Math.max(0, currentQuestion - 1))}
@@ -361,6 +361,26 @@ function TestResultContent() {
                 <ChevronLeft className="h-4 w-4 mr-1" />
                 Previous
               </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  render={
+                    <Button variant="outline" size="sm" className="sm:hidden">
+                      <Download className="h-4 w-4 mr-1.5" />
+                      Download
+                    </Button>
+                  }
+                />
+                <DropdownMenuContent align="center">
+                  <DropdownMenuItem onClick={() => handleExportPDF(result, user || {})}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Download PDF
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExportExcel(result, user || {})}>
+                    <FileSpreadsheet className="h-4 w-4 mr-2" />
+                    Download Excel
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button
                 onClick={() => setCurrentQuestion(Math.min(totalQuestions - 1, currentQuestion + 1))}
                 disabled={currentQuestion === totalQuestions - 1}

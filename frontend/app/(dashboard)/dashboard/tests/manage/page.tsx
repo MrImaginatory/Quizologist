@@ -51,35 +51,36 @@ export default function ManageTestsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => router.back()}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold">Manage Tests</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl sm:text-3xl font-bold">Manage Tests</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">
               Create and manage predefined tests
             </p>
           </div>
         </div>
-        <Button onClick={() => router.push("/dashboard/tests/create")}>
+        <Button onClick={() => router.push("/dashboard/tests/create")} className="shrink-0">
           <Plus className="mr-2 h-4 w-4" />
-          Create Test
+          <span className="hidden sm:inline">Create Test</span>
+          <span className="sm:hidden">Create</span>
         </Button>
       </div>
 
       {/* Tests Table */}
-      <div className="border rounded-lg">
-        <table className="w-full">
+      <div className="border rounded-lg overflow-x-auto">
+        <table className="w-full min-w-[600px]">
           <thead>
             <tr className="border-b">
               <th className="text-left p-3 font-medium">#</th>
               <th className="text-left p-3 font-medium">Title</th>
               <th className="text-left p-3 font-medium">Status</th>
-              <th className="text-left p-3 font-medium">Duration</th>
-              <th className="text-left p-3 font-medium">Questions</th>
-              <th className="text-left p-3 font-medium">Created</th>
+              <th className="hidden sm:table-cell text-left p-3 font-medium">Duration</th>
+              <th className="hidden sm:table-cell text-left p-3 font-medium">Questions</th>
+              <th className="hidden sm:table-cell text-left p-3 font-medium">Created</th>
               <th className="text-left p-3 font-medium">Actions</th>
             </tr>
           </thead>
@@ -128,9 +129,9 @@ export default function ManageTestsPage() {
                       {capitalize(test.status)}
                     </Badge>
                   </td>
-                  <td className="p-3">{test.duration_minutes} min</td>
-                  <td className="p-3">{test.question_limit}</td>
-                  <td className="p-3 text-sm text-muted-foreground">
+                  <td className="hidden sm:table-cell p-3">{test.duration_minutes} min</td>
+                  <td className="hidden sm:table-cell p-3">{test.question_limit}</td>
+                  <td className="hidden sm:table-cell p-3 text-sm text-muted-foreground">
                     {new Date(test.createdAt).toLocaleDateString()}
                   </td>
                   <td className="p-3" onClick={(e) => e.stopPropagation()}>

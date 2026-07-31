@@ -7,8 +7,25 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { XIcon } from "lucide-react"
 
-function Dialog({ ...props }: DialogPrimitive.Root.Props) {
-  return <DialogPrimitive.Root data-slot="dialog" {...props} />
+function Dialog({ open, onOpenChange, ...props }: DialogPrimitive.Root.Props) {
+  React.useEffect(() => {
+    if (open) {
+      const scrollY = window.scrollY;
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = "100%";
+    } else {
+      const scrollY = document.body.style.top;
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || "0", 10) * -1);
+      }
+    }
+  }, [open]);
+
+  return <DialogPrimitive.Root data-slot="dialog" open={open} onOpenChange={onOpenChange} {...props} />
 }
 
 function DialogTrigger({ ...props }: DialogPrimitive.Trigger.Props) {
