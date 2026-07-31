@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter, useParams } from "next/navigation";
+import { useEffect } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import useSWR from "swr";
 import { createFetcher, swrOptions } from "@/lib/swr-config";
@@ -43,6 +44,14 @@ export default function JoinTestPage() {
   const testInfo = response?.data;
   const isStarting = false;
 
+  useEffect(() => {
+    if (!authLoading && !authToken) {
+      const currentUrl = window.location.pathname;
+      sessionStorage.setItem("redirectAfterLogin", currentUrl);
+      router.push("/signin");
+    }
+  }, [authToken, authLoading, router]);
+
   if (authLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -52,9 +61,6 @@ export default function JoinTestPage() {
   }
 
   if (!authToken) {
-    const currentUrl = window.location.pathname;
-    sessionStorage.setItem("redirectAfterLogin", currentUrl);
-    router.push("/signin");
     return null;
   }
 
