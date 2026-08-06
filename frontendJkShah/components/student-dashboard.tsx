@@ -17,9 +17,10 @@ import {
 import { useStudentDashboard } from "@/hooks/use-student-dashboard";
 import { usePendingTests } from "@/hooks/use-pending-tests";
 import { capitalize } from "@/lib/utils";
-import { Loader2, Target, BookOpen, CheckCircle, Play, Clock, TrendingUp } from "lucide-react";
+import { Loader2, Target, BookOpen, CheckCircle, Play, Clock, TrendingUp, GraduationCap } from "lucide-react";
 import { ViewToggle } from "@/components/dashboard/view-toggle";
 import { RepeatedQuestionsTable } from "@/components/analytics/repeated-questions-table";
+import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 
 const PerformanceTrendChart = dynamic(
@@ -82,58 +83,78 @@ export function StudentDashboard() {
       value: stats?.testsSubmitted?.toString() || "0",
       icon: CheckCircle,
       color: "text-blue-500",
+      bg: "bg-blue-500/10",
     },
     {
       title: "Questions Available",
       value: stats?.questionsInEnrolledCourses?.toString() || "0",
       icon: BookOpen,
       color: "text-purple-500",
+      bg: "bg-purple-500/10",
     },
     {
       title: "Overall Accuracy",
       value: `${overallAccuracy}%`,
       icon: Target,
       color: overallAccuracy >= 70 ? "text-green-500" : overallAccuracy >= 50 ? "text-yellow-500" : "text-red-500",
+      bg: overallAccuracy >= 70 ? "bg-green-500/10" : overallAccuracy >= 50 ? "bg-yellow-500/10" : "bg-red-500/10",
     },
     {
       title: "Topics Attempted",
       value: totalTopicsAttempted.toString(),
       icon: GraduationCap,
       color: "text-orange-500",
+      bg: "bg-orange-500/10",
     },
   ];
 
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  };
+  
+  const itemVariant = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.4 } }
+  };
+
   return (
-    <div className="space-y-6">
+    <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <motion.div variants={itemVariant} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {kpiCards.map((card) => (
-          <Card key={card.title}>
+          <Card key={card.title} className="group overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-md border-border/60 hover:border-primary/20">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">{card.title}</p>
-                  <p className="text-2xl font-bold mt-1">{card.value}</p>
+                  <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">{card.title}</p>
+                  <p className="text-3xl font-bold mt-1 tracking-tight">{card.value}</p>
                 </div>
-                <card.icon className={`h-8 w-8 ${card.color}`} />
+                <div className={`p-3 rounded-2xl ${card.bg} transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3`}>
+                  <card.icon className={`h-6 w-6 ${card.color}`} />
+                </div>
               </div>
             </CardContent>
           </Card>
         ))}
-      </div>
+      </motion.div>
 
       {/* Pending Tests */}
       {!pendingLoading && pendingTests.length > 0 && (
-        <Card className="overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
+        <motion.div variants={itemVariant}>
+        <Card className="overflow-hidden hover:shadow-sm transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between pb-3 bg-muted/20 border-b">
+            <CardTitle className="flex items-center gap-2 text-lg font-semibold">
               <Play className="h-5 w-5 text-primary" />
               Pending Tests
             </CardTitle>
             <Button
               variant="link"
               size="sm"
-              className="text-primary h-auto p-0"
+              className="text-primary h-auto p-0 hover:text-primary/80 font-medium"
               onClick={() => router.push("/dashboard/tests/pending")}
             >
               View All
@@ -146,12 +167,12 @@ export function StudentDashboard() {
                 return (
                   <div
                     key={test.id}
-                    className="flex items-center justify-between p-4 hover:bg-muted/50 cursor-pointer transition-colors"
+                    className="group/test flex items-center justify-between p-4 hover:bg-primary/5 cursor-pointer transition-colors"
                     onClick={() => router.push("/dashboard/tests/pending")}
                   >
                     <div className="flex items-center gap-4">
-                      <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
-                        <Play className="h-5 w-5 text-primary" />
+                      <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 group-hover/test:scale-110 transition-transform">
+                        <Play className="h-5 w-5 text-primary ml-1" />
                       </div>
                       <div>
                         <p className="font-medium text-sm">{test.title}</p>
@@ -185,13 +206,15 @@ export function StudentDashboard() {
             </div>
           </CardContent>
         </Card>
+        </motion.div>
       )}
 
       {/* Performance Trends */}
+      <motion.div variants={itemVariant}>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-row items-center justify-between border-b bg-muted/10 pb-4 mb-4">
           <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" />
+            <TrendingUp className="h-5 w-5 text-primary" />
             Performance Trends
           </CardTitle>
           <ViewToggle value={trendsView} onChange={setTrendsView} />
@@ -227,13 +250,15 @@ export function StudentDashboard() {
           </Tabs>
         </CardContent>
       </Card>
+      </motion.div>
 
       {/* Repeated Questions */}
       {repeatedQuestions && repeatedQuestions.length > 0 && (
+        <motion.div variants={itemVariant}>
         <Card>
-          <CardHeader>
+          <CardHeader className="border-b bg-muted/10 pb-4 mb-4">
             <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5" />
+              <Target className="h-5 w-5 text-amber-500" />
               Repeated Questions
             </CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
@@ -244,13 +269,14 @@ export function StudentDashboard() {
             <RepeatedQuestionsTable data={repeatedQuestions} />
           </CardContent>
         </Card>
+        </motion.div>
       )}
 
       {/* Subject Performance & Topic Performance */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <motion.div variants={itemVariant} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Subject Performance */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+        <Card className="hover:shadow-sm transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between border-b bg-muted/10 pb-4 mb-4">
             <CardTitle>Subject Performance</CardTitle>
             <ViewToggle value={subjectView} onChange={setSubjectView} />
           </CardHeader>
@@ -304,8 +330,8 @@ export function StudentDashboard() {
         </Card>
 
         {/* Topic Performance */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+        <Card className="hover:shadow-sm transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between border-b bg-muted/10 pb-4 mb-4">
             <CardTitle>Topic Performance</CardTitle>
             <ViewToggle value={topicView} onChange={setTopicView} />
           </CardHeader>
@@ -359,30 +385,11 @@ export function StudentDashboard() {
             )}
           </CardContent>
         </Card>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
-function GraduationCap(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      {...props}
-    >
-      <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-      <path d="M6 12v5c3 3 9 3 12 0v-5" />
-    </svg>
-  );
-}
 
 function PerformanceTable({ data }: { data: { score: number; date: string; correct: number; totalQuestions: number }[] }) {
   if (data.length === 0) {

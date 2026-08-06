@@ -13,14 +13,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { PasswordStrength } from "@/components/password-strength";
+import { CustomSelect } from "@/components/ui/custom-select";
 import { authApi } from "@/lib/api";
 
 interface SignUpFormProps {
@@ -108,23 +102,17 @@ export function SignUpForm({ onSwitch }: SignUpFormProps) {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="role">I am a</Label>
-              <Select
+              <CustomSelect
+                id="role"
+                label="I am a"
                 value={formData.role}
-                onValueChange={(value) => {
-                  if (value) handleChange("role", value);
-                }}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select your role">
-                    {formData.role === "student" ? "Student" : formData.role === "teacher" ? "Teacher" : "Select your role"}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="student">Student</SelectItem>
-                  <SelectItem value="teacher">Teacher</SelectItem>
-                </SelectContent>
-              </Select>
+                onChange={(value) => handleChange("role", value)}
+                required
+                options={[
+                  { value: "student", label: "Student" },
+                  { value: "teacher", label: "Teacher" },
+                ]}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>

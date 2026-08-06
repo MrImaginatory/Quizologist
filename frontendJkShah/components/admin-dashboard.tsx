@@ -7,6 +7,7 @@ import { StatisticsCard } from "@/components/statistics-card";
 import { dashboardApi, DashboardStatsResponse } from "@/lib/api";
 import { Loader2, MapPin } from "lucide-react";
 import { ViewToggle } from "@/components/dashboard/view-toggle";
+import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 
 const UsersByLocationChart = dynamic(
@@ -121,12 +122,28 @@ export function AdminDashboard() {
 
   const totalUsers = usersByLocation.reduce((sum, loc) => sum + (Number(loc.user_count) || 0), 0);
 
-  return (
-    <div className="space-y-6">
-      <StatisticsCard stats={adminStats} />
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  };
+  
+  const itemVariant = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.4 } }
+  };
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+  return (
+    <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
+      <motion.div variants={itemVariant}>
+        <StatisticsCard stats={adminStats} />
+      </motion.div>
+
+      <motion.div variants={itemVariant}>
+      <Card className="hover:shadow-sm transition-shadow">
+        <CardHeader className="flex flex-row items-center justify-between border-b bg-muted/10 pb-4 mb-4">
           <CardTitle className="flex items-center gap-2">
             <MapPin className="h-5 w-5" />
             Users by Location
@@ -146,6 +163,7 @@ export function AdminDashboard() {
           )}
         </CardContent>
       </Card>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

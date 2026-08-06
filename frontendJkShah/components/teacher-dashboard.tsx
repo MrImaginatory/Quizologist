@@ -8,6 +8,7 @@ import { dashboardApi, teachersApi, DashboardStatsResponse } from "@/lib/api";
 import { Loader2, Trophy, AlertTriangle, BookOpen } from "lucide-react";
 import { capitalize } from "@/lib/utils";
 import { ViewToggle } from "@/components/dashboard/view-toggle";
+import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 
 const TeacherCharts = dynamic(
@@ -160,14 +161,29 @@ export function TeacherDashboard() {
     count: t.count,
   }));
 
-  return (
-    <div className="space-y-6">
-      <StatisticsCard stats={teacherStats} />
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  };
+  
+  const itemVariant = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.4 } }
+  };
 
-      <div className="grid gap-6 md:grid-cols-2">
+  return (
+    <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
+      <motion.div variants={itemVariant}>
+        <StatisticsCard stats={teacherStats} />
+      </motion.div>
+
+      <motion.div variants={itemVariant} className="grid gap-6 md:grid-cols-2">
         {/* Top Students */}
-        <Card>
-          <CardHeader>
+        <Card className="hover:shadow-sm transition-shadow">
+          <CardHeader className="border-b bg-muted/10 pb-4 mb-4">
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <Trophy className="h-5 w-5 text-yellow-500" />
@@ -180,15 +196,15 @@ export function TeacherDashboard() {
             {topStudents.length === 0 ? (
               <p className="text-muted-foreground">No student data available.</p>
             ) : topStudentsView === "table" ? (
-              <div className="space-y-2 max-h-[300px] overflow-y-auto">
+              <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
                 {topStudents.map((student, index) => (
-                  <div key={student.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+                  <div key={student.id} className="group/student flex items-center justify-between p-3 rounded-lg hover:bg-primary/5 border border-transparent hover:border-primary/10 transition-colors">
                     <div className="flex items-center gap-3">
-                      <span className="text-sm font-medium text-muted-foreground w-6">
+                      <span className="text-sm font-bold text-muted-foreground group-hover/student:text-primary transition-colors w-6">
                         #{index + 1}
                       </span>
                       <div>
-                        <p className="text-sm font-medium">
+                        <p className="text-sm font-semibold">
                           {capitalize(student.fname)} {capitalize(student.lname)}
                         </p>
                         <p className="text-xs text-muted-foreground">{student.totalTests} tests</p>
@@ -212,8 +228,8 @@ export function TeacherDashboard() {
         </Card>
 
         {/* Weak Topics */}
-        <Card>
-          <CardHeader>
+        <Card className="hover:shadow-sm transition-shadow">
+          <CardHeader className="border-b bg-muted/10 pb-4 mb-4">
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-orange-500" />
@@ -226,13 +242,13 @@ export function TeacherDashboard() {
             {weakTopics.length === 0 ? (
               <p className="text-muted-foreground">No weak topics identified.</p>
             ) : weakTopicsView === "table" ? (
-              <div className="space-y-2 max-h-[300px] overflow-y-auto">
+              <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
                 {weakTopics.slice(0, 5).map((topic) => (
-                  <div key={topic.topicId} className="p-2 rounded-lg bg-muted/50">
+                  <div key={topic.topicId} className="p-3 rounded-lg hover:bg-orange-500/5 border border-transparent hover:border-orange-500/10 transition-colors">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium">{capitalize(topic.topicName)}</p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-sm font-semibold">{capitalize(topic.topicName)}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
                           {capitalize(topic.subjectName)} • {capitalize(topic.courseName)}
                         </p>
                       </div>
@@ -258,11 +274,12 @@ export function TeacherDashboard() {
             )}
           </CardContent>
         </Card>
-      </div>
+      </motion.div>
 
       {/* Question Coverage */}
-      <Card>
-        <CardHeader>
+      <motion.div variants={itemVariant}>
+      <Card className="hover:shadow-sm transition-shadow">
+        <CardHeader className="border-b bg-muted/10 pb-4 mb-4">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <BookOpen className="h-5 w-5 text-blue-500" />
@@ -287,11 +304,11 @@ export function TeacherDashboard() {
                 </thead>
                 <tbody>
                   {coverageTopics.map((topic) => (
-                    <tr key={topic.topicId} className="border-b last:border-0">
-                      <td className="p-2">{capitalize(topic.topicName)}</td>
-                      <td className="p-2 text-muted-foreground">{capitalize(topic.subjectName)}</td>
-                      <td className="p-2 text-muted-foreground">{capitalize(topic.courseName)}</td>
-                      <td className="p-2 text-right font-medium">{topic.count}</td>
+                    <tr key={topic.topicId} className="border-b last:border-0 hover:bg-primary/5 transition-colors">
+                      <td className="p-3 font-medium">{capitalize(topic.topicName)}</td>
+                      <td className="p-3 text-muted-foreground">{capitalize(topic.subjectName)}</td>
+                      <td className="p-3 text-muted-foreground">{capitalize(topic.courseName)}</td>
+                      <td className="p-3 text-right font-bold">{topic.count}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -307,6 +324,7 @@ export function TeacherDashboard() {
           )}
         </CardContent>
       </Card>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
