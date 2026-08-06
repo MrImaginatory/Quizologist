@@ -56,7 +56,7 @@ export function SignInForm({ onSwitch }: SignInFormProps) {
 
   return (
     <div className="w-full animate-fade-in-up">
-      <Card className="border-0 shadow-none bg-transparent p-6">
+      <Card className="p-6">
         <CardHeader className="text-center lg:text-left p-0 mb-6">
           <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
           <CardDescription>

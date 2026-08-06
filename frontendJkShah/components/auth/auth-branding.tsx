@@ -24,9 +24,9 @@ const features = [
 export function AuthBranding() {
   return (
     <div className="flex flex-col justify-center items-center p-12 h-full bg-gradient-to-br from-primary/10 via-background to-primary/5">
-      <div className="text-center mb-12 animate-fade-in-up">
-        <div className="flex justify-center mb-6">
-          <AppLogo size="lg" showName={false} />
+      <div className="text-center mb-12 animate-fade-in-up w-full">
+        <div className="flex justify-center mb-8">
+          <AppLogo size="xl" showName={false} />
         </div>
         <h1 className="text-3xl font-bold text-foreground mb-3">
           Welcome to {process.env.NEXT_PUBLIC_APP_NAME || "Quiz App"}

@@ -161,12 +161,14 @@ function NavMainItem({
                     isActive={isParentActive}
                     onClick={() => setActiveParent(item.title!)}
                     className={cn(
-                      "rounded-md text-sm font-medium px-3 py-2 h-9 transition-colors cursor-pointer",
-                      isParentActive ? "bg-primary! text-primary-foreground!" : ""
+                      "group/nav-item rounded-md text-base font-medium px-4 py-2 h-10 transition-colors cursor-pointer w-full flex items-center gap-3",
+                      isParentActive ? "bg-primary! text-primary-foreground!" : "hover:bg-muted"
                     )}
                   >
-                    {item.icon && <item.icon size={16} />}
-                    <span>{item.title}</span>
+                    {item.icon && (
+                      <item.icon size={20} />
+                    )}
+                    <span className="flex-1 text-left">{item.title}</span>
                     <ChevronRight
                       className={cn(
                         "ml-auto transition-transform duration-200",
@@ -213,13 +215,15 @@ function NavMainItem({
                 setActiveChild(null);
               }}
               className={cn(
-                "rounded-md text-sm font-medium px-3 py-2 h-9 transition-colors cursor-pointer",
-                isParentActive ? "bg-primary! text-primary-foreground!" : ""
+                "group/nav-item w-full flex items-center gap-3 rounded-md text-base font-medium px-4 py-2 h-10 transition-colors cursor-pointer",
+                isParentActive ? "bg-primary! text-primary-foreground!" : "hover:bg-muted"
               )}
               render={<Link href={item.href || "#"} />}
             >
-              {item.icon && <item.icon />}
-              {item.title}
+              {item.icon && (
+                <item.icon size={20} />
+              )}
+              <span className="flex-1 text-left">{item.title}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -257,10 +261,12 @@ function NavMainSubItem({
             render={
               <SidebarMenuSubButton 
                 id={`nav-sub-trigger-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
-                className="rounded-md text-sm font-medium px-3 py-2 h-9"
+                className="group/nav-sub rounded-md text-base font-medium px-4 py-2 h-10 w-full flex items-center gap-3 transition-colors hover:bg-muted"
               >
-                {item.icon && <item.icon />}
-                <span>{item.title}</span>
+                {item.icon && (
+                  <item.icon size={20} />
+                )}
+                <span className="flex-1 text-left">{item.title}</span>
                 <ChevronRight
                   className={cn(
                     "ml-auto transition-transform duration-200",
@@ -296,15 +302,19 @@ function NavMainSubItem({
         <SidebarMenuSubButton
           id={`nav-sub-button-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
           className={cn(
-            "w-full rounded-md transition-colors",
-            activeChild === item.title ? "bg-muted! text-foreground!" : ""
+            "group/nav-sub w-full flex items-center rounded-md transition-colors text-sm px-4 py-2 h-9",
+            activeChild === item.title ? "bg-muted! text-foreground! font-semibold" : "hover:bg-muted"
           )}
           isActive={activeChild === item.title}
           onClick={() => {
             setActiveParent(parentTitle || "");
             setActiveChild(item.title!);
           }}
-          render={<Link href={item.href || "#"}>{item.title}</Link>}
+          render={
+            <Link href={item.href || "#"} className="flex w-full items-center">
+              <span>{item.title}</span>
+            </Link>
+          }
         />
       </SidebarMenuSubItem>
     );

@@ -13,6 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { AppLogo } from "@/components/app-logo";
 import { useAuth } from "@/contexts/auth-context";
+import { useAppConfig } from "@/hooks/use-app-config";
 import { capitalize } from "@/lib/utils";
 import { NavItem, NavMain } from "@/components/shadcn-space/blocks/sidebar-06/nav-main";
 import {
@@ -108,6 +109,7 @@ const adminNav: NavItem[] = [
 
 export function AppSidebar() {
   const { user, logout } = useAuth();
+  const { appLogo } = useAppConfig();
 
   const navItems = user?.role === "admin"
     ? adminNav
@@ -121,9 +123,9 @@ export function AppSidebar() {
         {/* Header */}
         <SidebarHeader className="px-4">
           <SidebarMenu>
-            <SidebarMenuItem>
-              <Link href="/dashboard">
-                <AppLogo size="md" showName={true} />
+            <SidebarMenuItem className="mb-4 min-h-[4rem]">
+              <Link href="/dashboard" className="flex items-center justify-center w-full h-full py-2 px-2 overflow-hidden">
+                <AppLogo size="sidebar" showName={!appLogo} />
               </Link>
             </SidebarMenuItem>
           </SidebarMenu>
