@@ -54,7 +54,7 @@ export function SubjectsAttentionTable({ data, isLoading }: SubjectsAttentionTab
   };
 
   return (
-    <Card>
+    <Card className="overflow-hidden rounded-2xl">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <AlertTriangle className="h-5 w-5" />
@@ -76,7 +76,7 @@ export function SubjectsAttentionTable({ data, isLoading }: SubjectsAttentionTab
           <TableBody>
             {data.subjects.map((subject) => (
               <Fragment key={subject.subjectId}>
-                <TableRow>
+                <TableRow className="hover:bg-muted/50 transition-colors">
                   <TableCell className="font-medium">{capitalize(subject.subjectName)}</TableCell>
                   <TableCell>{subject.courseName}</TableCell>
                   <TableCell>
@@ -116,7 +116,7 @@ export function SubjectsAttentionTable({ data, isLoading }: SubjectsAttentionTab
                 </TableRow>
                 {expandedSubject === subject.subjectId && (
                   <TableRow key={`${subject.subjectId}-expanded`}>
-                    <TableCell colSpan={6} className="bg-muted/50">
+                    <TableCell colSpan={6} className="bg-muted/20 p-4">
                       <div className="py-2">
                         <p className="text-sm font-medium mb-2">Low-Performing Students:</p>
                         <div className="grid gap-1">

@@ -10,7 +10,7 @@ import type { LeastQuestionsResponse } from "@/lib/api";
 const chartConfig = {
   questionCount: {
     label: "Questions",
-    color: "var(--chart-4)",
+    color: "#4F46E5",
   },
 } satisfies ChartConfig;
 
@@ -67,7 +67,7 @@ export function LeastQuestionsChart({ data, isLoading }: LeastQuestionsChartProp
   }));
 
   return (
-    <Card>
+    <Card className="overflow-hidden rounded-2xl">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
@@ -85,7 +85,7 @@ export function LeastQuestionsChart({ data, isLoading }: LeastQuestionsChartProp
       <CardContent>
         <ChartContainer config={chartConfig} className="h-[300px] w-full">
           <BarChart data={chartData} layout="vertical" margin={{ left: 20 }}>
-            <CartesianGrid stroke="var(--border)" horizontal={false} />
+            <CartesianGrid stroke="var(--border)" horizontal={false} strokeDasharray="3 3" opacity={0.3} />
             <XAxis type="number" tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} />
             <YAxis
               type="category"
@@ -98,17 +98,21 @@ export function LeastQuestionsChart({ data, isLoading }: LeastQuestionsChartProp
                 if (active && payload && payload.length) {
                   const data = payload[0].payload;
                   return (
-                    <div className="rounded-lg border bg-background p-2 shadow-sm">
-                      <p className="font-medium">{data.fullName}</p>
-                      <p className="text-xs text-muted-foreground">{data.subject} • {data.course}</p>
-                      <p className="text-sm mt-1">{data.questionCount} questions</p>
+                    <div className="rounded-xl border border-primary/10 bg-background/95 backdrop-blur-md p-3 shadow-xl">
+                      <p className="font-semibold text-primary">{data.fullName}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{data.subject} • {data.course}</p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="w-2 h-2 rounded-full bg-primary" />
+                        <p className="text-sm font-medium">{data.questionCount} questions</p>
+                      </div>
                     </div>
                   );
                 }
                 return null;
               }}
+              cursor={{ fill: "var(--muted)", opacity: 0.2 }}
             />
-            <Bar dataKey="questionCount" fill="var(--chart-4)" radius={[0, 4, 4, 0]} />
+            <Bar dataKey="questionCount" fill="var(--color-questionCount)" radius={[0, 4, 4, 0]} />
           </BarChart>
         </ChartContainer>
       </CardContent>

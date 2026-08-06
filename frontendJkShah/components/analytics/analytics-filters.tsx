@@ -1,13 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { CustomSelect } from "@/components/ui/custom-select";
 import { DatePicker } from "@/components/ui/date-picker";
 import { X } from "lucide-react";
 import { useCourses } from "@/hooks/use-courses";
@@ -84,62 +78,42 @@ export function AnalyticsFilters({
     <div className="flex flex-wrap items-end gap-3">
       {/* Location Filter */}
       <div className="flex-1 min-w-[180px]">
-        <Select value={locationId || "all"} onValueChange={(value) => onLocationChange(value === "all" ? "" : value ?? "")}>
-          <SelectTrigger className="w-full">
-            <SelectValue>
-              {locationId ? capitalize(locations.find(l => l.id === locationId)?.city || locationId) : "All Locations"}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Locations</SelectItem>
-            {locations.map((location) => (
-              <SelectItem key={location.id} value={location.id}>
-                {location.city}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <CustomSelect
+          value={locationId || "all"}
+          onChange={(value) => onLocationChange(value === "all" ? "" : value)}
+          options={[
+            { value: "all", label: "All Locations" },
+            ...locations.map(l => ({ value: l.id, label: l.city }))
+          ]}
+        />
       </div>
 
       {/* Course Filter */}
       <div className="flex-1 min-w-[180px]">
-        <Select value={courseId || "all"} onValueChange={(value) => {
-          onCourseChange(value === "all" ? "" : value ?? "");
-          onSubjectChange("");
-        }}>
-          <SelectTrigger className="w-full">
-            <SelectValue>
-              {courseId ? capitalize(courses.find(c => c.id === courseId)?.name || courseId) : "All Courses"}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Courses</SelectItem>
-            {courses.map((course) => (
-              <SelectItem key={course.id} value={course.id}>
-                {capitalize(course.name)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <CustomSelect
+          value={courseId || "all"}
+          onChange={(value) => {
+            onCourseChange(value === "all" ? "" : value);
+            onSubjectChange("");
+          }}
+          options={[
+            { value: "all", label: "All Courses" },
+            ...courses.map(c => ({ value: c.id, label: capitalize(c.name) }))
+          ]}
+        />
       </div>
 
       {/* Subject Filter */}
       <div className="flex-1 min-w-[180px]">
-        <Select value={subjectId || "all"} onValueChange={(value) => onSubjectChange(value === "all" ? "" : value ?? "")} disabled={!courseId}>
-          <SelectTrigger className="w-full">
-            <SelectValue>
-              {subjectId ? capitalize(subjects.find(s => s.id === subjectId)?.name || subjectId) : !courseId ? "Select course first" : "All Subjects"}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Subjects</SelectItem>
-            {subjects.map((subject) => (
-              <SelectItem key={subject.id} value={subject.id}>
-                {capitalize(subject.name)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <CustomSelect
+          value={subjectId || "all"}
+          onChange={(value) => onSubjectChange(value === "all" ? "" : value)}
+          disabled={!courseId}
+          options={[
+            { value: "all", label: "All Subjects" },
+            ...subjects.map(s => ({ value: s.id, label: capitalize(s.name) }))
+          ]}
+        />
       </div>
 
       {/* Date Range */}
@@ -158,16 +132,17 @@ export function AnalyticsFilters({
       </div>
 
       {/* Top N Selector */}
-      <Select value={topN.toString()} onValueChange={(value) => onTopNChange(parseInt(value ?? "10", 10))}>
-        <SelectTrigger className="w-[120px]">
-          <SelectValue>Top {topN}</SelectValue>
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="5">Top 5</SelectItem>
-          <SelectItem value="10">Top 10</SelectItem>
-          <SelectItem value="20">Top 20</SelectItem>
-        </SelectContent>
-      </Select>
+      <div className="w-[120px]">
+        <CustomSelect
+          value={topN.toString()}
+          onChange={(value) => onTopNChange(parseInt(value, 10))}
+          options={[
+            { value: "5", label: "Top 5" },
+            { value: "10", label: "Top 10" },
+            { value: "20", label: "Top 20" }
+          ]}
+        />
+      </div>
 
       {hasFilters && (
         <Button variant="ghost" size="sm" onClick={onClear}>

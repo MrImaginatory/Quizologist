@@ -34,34 +34,43 @@ export function TeacherStudentRatioCards({ data, isLoading }: TeacherStudentRati
 
   return (
     <div className="grid gap-4 md:grid-cols-3">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Teachers</CardTitle>
-          <GraduationCap className="h-4 w-4 text-muted-foreground" />
+      <Card className="overflow-hidden relative group hover:shadow-lg hover:-translate-y-1 transition-all duration-300 rounded-2xl border-primary/10 bg-gradient-to-br from-card to-muted/20">
+        <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+          <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-primary transition-colors">Total Teachers</CardTitle>
+          <div className="p-2 bg-primary/10 rounded-xl group-hover:scale-110 transition-transform">
+            <GraduationCap className="h-4 w-4 text-primary" />
+          </div>
         </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{data.total_teachers}</div>
+        <CardContent className="relative z-10">
+          <div className="text-3xl font-bold">{data.total_teachers}</div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Students</CardTitle>
-          <Users className="h-4 w-4 text-muted-foreground" />
+      <Card className="overflow-hidden relative group hover:shadow-lg hover:-translate-y-1 transition-all duration-300 rounded-2xl border-primary/10 bg-gradient-to-br from-card to-muted/20">
+        <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+          <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-primary transition-colors">Total Students</CardTitle>
+          <div className="p-2 bg-primary/10 rounded-xl group-hover:scale-110 transition-transform">
+            <Users className="h-4 w-4 text-primary" />
+          </div>
         </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{data.total_students}</div>
+        <CardContent className="relative z-10">
+          <div className="text-3xl font-bold">{data.total_students}</div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Average Ratio</CardTitle>
-          <BarChart3 className="h-4 w-4 text-muted-foreground" />
+      <Card className="overflow-hidden relative group hover:shadow-lg hover:-translate-y-1 transition-all duration-300 rounded-2xl border-primary/10 bg-gradient-to-br from-card to-muted/20">
+        <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+          <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-primary transition-colors">Average Ratio</CardTitle>
+          <div className="p-2 bg-primary/10 rounded-xl group-hover:scale-110 transition-transform">
+            <BarChart3 className="h-4 w-4 text-primary" />
+          </div>
         </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{avgRatio}</div>
-          <p className="text-xs text-muted-foreground">Teacher : Student</p>
+        <CardContent className="relative z-10">
+          <div className="text-3xl font-bold">{avgRatio}</div>
+          <p className="text-xs text-muted-foreground mt-1">Teacher : Student</p>
         </CardContent>
       </Card>
     </div>

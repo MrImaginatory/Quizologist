@@ -53,7 +53,7 @@ export function TopStudentsTable({ data, isLoading }: TopStudentsTableProps) {
   };
 
   return (
-    <Card>
+    <Card className="overflow-hidden rounded-2xl">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Trophy className="h-5 w-5" />
@@ -74,7 +74,7 @@ export function TopStudentsTable({ data, isLoading }: TopStudentsTableProps) {
           </TableHeader>
           <TableBody>
             {data.students.map((student) => (
-              <TableRow key={student.id}>
+              <TableRow key={student.id} className="hover:bg-muted/50 transition-colors">
                 <TableCell>{getRankBadge(student.rank)}</TableCell>
                 <TableCell>
                   <div>

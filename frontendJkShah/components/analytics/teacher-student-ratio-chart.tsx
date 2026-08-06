@@ -16,11 +16,11 @@ import { capitalize } from "@/lib/utils";
 const chartConfig = {
   teacher_count: {
     label: "Teachers",
-    color: "#3b82f6",
+    color: "#818cf8",
   },
   student_count: {
     label: "Students",
-    color: "#8b5cf6",
+    color: "#4F46E5",
   },
 } satisfies ChartConfig;
 
@@ -93,7 +93,7 @@ export function TeacherStudentRatioChart({ data, isLoading }: TeacherStudentRati
   }));
 
   return (
-    <Card>
+    <Card className="overflow-hidden rounded-2xl">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle className="flex items-center gap-2">
@@ -149,18 +149,28 @@ export function TeacherStudentRatioChart({ data, isLoading }: TeacherStudentRati
                 fill="var(--color-student_count)"
                 radius={[4, 4, 0, 0]}
               />
-              <ChartTooltip
-                content={
-                  <ChartTooltipContent
-                    labelKey="city"
-                    formatter={(value, name) => {
-                      const label = name === "teacher_count" ? "Teachers" : "Students";
-                      return [value, label];
-                    }}
-                  />
-                }
-                cursor={false}
-              />
+                <ChartTooltip
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="rounded-xl border border-primary/10 bg-background/95 backdrop-blur-md p-3 shadow-xl space-y-1">
+                          <p className="font-semibold">{payload[0].payload.city}</p>
+                          {payload.map((entry: any, i: number) => (
+                            <div key={i} className="flex items-center gap-2">
+                              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
+                              <span className="text-sm text-muted-foreground">
+                                {entry.name === "teacher_count" ? "Teachers" : "Students"}:
+                              </span>
+                              <span className="text-sm font-medium">{entry.value}</span>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                  cursor={{ fill: "var(--muted)", opacity: 0.2 }}
+                />
             </BarChart>
           </ChartContainer>
         ) : (

@@ -9,6 +9,22 @@ import { TopStudentsTable } from "./top-students-table";
 import { SubjectsAttentionTable } from "./subjects-attention-table";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.4 } }
+};
 
 const TeacherStudentRatioChart = dynamic(
   () => import("./teacher-student-ratio-chart").then(m => ({ default: m.TeacherStudentRatioChart })),
@@ -65,38 +81,51 @@ export function AnalyticsDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <motion.div 
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+      className="space-y-6"
+    >
       {/* Global Filters */}
-      <AnalyticsFilters
-        locationId={filters.location_id}
-        dateFrom={filters.date_from}
-        dateTo={filters.date_to}
-        courseId={filters.course_id}
-        subjectId={filters.subject_id}
-        topN={filters.limit}
-        onLocationChange={(v) => handleFilterChange("location_id", v)}
-        onDateFromChange={(v) => handleFilterChange("date_from", v)}
-        onDateToChange={(v) => handleFilterChange("date_to", v)}
-        onCourseChange={(v) => handleFilterChange("course_id", v)}
-        onSubjectChange={(v) => handleFilterChange("subject_id", v)}
-        onTopNChange={(v) => handleFilterChange("limit", v)}
-        onClear={handleClearFilters}
-      />
+      <motion.div variants={itemVariants}>
+        <AnalyticsFilters
+          locationId={filters.location_id}
+          dateFrom={filters.date_from}
+          dateTo={filters.date_to}
+          courseId={filters.course_id}
+          subjectId={filters.subject_id}
+          topN={filters.limit}
+          onLocationChange={(v) => handleFilterChange("location_id", v)}
+          onDateFromChange={(v) => handleFilterChange("date_from", v)}
+          onDateToChange={(v) => handleFilterChange("date_to", v)}
+          onCourseChange={(v) => handleFilterChange("course_id", v)}
+          onSubjectChange={(v) => handleFilterChange("subject_id", v)}
+          onTopNChange={(v) => handleFilterChange("limit", v)}
+          onClear={handleClearFilters}
+        />
+      </motion.div>
 
       {/* Module 1: Teacher-Student Ratio */}
-      <div className="space-y-4">
+      <motion.div variants={itemVariants} className="space-y-4">
         <TeacherStudentRatioCards data={ratioData} isLoading={isLoading} />
         <TeacherStudentRatioChart data={ratioData} isLoading={isLoading} />
-      </div>
+      </motion.div>
 
       {/* Module 2: Top Students */}
-      <TopStudentsTable data={topStudents} isLoading={isLoading} />
+      <motion.div variants={itemVariants}>
+        <TopStudentsTable data={topStudents} isLoading={isLoading} />
+      </motion.div>
 
       {/* Module 3: Least Questions */}
-      <LeastQuestionsChart data={leastQuestions} isLoading={isLoading} />
+      <motion.div variants={itemVariants}>
+        <LeastQuestionsChart data={leastQuestions} isLoading={isLoading} />
+      </motion.div>
 
       {/* Module 4: Subjects Attention */}
-      <SubjectsAttentionTable data={subjectsAttention} isLoading={isLoading} />
-    </div>
+      <motion.div variants={itemVariants}>
+        <SubjectsAttentionTable data={subjectsAttention} isLoading={isLoading} />
+      </motion.div>
+    </motion.div>
   );
 }
