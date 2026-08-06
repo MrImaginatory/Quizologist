@@ -1,0 +1,145 @@
+import { appConfig } from "./app-config";
+
+const BASE_URL = appConfig.backendUrl;
+
+// API Routes
+export const API_ROUTES = {
+  // Auth
+  AUTH: {
+    SIGNUP: `${BASE_URL}/api/user/signup`,
+    LOGIN: `${BASE_URL}/api/user/login`,
+  },
+
+  // Users
+  USERS: {
+    BASE: `${BASE_URL}/api/user`,
+    ME: `${BASE_URL}/api/user/me`,
+    BY_ID: (id: string) => `${BASE_URL}/api/user/${id}`,
+    BY_ROLE: (role: string) => `${BASE_URL}/api/user/role/${role}`,
+    ASSIGN_LOCATION: (id: string) => `${BASE_URL}/api/user/${id}/location`,
+  },
+
+  // Courses
+  COURSES: {
+    BASE: `${BASE_URL}/api/content/course`,
+    BY_ID: (id: string) => `${BASE_URL}/api/content/course/${id}`,
+    BULK_HIERARCHY: `${BASE_URL}/api/content/bulk-hierarchy`,
+  },
+
+  // Subjects
+  SUBJECTS: {
+    BASE: `${BASE_URL}/api/content/subject`,
+    BY_ID: (id: string) => `${BASE_URL}/api/content/subject/${id}`,
+    BY_COURSE: (courseId: string) => `${BASE_URL}/api/content/subject/course/${courseId}`,
+  },
+
+  // Topics
+  TOPICS: {
+    BASE: `${BASE_URL}/api/content/topic`,
+    BY_ID: (id: string) => `${BASE_URL}/api/content/topic/${id}`,
+    BY_SUBJECT: (subjectId: string) => `${BASE_URL}/api/content/topic/subject/${subjectId}`,
+  },
+
+  // Questions
+  QUESTIONS: {
+    BASE: `${BASE_URL}/api/question`,
+    BY_ID: (id: string) => `${BASE_URL}/api/question/${id}`,
+    BY_SUBJECT: (subjectId: string) => `${BASE_URL}/api/question/subject/${subjectId}`,
+    BY_TOPIC: (topicId: string) => `${BASE_URL}/api/question/topic/${topicId}`,
+    FILTER: `${BASE_URL}/api/question/filter`,
+    ACTIVE_FILTERS: `${BASE_URL}/api/question/active-filters`,
+    BULK: `${BASE_URL}/api/question/bulk`,
+    IMPORT_TEMPLATE: `${BASE_URL}/api/question/import-template`,
+  },
+
+  // Enrollments
+  ENROLLMENTS: {
+    BASE: `${BASE_URL}/api/enrollment`,
+    BY_ID: (id: string) => `${BASE_URL}/api/enrollment/${id}`,
+    ENROLLED_COURSES: `${BASE_URL}/api/enrollment/courses`,
+    ENROLLED_SUBJECTS: (courseId: string) => `${BASE_URL}/api/enrollment/subjects?course_id=${courseId}`,
+    ENROLLED_TOPICS: (courseId: string, subjectId: string) => `${BASE_URL}/api/enrollment/topics?course_id=${courseId}&subject_id=${subjectId}`,
+  },
+
+  // Students
+  STUDENTS: {
+    BASE: `${BASE_URL}/api/student/list`,
+    BY_ID: (id: string) => `${BASE_URL}/api/student/${id}`,
+  },
+
+  // Teachers
+  TEACHERS: {
+    BASE: `${BASE_URL}/api/teacher`,
+    BY_ID: (id: string) => `${BASE_URL}/api/teacher/${id}`,
+    ASSIGN: `${BASE_URL}/api/teacher/assign`,
+    ASSIGN_COURSE: `${BASE_URL}/api/teacher/assign/course`,
+    ASSIGN_SUBJECT: `${BASE_URL}/api/teacher/assign/subject`,
+    ASSIGN_BULK_SUBJECTS: `${BASE_URL}/api/teacher/assign/bulk-subjects`,
+    UNENROLL: (id: string) => `${BASE_URL}/api/teacher/unenroll/${id}`,
+    TEACHER_ENROLLMENT: `${BASE_URL}/api/teacher/teacher-enrollment`,
+    TEACHING_COURSES_AND_SUBJECTS: `${BASE_URL}/api/teacher/teaching/courses-and-subjects`,
+    TEACHING_STUDENTS: `${BASE_URL}/api/teacher/teaching/students`,
+    TEACHING_TESTS: `${BASE_URL}/api/teacher/teaching/tests`,
+    TEACHING_TOP_STUDENTS: `${BASE_URL}/api/teacher/teaching/top-students`,
+    TEACHING_WEAKNESS_SUMMARY: `${BASE_URL}/api/teacher/teaching/weakness-summary`,
+    TEACHING_QUESTION_COVERAGE: `${BASE_URL}/api/teacher/teaching/question-coverage`,
+  },
+
+  // Tests
+  TESTS: {
+    BASE: `${BASE_URL}/api/test`,
+    ALL: `${BASE_URL}/api/test/all`,
+    BY_ID: (id: string) => `${BASE_URL}/api/test/${id}`,
+    START: `${BASE_URL}/api/test/start`,
+    SUBMIT: (id: string) => `${BASE_URL}/api/test/${id}/submit`,
+    ABANDON: (id: string) => `${BASE_URL}/api/test/abandon/${id}`,
+    RESULT: (id: string) => `${BASE_URL}/api/test/result/${id}/`,
+    HISTORY: `${BASE_URL}/api/test/history`,
+    STUDENT_RESULTS: (studentId: string) => `${BASE_URL}/api/test/student/${studentId}/results`,
+  },
+
+  // Time Based Tests
+  TIME_BASED: {
+    START: `${BASE_URL}/api/test/time-based/start`,
+  },
+
+  // Predefined Tests
+  PREDEFINED_TESTS: {
+    BASE: `${BASE_URL}/api/test/predefined`,
+    BY_ID: (id: string) => `${BASE_URL}/api/test/predefined/${id}`,
+    ACTIVATE: (id: string) => `${BASE_URL}/api/test/predefined/${id}/activate`,
+    DEACTIVATE: (id: string) => `${BASE_URL}/api/test/predefined/${id}/deactivate`,
+    START: (id: string) => `${BASE_URL}/api/test/predefined/${id}/start`,
+    PENDING: `${BASE_URL}/api/test/predefined/pending`,
+    JOIN: (token: string) => `${BASE_URL}/api/test/predefined/join/${token}`,
+  },
+
+  // Dashboard
+  DASHBOARD: {
+    STATS: `${BASE_URL}/api/dashboard/stats`,
+    ANALYTICS_TEACHER_STUDENT_RATIO: `${BASE_URL}/api/dashboard/analytics/teacher-student-ratio`,
+    ANALYTICS_TOP_STUDENTS: `${BASE_URL}/api/dashboard/analytics/top-students-by-location`,
+    ANALYTICS_LEAST_QUESTIONS: `${BASE_URL}/api/dashboard/analytics/least-questions`,
+    ANALYTICS_SUBJECTS_ATTENTION: `${BASE_URL}/api/dashboard/analytics/subjects-needing-attention`,
+    STUDENT_ANALYTICS: (studentId: string) => `${BASE_URL}/api/dashboard/student/${studentId}`,
+    TEACHER_ANALYTICS: (teacherId: string) => `${BASE_URL}/api/dashboard/teacher/${teacherId}`,
+    STUDENT_TOPIC_PERFORMANCE: `${BASE_URL}/api/dashboard/student/topic-performance`,
+    STUDENT_SUBJECT_PERFORMANCE: `${BASE_URL}/api/dashboard/student/subject-performance`,
+    STUDENT_DIFFICULTY_BREAKDOWN: `${BASE_URL}/api/dashboard/student/difficulty-breakdown`,
+    STUDENT_TIME_ANALYSIS: `${BASE_URL}/api/dashboard/student/time-analysis`,
+    STUDENT_PERFORMANCE_TRENDS: `${BASE_URL}/api/dashboard/student/performance-trends`,
+    STUDENT_STRENGTHS_WEAKNESSES: `${BASE_URL}/api/dashboard/student/strengths-weaknesses`,
+    STUDENT_SKILL_RATING: `${BASE_URL}/api/dashboard/student/skill-rating`,
+    STUDENT_REPEATED_QUESTIONS: `${BASE_URL}/api/dashboard/student/repeated-questions`,
+
+  },
+
+  // Locations
+  LOCATIONS: {
+    BASE: `${BASE_URL}/api/user/location`,
+    BY_ID: (id: string) => `${BASE_URL}/api/user/location/${id}`,
+  },
+} as const;
+
+// Socket.IO URL
+export const SOCKET_URL = `${BASE_URL}`;
