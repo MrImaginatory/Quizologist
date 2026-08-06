@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <title>JK Shah Classes — Design System Preview</title>
+  
+  <script>
+    // Prevent FOUC for users with pinned theme
+    {
+      const colorScheme = localStorage.getItem("jksc-color-scheme");
+      if (colorScheme) {
+        document.querySelector('meta[name="color-scheme"]').content = colorScheme;
+      }
+    }
+  </script>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  
+  <style>
+    /* ========================================
+       CSS Custom Properties — Light Mode (Default)
+       ======================================== */
+    :root {
+      color-scheme: light dark;
+      
+      /* Brand */
+      --jksc-brand: #373081;
+      --jksc-brand-light: rgba(55, 48, 129, 0.1);
+      --jksc-brand-medium: rgba(55, 48, 129, 0.7);
+      --jksc-brand-dark: rgba(55, 48, 129, 0.9);
+      --jksc-brand-hover: #2d2670;
+      
+      /* Accent */
+      --jksc-amber: #f59e0b;
+      --jksc-amber-light: rgba(251, 191, 36, 0.1);
+      --jksc-green: #2ba57d;
+      --jksc-green-light: rgba(43, 165, 125, 0.1);
+      
+      /* Surface */
+      --jksc-canvas: #ffffff;
+      --jksc-hairline: #e2e8f0;
+      --jksc-surface-light: #f8fafc;
+      --jksc-surface-purple: #f5f3ff;
+      --jksc-surface-purple-muted: #f0eaff;
+      
+      /* Text */
+      --jksc-ink: #2d3748;
+      --jksc-body: #64748b;
+      --jksc-muted: #94a3b8;
+      
+      /* Shadows */
+      --jksc-shadow-subtle: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+      --jksc-shadow-elevated: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+      --jksc-shadow-modal: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      
+      /* Radius */
+      --jksc-radius-sm: 4px;
+      --jksc-radius-md: 10px;
+      --jksc-radius-xl: 16px;
+      --jksc-radius-2xl: 24px;
+      --jksc-radius-full: 9999px;
+      
+      /* Font */
+      --jksc-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+
+    /* ========================================
+       Dark Mode — Manual Override (data-theme)
+       ======================================== */
+    html[data-theme="dark"] {
+      --jksc-brand: #6366f1;
+      --jksc-brand-light: rgba(99, 102, 241, 0.15);
+      --jksc-brand-medium: rgba(99, 102, 241, 0.7);
+      --jksc-brand-dark: rgba(99, 102, 241, 0.9);
+      --jksc-brand-hover: #818cf8;
+      
+      --jksc-amber: #f59e0b;
+      --jksc-amber-light: rgba(251, 191, 36, 0.15);
+      --jksc-green: #34d399;
+      --jksc-green-light: rgba(52, 211, 153, 0.15);
+      
+      --jksc-canvas: #0f172a;
+      --jksc-hairline: #1e293b;
+      --jksc-surface-light: #1e293b;
+      --jksc-surface-purple: rgba(99, 102, 241, 0.08);
+      --jksc-surface-purple-muted: rgba(99, 102, 241, 0.12);
+      
+      --jksc-ink: #f1f5f9;
+      --jksc-body: #94a3b8;
+      --jksc-muted: #64748b;
+      
+      --jksc-shadow-subtle: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px -1px rgba(0, 0, 0, 0.4);
+      --jksc-shadow-elevated: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+      --jksc-shadow-modal: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+    }
+
+    /* ========================================
+       Dark Mode — System Preference Fallback
+       ======================================== */
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --jksc-brand: #6366f1;
+        --jksc-brand-light: rgba(99, 102, 241, 0.15);
+        --jksc-brand-medium: rgba(99, 102, 241, 0.7);
+        --jksc-brand-dark: rgba(99, 102, 241, 0.9);
+        --jksc-brand-hover: #818cf8;
+        
+        --jksc-amber: #f59e0b;
+        --jksc-amber-light: rgba(251, 191, 36, 0.15);
+        --jksc-green: #34d399;
+        --jksc-green-light: rgba(52, 211, 153, 0.15);
+        
+        --jksc-canvas: #0f172a;
+        --jksc-hairline: #1e293b;
+        --jksc-surface-light: #1e293b;
+        --jksc-surface-purple: rgba(99, 102, 241, 0.08);
+        --jksc-surface-purple-muted: rgba(99, 102, 241, 0.12);
+        
+        --jksc-ink: #f1f5f9;
+        --jksc-body: #94a3b8;
+        --jksc-muted: #64748b;
+        
+        --jksc-shadow-subtle: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px -1px rgba(0, 0, 0, 0.4);
+        --jksc-shadow-elevated: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+        --jksc-shadow-modal: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+      }
+    }
+
+    /* ========================================
+       Base Reset & Typography
+       ======================================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--jksc-font-family);
+      font-size: 16px;
+      line-height: 24px;
+      color: var(--jksc-ink);
+      background-color: var(--jksc-canvas);
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    /* ========================================
+       Layout
+       ======================================== */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+
+    section {
+      padding: 48px 0;
+    }
+
+    section + section {
+      border-top: 1px solid var(--jksc-hairline);
+    }
+
+    .section-title {
+      font-size: 24px;
+      font-weight: 900;
+      line-height: 30px;
+      letter-spacing: -0.6px;
+      color: var(--jksc-ink);
+      margin-bottom: 24px;
+    }
+
+    .section-subtitle {
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 24px;
+      color: var(--jksc-body);
+      margin-bottom: 32px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 24px;
+    }
+
+    .grid-2 { grid-template-columns: repeat(2, 1fr); }
+    .grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .grid-4 { grid-template-columns: repeat(4, 1fr); }
+    .grid-7 { grid-template-columns: repeat(7, 1fr); }
+
+    @media (max-width: 1024px) {
+      .grid-3, .grid-4 { grid-template-columns: repeat(2, 1fr); }
+      .grid-7 { grid-template-columns: repeat(4, 1fr); }
+    }
+
+    @media (max-width: 640px) {
+      .grid-2, .grid-3, .grid-4, .grid-7 { grid-template-columns: 1fr; }
+      .container { padding: 0 16px; }
+      section { padding: 32px 0; }
+    }
+
+    /* ========================================
+       Theme Toggle
+       ======================================== */
+    .theme-toggle {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--jksc-surface-light);
+      border: 1px solid var(--jksc-hairline);
+      border-radius: var(--jksc-radius-full);
+      padding: 8px 16px;
+      cursor: pointer;
+      font-family: var(--jksc-font-family);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--jksc-ink);
+      transition: all 0.2s ease;
+    }
+
+    .theme-toggle:hover {
+      background: var(--jksc-surface-purple);
+      border-color: var(--jksc-brand);
+    }
+
+    .theme-toggle .icon {
+      font-size: 18px;
+    }
+
+    /* ========================================
+       Navigation
+       ======================================== */
+    .nav-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--jksc-canvas);
+      border-bottom: 1px solid var(--jksc-hairline);
+      padding: 12px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-logo {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--jksc-brand);
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 8px;
+      list-style: none;
+    }
+
+    .nav-link {
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--jksc-ink);
+      padding: 6px 12px;
+      border-radius: var(--jksc-radius-md);
+      transition: all 0.2s ease;
+    }
+
+    .nav-link:hover {
+      background: var(--jksc-brand-light);
+      color: var(--jksc-brand);
+    }
+
+    .nav-link.active {
+      background: var(--jksc-brand);
+      color: white;
+    }
+
+    /* ========================================
+       Buttons
+       ======================================== */
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px 12px;
+      font-family: var(--jksc-font-family);
+      font-size: 16px;
+      font-weight: 500;
+      line-height: 24px;
+      border-radius: var(--jksc-radius-md);
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .button-primary {
+      background: var(--jksc-brand);
+      color: white;
+    }
+
+    .button-primary:hover {
+      background: var(--jksc-brand-hover);
+    }
+
+    .button-secondary {
+      background: transparent;
+      color: var(--jksc-brand);
+      border-color: var(--jksc-hairline);
+    }
+
+    .button-secondary:hover {
+      background: var(--jksc-brand-light);
+      border-color: var(--jksc-brand);
+    }
+
+    .button-ghost {
+      background: transparent;
+      color: var(--jksc-body);
+      border: none;
+    }
+
+    .button-ghost:hover {
+      background: var(--jksc-brand-light);
+      color: var(--jksc-brand);
+    }
+
+    .button-badge {
+      background: var(--jksc-brand-light);
+      color: var(--jksc-brand);
+      border-radius: var(--jksc-radius-full);
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .button-icon {
+      background: transparent;
+      color: var(--jksc-ink);
+      border-radius: var(--jksc-radius-full);
+      width: 40px;
+      height: 40px;
+      padding: 0;
+    }
+
+    .button-sm {
+      font-size: 14px;
+      line-height: 20px;
+      padding: 6px 12px;
+    }
+
+    /* ========================================
+       Cards
+       ======================================== */
+    .card {
+      background: var(--jksc-canvas);
+      color: var(--jksc-ink);
+      border: 1px solid var(--jksc-hairline);
+      border-radius: var(--jksc-radius-xl);
+      padding: 32px;
+      box-shadow: var(--jksc-shadow-subtle);
+      transition: all 0.2s ease;
+    }
+
+    .card:hover {
+      box-shadow: var(--jksc-shadow-elevated);
+    }
+
+    .card-feature {
+      background: var(--jksc-surface-purple);
+      color: var(--jksc-brand);
+      border: none;
+      border-radius: var(--jksc-radius-2xl);
+      padding: 32px;
+    }
+
+    .card-stat {
+      background: var(--jksc-canvas);
+      color: var(--jksc-brand);
+      border: 1px solid var(--jksc-hairline);
+      border-radius: var(--jksc-radius-xl);
+      padding: 24px;
+      text-align: center;
+    }
+
+    .card-stat .stat-value {
+      font-size: 36px;
+      font-weight: 900;
+      line-height: 45px;
+      letter-spacing: -0.6px;
+    }
+
+    .card-stat .stat-label {
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--jksc-body);
+      margin-top: 4px;
+    }
+
+    .card-course {
+      background: var(--jksc-canvas);
+      color: var(--jksc-ink);
+      border: 1px solid var(--jksc-hairline);
+      border-radius: var(--jksc-radius-xl);
+      overflow: hidden;
+      box-shadow: var(--jksc-shadow-subtle);
+    }
+
+    .card-course-image {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: linear-gradient(135deg, var(--jksc-brand) 0%, var(--jksc-surface-purple) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .card-course-body {
+      padding: 24px;
+    }
+
+    .card-course-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--jksc-ink);
+      margin-bottom: 8px;
+    }
+
+    .card-course-desc {
+      font-size: 14px;
+      color: var(--jksc-body);
+      margin-bottom: 16px;
+    }
+
+    .card-course-meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* ========================================
+       Badges
+       ======================================== */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 16px;
+      border-radius: var(--jksc-radius-full);
+    }
+
+    .badge-premium {
+      background: var(--jksc-amber);
+      color: #2d3748;
+    }
+
+    .badge-popular {
+      background: var(--jksc-green);
+      color: white;
+    }
+
+    .badge-rating {
+      background: var(--jksc-amber-light);
+      color: var(--jksc-amber);
+    }
+
+    .badge-count {
+      background: var(--jksc-brand-light);
+      color: var(--jksc-brand);
+    }
+
+    .badge-level {
+      background: transparent;
+      color: var(--jksc-body);
+      border: 1px solid var(--jksc-hairline);
+    }
+
+    /* ========================================
+       Forms & Inputs
+       ======================================== */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--jksc-ink);
+    }
+
+    .form-input {
+      background: var(--jksc-canvas);
+      color: var(--jksc-ink);
+      border: 1px solid var(--jksc-hairline);
+      border-radius: var(--jksc-radius-sm);
+      padding: 8px 12px;
+      font-family: var(--jksc-font-family);
+      font-size: 16px;
+      line-height: 24px;
+      transition: border-color 0.2s ease;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--jksc-brand);
+      box-shadow: 0 0 0 3px var(--jksc-brand-light);
+    }
+
+    .form-input::placeholder {
+      color: var(--jksc-muted);
+    }
+
+    .form-search {
+      border-radius: var(--jksc-radius-xl);
+      padding-left: 40px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: 12px center;
+    }
+
+    .form-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 40px;
+    }
+
+    /* ========================================
+       Hero Section
+       ======================================== */
+    .hero {
+      background: linear-gradient(to right bottom, rgba(248, 250, 252, 0.3) 0%, var(--jksc-canvas) 50%, var(--jksc-surface-purple) 100%);
+      padding: 80px 0;
+      text-align: center;
+    }
+
+    .hero-title {
+      font-size: 36px;
+      font-weight: 700;
+      line-height: 45px;
+      color: var(--jksc-ink);
+      margin-bottom: 16px;
+    }
+
+    .hero-subtitle {
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 24px;
+      color: var(--jksc-body);
+      max-width: 600px;
+      margin: 0 auto 32px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* Dark mode hero gradient override */
+    html[data-theme="dark"] .hero,
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) .hero {
+        background: linear-gradient(to right bottom, rgba(99, 102, 241, 0.05) 0%, var(--jksc-canvas) 50%, rgba(99, 102, 241, 0.08) 100%);
+      }
+    }
+
+    /* ========================================
+       Stats Section
+       ======================================== */
+    .stats {
+      background: var(--jksc-surface-light);
+    }
+
+    .stats .grid-7 {
+      grid-template-columns: repeat(7, 1fr);
+    }
+
+    @media (max-width: 1024px) {
+      .stats .grid-7 {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .stats .grid-7 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    /* ========================================
+       Testimonial
+       ======================================== */
+    .testimonial {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .testimonial-quote {
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 24px;
+      color: var(--jksc-ink);
+      font-style: italic;
+    }
+
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .testimonial-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--jksc-radius-full);
+      background: var(--jksc-surface-purple);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--jksc-brand);
+      font-weight: 700;
+    }
+
+    .testimonial-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--jksc-ink);
+    }
+
+    .testimonial-role {
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--jksc-body);
+    }
+
+    /* ========================================
+       Footer
+       ======================================== */
+    .footer {
+      background: #1e293b;
+      color: white;
+      padding: 48px 0 32px;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 32px;
+      margin-bottom: 32px;
+    }
+
+    @media (max-width: 1024px) {
+      .footer-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 640px) {
+      .footer-grid { grid-template-columns: 1fr; }
+    }
+
+    .footer-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .footer-link {
+      display: block;
+      font-size: 14px;
+      font-weight: 400;
+      color: #94a3b8;
+      text-decoration: none;
+      margin-bottom: 8px;
+      transition: color 0.2s ease;
+    }
+
+    .footer-link:hover {
+      color: white;
+    }
+
+    .footer-bottom {
+      border-top: 1px solid #334155;
+      padding-top: 24px;
+      text-align: center;
+      font-size: 14px;
+      color: #94a3b8;
+    }
+
+    /* ========================================
+       Color Swatch
+       ======================================== */
+    .swatch {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .swatch-color {
+      width: 100%;
+      height: 64px;
+      border-radius: var(--jksc-radius-md);
+      border: 1px solid var(--jksc-hairline);
+    }
+
+    .swatch-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--jksc-ink);
+    }
+
+    .swatch-value {
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--jksc-body);
+      font-family: monospace;
+    }
+
+    /* ========================================
+       Typography Sample
+       ======================================== */
+    .type-sample {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--jksc-hairline);
+    }
+
+    .type-sample:last-child {
+      border-bottom: none;
+    }
+
+    .type-sample-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--jksc-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .type-sample-meta {
+      font-size: 12px;
+      color: var(--jksc-body);
+    }
+
+    /* ========================================
+       Divider
+       ======================================== */
+    .divider {
+      height: 1px;
+      background: var(--jksc-hairline);
+      margin: 24px 0;
+    }
+
+    /* ========================================
+       Star Rating
+       ======================================== */
+    .stars {
+      color: var(--jksc-amber);
+      font-size: 14px;
+    }
+
+    /* ========================================
+       Alumni Logos (Grayscale)
+       ======================================== */
+    .alumni-logo {
+      filter: grayscale(100%);
+      opacity: 0.6;
+      transition: all 0.3s ease;
+    }
+
+    .alumni-logo:hover {
+      filter: grayscale(0%);
+      opacity: 1;
+    }
+
+    /* ========================================
+       Lucide Icons
+       ======================================== */
+    .lucide {
+      width: 18px;
+      height: 18px;
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    .lucide-star {
+      color: var(--jksc-amber);
+    }
+
+    .lucide-sun, .lucide-moon {
+      color: var(--jksc-ink);
+    }
+
+    .stars {
+      display: flex;
+      gap: 2px;
+    }
+
+    .stars .lucide {
+      color: var(--jksc-amber);
+      width: 16px;
+      height: 16px;
+    }
+
+    .badge-rating {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .badge-rating .lucide {
+      width: 14px;
+      height: 14px;
+      color: var(--jksc-amber);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Theme Toggle Button -->
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+    <i data-lucide="moon" class="lucide" id="themeIcon"></i>
+    <span id="themeLabel">Dark</span>
+  </button>
+
+  <!-- Navigation -->
+  <nav class="nav-bar">
+    <a href="#" class="nav-logo">JK Shah Classes</a>
+    <ul class="nav-links">
+      <li><a href="#" class="nav-link active">Home</a></li>
+      <li><a href="#" class="nav-link">Courses</a></li>
+      <li><a href="#" class="nav-link">Results</a></li>
+      <li><a href="#" class="nav-link">About</a></li>
+      <li><a href="#" class="nav-link">Contact</a></li>
+    </ul>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <h1 class="hero-title">Empower your career with CA.</h1>
+      <p class="hero-subtitle">India's leading commerce coaching institute with 43+ years of legacy. Join 50,000+ successful CA professionals.</p>
+      <div class="hero-actions">
+        <button class="button button-primary">Explore Courses</button>
+        <button class="button button-secondary">Free Demo Class</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Color Palette -->
+  <section>
+    <div class="container">
+      <h2 class="section-title">Color Palette</h2>
+      <p class="section-subtitle">Brand colors adapt between light and dark modes</p>
+      
+      <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px;">Brand & Primary</h3>
+      <div class="grid grid-4" style="margin-bottom: 32px;">
+        <div class="swatch">
+          <div class="swatch-color" style="background: var(--jksc-brand);"></div>
+          <span class="swatch-label">Brand Indigo</span>
+          <span class="swatch-value">--jksc-brand</span>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background: var(--jksc-brand-light);"></div>
+          <span class="swatch-label">Brand Light</span>
+          <span class="swatch-value">--jksc-brand-light</span>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background: var(--jksc-amber);"></div>
+          <span class="swatch-label">Amber Accent</span>
+          <span class="swatch-value">--jksc-amber</span>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background: var(--jksc-green);"></div>
+          <span class="swatch-label">Success Green</span>
+          <span class="swatch-value">--jksc-green</span>
+        </div>
+      </div>
+      
+      <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px;">Surfaces</h3>
+      <div class="grid grid-4" style="margin-bottom: 32px;">
+        <div class="swatch">
+          <div class="swatch-color" style="background: var(--jksc-canvas);"></div>
+          <span class="swatch-label">Canvas</span>
+          <span class="swatch-value">--jksc-canvas</span>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background: var(--jksc-surface-light);"></div>
+          <span class="swatch-label">Surface Light</span>
+          <span class="swatch-value">--jksc-surface-light</span>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background: var(--jksc-surface-purple);"></div>
+          <span class="swatch-label">Surface Purple</span>
+          <span class="swatch-value">--jksc-surface-purple</span>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background: var(--jksc-hairline);"></div>
+          <span class="swatch-label">Hairline</span>
+          <span class="swatch-value">--jksc-hairline</span>
+        </div>
+      </div>
+      
+      <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px;">Text</h3>
+      <div class="grid grid-3">
+        <div class="swatch">
+          <div class="swatch-color" style="background: var(--jksc-ink);"></div>
+          <span class="swatch-label">Ink (Primary)</span>
+          <span class="swatch-value">--jksc-ink</span>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background: var(--jksc-body);"></div>
+          <span class="swatch-label">Body (Secondary)</span>
+          <span class="swatch-value">--jksc-body</span>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background: var(--jksc-muted);"></div>
+          <span class="swatch-label">Muted</span>
+          <span class="swatch-value">--jksc-muted</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Typography -->
+  <section>
+    <div class="container">
+      <h2 class="section-title">Typography</h2>
+      <p class="section-subtitle">Inter font family across all weights and sizes</p>
+      
+      <div class="card">
+        <div class="type-sample">
+          <span class="type-sample-label">display-xl</span>
+          <div style="font-size: 36px; font-weight: 700; line-height: 45px; color: var(--jksc-ink);">Empower your career with CA.</div>
+          <span class="type-sample-meta">36px / 700 / 45px</span>
+        </div>
+        <div class="type-sample">
+          <span class="type-sample-label">display-lg</span>
+          <div style="font-size: 24px; font-weight: 900; line-height: 30px; letter-spacing: -0.6px; color: var(--jksc-ink);">Why Choose JK Shah?</div>
+          <span class="type-sample-meta">24px / 900 / 30px / -0.6px tracking</span>
+        </div>
+        <div class="type-sample">
+          <span class="type-sample-label">display-md</span>
+          <div style="font-size: 24px; font-weight: 700; line-height: 32px; color: var(--jksc-ink);">Course Highlights</div>
+          <span class="type-sample-meta">24px / 700 / 32px</span>
+        </div>
+        <div class="type-sample">
+          <span class="type-sample-label">display-sm</span>
+          <div style="font-size: 20px; font-weight: 700; line-height: 28px; color: var(--jksc-ink);">CA Foundation Course</div>
+          <span class="type-sample-meta">20px / 700 / 28px</span>
+        </div>
+        <div class="type-sample">
+          <span class="type-sample-label">heading-lg</span>
+          <div style="font-size: 16px; font-weight: 700; line-height: 20px; letter-spacing: -0.35px; color: var(--jksc-ink);">Why CA?</div>
+          <span class="type-sample-meta">16px / 700 / 20px / -0.35px tracking</span>
+        </div>
+        <div class="type-sample">
+          <span class="type-sample-label">body-lg / body-md</span>
+          <div style="font-size: 16px; font-weight: 400; line-height: 24px; color: var(--jksc-ink);">Join India's most trusted coaching institute for commerce education.</div>
+          <span class="type-sample-meta">16px / 400 / 24px</span>
+        </div>
+        <div class="type-sample">
+          <span class="type-sample-label">body-sm</span>
+          <div style="font-size: 14px; font-weight: 400; line-height: 20px; color: var(--jksc-body);">Last date for registration: 31st August 2026</div>
+          <span class="type-sample-meta">14px / 400 / 20px</span>
+        </div>
+        <div class="type-sample">
+          <span class="type-sample-label">caption-sm</span>
+          <div style="font-size: 12px; font-weight: 500; line-height: 16px; color: var(--jksc-muted);">*Terms and conditions apply</div>
+          <span class="type-sample-meta">12px / 500 / 16px</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Buttons -->
+  <section>
+    <div class="container">
+      <h2 class="section-title">Buttons</h2>
+      <p class="section-subtitle">Primary CTAs, secondary, ghost, and badge variants</p>
+      
+      <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px;">
+        <button class="button button-primary">Primary CTA</button>
+        <button class="button button-secondary">Secondary</button>
+        <button class="button button-ghost">Ghost Button</button>
+        <button class="button button-badge">Badge Button</button>
+      </div>
+      
+      <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <button class="button button-primary button-sm">Small Primary</button>
+        <button class="button button-secondary button-sm">Small Secondary</button>
+        <button class="button button-icon">→</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cards -->
+  <section>
+    <div class="container">
+      <h2 class="section-title">Cards & Containers</h2>
+      <p class="section-subtitle">Course cards, feature cards, and stat counters</p>
+      
+      <div class="grid grid-3" style="margin-bottom: 32px;">
+        <!-- Course Card -->
+        <div class="card-course">
+          <div class="card-course-image">CA Foundation</div>
+          <div class="card-course-body">
+            <div class="card-course-meta" style="margin-bottom: 8px;">
+              <span class="badge badge-premium">Bestseller</span>
+              <span class="badge badge-rating"><i data-lucide="star" class="lucide lucide-star"></i> 4.8</span>
+            </div>
+            <h3 class="card-course-title">CA Foundation</h3>
+            <p class="card-course-desc">Complete preparation for CA Foundation examination with study materials and mock tests.</p>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <span class="badge badge-count">15 Available</span>
+              <span class="badge badge-level">3 Levels</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Course Card -->
+        <div class="card-course">
+          <div class="card-course-image">CA Intermediate</div>
+          <div class="card-course-body">
+            <div class="card-course-meta" style="margin-bottom: 8px;">
+              <span class="badge badge-popular">Most Popular</span>
+              <span class="badge badge-rating"><i data-lucide="star" class="lucide lucide-star"></i> 4.9</span>
+            </div>
+            <h3 class="card-course-title">CA Intermediate</h3>
+            <p class="card-course-desc">Advanced preparation for CA Intermediate with expert faculty and comprehensive materials.</p>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <span class="badge badge-count">12 Available</span>
+              <span class="badge badge-level">3 Levels</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Course Card -->
+        <div class="card-course">
+          <div class="card-course-image">CA Final</div>
+          <div class="card-course-body">
+            <div class="card-course-meta" style="margin-bottom: 8px;">
+              <span class="badge badge-rating"><i data-lucide="star" class="lucide lucide-star"></i> 4.7</span>
+            </div>
+            <h3 class="card-course-title">CA Final</h3>
+            <p class="card-course-desc">Expert-led preparation for CA Final with personalized mentorship and practice.</p>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <span class="badge badge-count">10 Available</span>
+              <span class="badge badge-level">3 Levels</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Feature Card -->
+      <div class="card-feature" style="margin-bottom: 32px;">
+        <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 8px;">Why Choose JK Shah Classes?</h3>
+        <p style="font-size: 16px; line-height: 24px; opacity: 0.9;">43+ years of legacy, 50,000+ successful students, and India's most trusted commerce coaching institute.</p>
+      </div>
+      
+      <!-- Stat Cards -->
+      <div class="grid grid-4">
+        <div class="card-stat">
+          <div class="stat-value">50K+</div>
+          <div class="stat-label">Students Enrolled</div>
+        </div>
+        <div class="card-stat">
+          <div class="stat-value">43+</div>
+          <div class="stat-label">Years Legacy</div>
+        </div>
+        <div class="card-stat">
+          <div class="stat-value">95%</div>
+          <div class="stat-label">Success Rate</div>
+        </div>
+        <div class="card-stat">
+          <div class="stat-value">100+</div>
+          <div class="stat-label">Expert Faculty</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Badges & Tags -->
+  <section>
+    <div class="container">
+      <h2 class="section-title">Badges & Tags</h2>
+      <p class="section-subtitle">Status indicators, ratings, and metadata pills</p>
+      
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <span class="badge badge-premium">Bestseller</span>
+        <span class="badge badge-popular">Most Popular</span>
+        <span class="badge badge-rating"><i data-lucide="star" class="lucide lucide-star"></i> 4.8 Rating</span>
+        <span class="badge badge-count">15 Available</span>
+        <span class="badge badge-level">3 Levels</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Form Inputs -->
+  <section>
+    <div class="container">
+      <h2 class="section-title">Form Inputs</h2>
+      <p class="section-subtitle">Text inputs, search, and select dropdowns</p>
+      
+      <div class="grid grid-3">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" class="form-input" placeholder="Enter your full name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" class="form-input" placeholder="you@example.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Search Courses</label>
+          <input type="text" class="form-input form-search" placeholder="Search courses...">
+        </div>
+      </div>
+      
+      <div class="grid grid-3" style="margin-top: 16px;">
+        <div class="form-group">
+          <label class="form-label">Course Level</label>
+          <select class="form-input form-select">
+            <option>Select level</option>
+            <option>Foundation</option>
+            <option>Intermediate</option>
+            <option>Final</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone Number</label>
+          <input type="tel" class="form-input" placeholder="+91 98765 43210">
+        </div>
+        <div class="form-group">
+          <label class="form-label">City</label>
+          <input type="text" class="form-input" placeholder="Mumbai">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials -->
+  <section>
+    <div class="container">
+      <h2 class="section-title">Student Testimonials</h2>
+      <p class="section-subtitle">Success stories from our students</p>
+      
+      <div class="grid grid-3">
+        <div class="card">
+          <div class="testimonial">
+            <div class="stars">
+              <i data-lucide="star" class="lucide"></i>
+              <i data-lucide="star" class="lucide"></i>
+              <i data-lucide="star" class="lucide"></i>
+              <i data-lucide="star" class="lucide"></i>
+              <i data-lucide="star" class="lucide"></i>
+            </div>
+            <p class="testimonial-quote">"JK Shah Classes transformed my understanding of commerce. The faculty's expertise and personalized approach helped me clear CA Final in first attempt."</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">PS</div>
+              <div>
+                <div class="testimonial-name">Priya Sharma</div>
+                <div class="testimonial-role">CA Final - AIR 15</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="testimonial">
+            <div class="stars">
+              <i data-lucide="star" class="lucide"></i>
+              <i data-lucide="star" class="lucide"></i>
+              <i data-lucide="star" class="lucide"></i>
+              <i data-lucide="star" class="lucide"></i>
+              <i data-lucide="star" class="lucide"></i>
+            </div>
+            <p class="testimonial-quote">"The study materials and mock tests are world-class. I scored 85% in CA Intermediate thanks to the structured approach at JK Shah."</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">AK</div>
+              <div>
+                <div class="testimonial-name">Amit Kumar</div>
+                <div class="testimonial-role">CA Intermediate - 85%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="testimonial">
+            <div class="stars">
+              <i data-lucide="star" class="lucide"></i>
+              <i data-lucide="star" class="lucide"></i>
+              <i data-lucide="star" class="lucide"></i>
+              <i data-lucide="star" class="lucide"></i>
+              <i data-lucide="star" class="lucide"></i>
+            </div>
+            <p class="testimonial-quote">"Best decision of my career! The faculty here is unmatched. They don't just teach, they mentor you to success."</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">RG</div>
+              <div>
+                <div class="testimonial-name">Rahul Gupta</div>
+                <div class="testimonial-role">CA Foundation - 92%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Elevation & Shadows -->
+  <section>
+    <div class="container">
+      <h2 class="section-title">Elevation & Depth</h2>
+      <p class="section-subtitle">Shadow levels from flat to modal</p>
+      
+      <div class="grid grid-4">
+        <div style="padding: 24px; background: var(--jksc-canvas); border: 1px solid var(--jksc-hairline); border-radius: var(--jksc-radius-xl); text-align: center;">
+          <div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">Level 0</div>
+          <div style="font-size: 12px; color: var(--jksc-body);">Flat</div>
+        </div>
+        <div style="padding: 24px; background: var(--jksc-canvas); border: 1px solid var(--jksc-hairline); border-radius: var(--jksc-radius-xl); text-align: center; box-shadow: var(--jksc-shadow-subtle);">
+          <div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">Level 2</div>
+          <div style="font-size: 12px; color: var(--jksc-body);">Subtle</div>
+        </div>
+        <div style="padding: 24px; background: var(--jksc-canvas); border: 1px solid var(--jksc-hairline); border-radius: var(--jksc-radius-xl); text-align: center; box-shadow: var(--jksc-shadow-elevated);">
+          <div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">Level 3</div>
+          <div style="font-size: 12px; color: var(--jksc-body);">Elevated</div>
+        </div>
+        <div style="padding: 24px; background: var(--jksc-canvas); border: 1px solid var(--jksc-hairline); border-radius: var(--jksc-radius-xl); text-align: center; box-shadow: var(--jksc-shadow-modal);">
+          <div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">Level 4</div>
+          <div style="font-size: 12px; color: var(--jksc-body);">Modal</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Border Radius -->
+  <section>
+    <div class="container">
+      <h2 class="section-title">Border Radius</h2>
+      <p class="section-subtitle">Shape system from sharp to pill</p>
+      
+      <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: end;">
+        <div style="text-align: center;">
+          <div style="width: 64px; height: 64px; background: var(--jksc-brand); border-radius: var(--jksc-radius-sm); margin-bottom: 8px;"></div>
+          <span style="font-size: 12px; color: var(--jksc-body);">sm (4px)</span>
+        </div>
+        <div style="text-align: center;">
+          <div style="width: 64px; height: 64px; background: var(--jksc-brand); border-radius: var(--jksc-radius-md); margin-bottom: 8px;"></div>
+          <span style="font-size: 12px; color: var(--jksc-body);">md (10px)</span>
+        </div>
+        <div style="text-align: center;">
+          <div style="width: 64px; height: 64px; background: var(--jksc-brand); border-radius: var(--jksc-radius-xl); margin-bottom: 8px;"></div>
+          <span style="font-size: 12px; color: var(--jksc-body);">xl (16px)</span>
+        </div>
+        <div style="text-align: center;">
+          <div style="width: 64px; height: 64px; background: var(--jksc-brand); border-radius: var(--jksc-radius-2xl); margin-bottom: 8px;"></div>
+          <span style="font-size: 12px; color: var(--jksc-body);">2xl (24px)</span>
+        </div>
+        <div style="text-align: center;">
+          <div style="width: 64px; height: 64px; background: var(--jksc-brand); border-radius: var(--jksc-radius-full); margin-bottom: 8px;"></div>
+          <span style="font-size: 12px; color: var(--jksc-body);">full (9999px)</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-title">JK Shah Classes</div>
+          <p style="font-size: 14px; color: #94a3b8; line-height: 20px;">India's leading commerce coaching institute with 43+ years of legacy.</p>
+        </div>
+        <div>
+          <div class="footer-title">Courses</div>
+          <a href="#" class="footer-link">CA Foundation</a>
+          <a href="#" class="footer-link">CA Intermediate</a>
+          <a href="#" class="footer-link">CA Final</a>
+          <a href="#" class="footer-link">CMA</a>
+        </div>
+        <div>
+          <div class="footer-title">Resources</div>
+          <a href="#" class="footer-link">Study Materials</a>
+          <a href="#" class="footer-link">Mock Tests</a>
+          <a href="#" class="footer-link">Video Lectures</a>
+          <a href="#" class="footer-link">Blog</a>
+        </div>
+        <div>
+          <div class="footer-title">Contact</div>
+          <a href="#" class="footer-link">+91 98765 43210</a>
+          <a href="#" class="footer-link">info@jkshahclasses.com</a>
+          <a href="#" class="footer-link">Mumbai, India</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        © 2026 JK Shah Classes. All rights reserved.
+      </div>
+    </div>
+  </footer>
+
+  <!-- Theme Toggle Script -->
+  <script>
+    const toggle = document.getElementById('themeToggle');
+    const icon = document.getElementById('themeIcon');
+    const label = document.getElementById('themeLabel');
+    const meta = document.querySelector('meta[name="color-scheme"]');
+    
+    function getSystemTheme() {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    
+    function getStoredTheme() {
+      return localStorage.getItem('jksc-color-scheme');
+    }
+    
+    function applyTheme(theme) {
+      if (theme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        icon.setAttribute('data-lucide', 'sun');
+        label.textContent = 'Light';
+      } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+        icon.setAttribute('data-lucide', 'moon');
+        label.textContent = 'Dark';
+      }
+      meta.content = theme === 'dark' ? 'dark' : 'light';
+      lucide.createIcons();
+    }
+    
+    function initTheme() {
+      const stored = getStoredTheme();
+      if (stored) {
+        applyTheme(stored);
+      } else {
+        applyTheme(getSystemTheme());
+      }
+    }
+    
+    toggle.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme') || getSystemTheme();
+      const next = current === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('jksc-color-scheme', next);
+      applyTheme(next);
+    });
+    
+    // Listen for system theme changes
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+      if (!getStoredTheme()) {
+        applyTheme(e.matches ? 'dark' : 'light');
+      }
+    });
+    
+    // Initialize Lucide icons
+    lucide.createIcons();
+    initTheme();
+  </script>
+
+</body>
+</html>
