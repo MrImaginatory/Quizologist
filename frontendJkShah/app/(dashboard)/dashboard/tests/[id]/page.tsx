@@ -356,7 +356,7 @@ export default function PredefinedTestDetailPage() {
                       >
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
-                      <span className="font-medium">{course.name}</span>
+                      <span className="font-medium">{capitalize(course.name)}</span>
                     </div>
                     <Badge variant="outline" className="text-xs">
                       {course.subjects.size} subject{course.subjects.size !== 1 ? "s" : ""}
@@ -387,7 +387,7 @@ export default function PredefinedTestDetailPage() {
                               >
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                               </svg>
-                              <span className="text-sm">{subject.name}</span>
+                              <span className="text-sm">{capitalize(subject.name)}</span>
                             </div>
                             <Badge variant="outline" className="text-xs">
                               {subject.topics.length} topic{subject.topics.length !== 1 ? "s" : ""}

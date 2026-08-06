@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { BookOpen, Settings } from "lucide-react";
 import { TestFilters } from "@/components/filters/test-filters";
 import { capitalize } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 interface TestRow {
   id: string;
@@ -261,7 +262,12 @@ export default function TestsPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="space-y-6"
+    >
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Tests</h1>
@@ -313,6 +319,6 @@ export default function TestsPage() {
         onPageChange={setPage}
         onLimitChange={setLimit}
       />
-    </div>
+    </motion.div>
   );
 }

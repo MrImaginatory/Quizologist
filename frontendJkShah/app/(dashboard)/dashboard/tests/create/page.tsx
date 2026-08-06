@@ -11,6 +11,7 @@ import { useTeachingCoursesAndSubjects } from "@/hooks/use-teaching-courses-and-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { CustomSelect } from "@/components/ui/custom-select";
 import {
   Select,
   SelectContent,
@@ -20,10 +21,11 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ArrowLeft, Save, ArrowRight, Trash2, X } from "lucide-react";
+import { Loader2, ArrowLeft, Save, ArrowRight, Trash2, X, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { capitalize } from "@/lib/utils";
 import { Stepper } from "@/components/ui/stepper";
+import { motion } from "framer-motion";
 import { DateTimePicker } from "@/components/ui/datetime-picker";
 import { TimezoneSelect } from "@/components/ui/timezone-select";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
@@ -279,7 +281,12 @@ export default function CreatePredefinedTestPage() {
   };
 
   return (
-    <div className="mx-auto space-y-6">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="mx-auto space-y-6"
+    >
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => router.back()}>
           <ArrowLeft className="h-5 w-5" />
@@ -320,11 +327,13 @@ export default function CreatePredefinedTestPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
-                <Input
+                <textarea
                   id="description"
                   value={description}
                   onChange={(e) => updateForm({ description: e.target.value })}
                   placeholder="Optional description for the test"
+                  rows={4}
+                  className="flex w-full rounded-[20px] border border-input bg-background px-4 py-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
                 />
               </div>
             </CardContent>
@@ -369,18 +378,14 @@ export default function CreatePredefinedTestPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Difficulty *</Label>
-                  <Select value={difficulty} onValueChange={(v) => { if (v) updateForm({ difficulty: v }); }}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue>
-                        {capitalize(difficulty)}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {DIFFICULTY_OPTIONS.map((d) => (
-                        <SelectItem key={d} value={d}>{capitalize(d)}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <CustomSelect
+                    value={difficulty}
+                    onChange={(v) => updateForm({ difficulty: v })}
+                    options={DIFFICULTY_OPTIONS.map((d) => ({
+                      value: d,
+                      label: capitalize(d),
+                    }))}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Max Attempts</Label>
@@ -784,6 +789,6 @@ export default function CreatePredefinedTestPage() {
         confirmText="Clear"
         onConfirm={handleClearConfirm}
       />
-    </div>
+    </motion.div>
   );
 }

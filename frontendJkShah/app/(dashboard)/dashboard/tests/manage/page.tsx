@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, ArrowLeft, Plus, Play, Pause } from "lucide-react";
 import { capitalize } from "@/lib/utils";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 export default function ManageTestsPage() {
   const router = useRouter();
@@ -50,7 +51,12 @@ export default function ManageTestsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="space-y-6"
+    >
       <div className="flex items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => router.back()}>
@@ -199,6 +205,6 @@ export default function ManageTestsPage() {
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }

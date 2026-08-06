@@ -1,13 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { CustomSelect } from "@/components/ui/custom-select";
 import { DatePicker } from "@/components/ui/date-picker";
 import { X } from "lucide-react";
 import { capitalize } from "@/lib/utils";
@@ -117,80 +111,66 @@ export function TestFilters({
   return (
     <div className="flex flex-wrap items-center gap-3">
       {showCourseFilter && (
-        <Select
+        <CustomSelect
           value={courseId || "all"}
-          onValueChange={(value) => onCourseChange?.(value && value !== "all" ? value : "")}
-        >
-          <SelectTrigger className="w-[200px]">
-            <SelectValue>
-              {courseDisplay || (coursesLoading ? "Loading courses..." : "All Courses")}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Courses</SelectItem>
-            {courses.map((course) => (
-              <SelectItem key={course.id} value={course.id}>
-                {capitalize(course.name)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          onChange={(value) => onCourseChange?.(value && value !== "all" ? value : "")}
+          placeholder={coursesLoading ? "Loading courses..." : "All Courses"}
+          className="w-[200px]"
+          options={[
+            { value: "all", label: "All Courses" },
+            ...courses.map((course) => ({
+              value: course.id,
+              label: capitalize(course.name),
+            })),
+          ]}
+        />
       )}
 
       {showSubjectFilter && (
-        <Select
+        <CustomSelect
           value={subjectId || "all"}
-          onValueChange={(value) => onSubjectChange?.(value && value !== "all" ? value : "")}
+          onChange={(value) => onSubjectChange?.(value && value !== "all" ? value : "")}
           disabled={!courseId || courseId === "all"}
-        >
-          <SelectTrigger className="w-[200px]">
-            <SelectValue>
-              {subjectDisplay || (subjectsLoading ? "Loading subjects..." : !courseId || courseId === "all" ? "Select course first" : "All Subjects")}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Subjects</SelectItem>
-            {filteredSubjects.map((subject) => (
-              <SelectItem key={subject.id} value={subject.id}>
-                {capitalize(subject.name)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          placeholder={subjectsLoading ? "Loading subjects..." : !courseId || courseId === "all" ? "Select course first" : "All Subjects"}
+          className="w-[200px]"
+          options={[
+            { value: "all", label: "All Subjects" },
+            ...filteredSubjects.map((subject) => ({
+              value: subject.id,
+              label: capitalize(subject.name),
+            })),
+          ]}
+        />
       )}
 
       {showStudentFilter && (
-        <Select value={studentId} onValueChange={(value) => onStudentChange(value || "")}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue>
-              {studentDisplay || (studentsLoading ? "Loading students..." : "All Students")}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Students</SelectItem>
-            {students.map((student) => (
-              <SelectItem key={student.id} value={student.id}>
-                {capitalize(student.fname)} {capitalize(student.lname)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <CustomSelect
+          value={studentId || "all"}
+          onChange={(value) => onStudentChange(value && value !== "all" ? value : "")}
+          placeholder={studentsLoading ? "Loading students..." : "All Students"}
+          className="w-[200px]"
+          options={[
+            { value: "all", label: "All Students" },
+            ...students.map((student) => ({
+              value: student.id,
+              label: `${capitalize(student.fname)} ${capitalize(student.lname)}`,
+            })),
+          ]}
+        />
       )}
 
-      <Select value={status} onValueChange={(value) => onStatusChange(value || "")}>
-        <SelectTrigger className="w-[160px]">
-          <SelectValue>
-            {status && status !== "all" ? statusLabels[status] || capitalize(status) : "All Status"}
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Status</SelectItem>
-          <SelectItem value="pending">Pending</SelectItem>
-          <SelectItem value="in_progress">In Progress</SelectItem>
-          <SelectItem value="completed">Completed</SelectItem>
-          <SelectItem value="abandoned">Abandoned</SelectItem>
-        </SelectContent>
-      </Select>
+      <CustomSelect
+        value={status || "all"}
+        onChange={(value) => onStatusChange(value && value !== "all" ? value : "")}
+        className="w-[160px]"
+        options={[
+          { value: "all", label: "All Status" },
+          { value: "pending", label: "Pending" },
+          { value: "in_progress", label: "In Progress" },
+          { value: "completed", label: "Completed" },
+          { value: "abandoned", label: "Abandoned" },
+        ]}
+      />
 
       <div className="flex items-center gap-2">
         <DatePicker

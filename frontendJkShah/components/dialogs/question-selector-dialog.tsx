@@ -329,12 +329,12 @@ export function QuestionSelectorDialog({
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Difficulties</SelectItem>
-                <SelectItem value="beginner">Beginner</SelectItem>
-                <SelectItem value="normal">Normal</SelectItem>
-                <SelectItem value="mid">Mid</SelectItem>
-                <SelectItem value="hard">Hard</SelectItem>
-                <SelectItem value="expert">Expert</SelectItem>
+                <SelectItem value="all" className="focus:bg-primary focus:text-primary-foreground">All Difficulties</SelectItem>
+                <SelectItem value="beginner" className="focus:bg-primary focus:text-primary-foreground">Beginner</SelectItem>
+                <SelectItem value="normal" className="focus:bg-primary focus:text-primary-foreground">Normal</SelectItem>
+                <SelectItem value="mid" className="focus:bg-primary focus:text-primary-foreground">Mid</SelectItem>
+                <SelectItem value="hard" className="focus:bg-primary focus:text-primary-foreground">Hard</SelectItem>
+                <SelectItem value="expert" className="focus:bg-primary focus:text-primary-foreground">Expert</SelectItem>
               </SelectContent>
             </Select>
             <Select value={filterCourse || "all"} onValueChange={(v) => setFilterCourse(v || "all")}>
@@ -346,9 +346,9 @@ export function QuestionSelectorDialog({
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Courses</SelectItem>
+                <SelectItem value="all" className="focus:bg-primary focus:text-primary-foreground">All Courses</SelectItem>
                 {courseIds.map((cId) => (
-                  <SelectItem key={cId} value={cId}>
+                  <SelectItem key={cId} value={cId} className="focus:bg-primary focus:text-primary-foreground">
                     {capitalize(courseNames.get(cId) || "Course")}
                   </SelectItem>
                 ))}
@@ -363,9 +363,9 @@ export function QuestionSelectorDialog({
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Subjects</SelectItem>
+                <SelectItem value="all" className="focus:bg-primary focus:text-primary-foreground">All Subjects</SelectItem>
                 {filteredSubjectOptions.map((sId) => (
-                  <SelectItem key={sId} value={sId}>
+                  <SelectItem key={sId} value={sId} className="focus:bg-primary focus:text-primary-foreground">
                     {capitalize(subjectNames.get(sId) || "Subject")}
                   </SelectItem>
                 ))}
