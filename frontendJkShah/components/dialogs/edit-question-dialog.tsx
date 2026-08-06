@@ -12,13 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { CustomSelect } from "@/components/ui/custom-select";
 import { Loader2, Plus, X } from "lucide-react";
 import { questionsApi, Question } from "@/lib/api";
 import { useAuth } from "@/contexts/auth-context";
@@ -148,19 +142,18 @@ export function EditQuestionDialog({
 
             {/* Difficulty */}
             <div className="space-y-2">
-              <Label>Difficulty</Label>
-              <Select value={difficulty} onValueChange={(value) => { if (value) setDifficulty(value); }}>
-                <SelectTrigger className="w-full">
-                  <SelectValue>{capitalize(difficulty)}</SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="beginner">Beginner</SelectItem>
-                  <SelectItem value="normal">Normal</SelectItem>
-                  <SelectItem value="mid">Mid</SelectItem>
-                  <SelectItem value="hard">Hard</SelectItem>
-                  <SelectItem value="expert">Expert</SelectItem>
-                </SelectContent>
-              </Select>
+                <Label>Difficulty *</Label>
+                <CustomSelect
+                  value={difficulty}
+                  onChange={(value) => setDifficulty(value)}
+                  options={[
+                    { value: "beginner", label: "Beginner" },
+                    { value: "normal", label: "Normal" },
+                    { value: "mid", label: "Mid" },
+                    { value: "hard", label: "Hard" },
+                    { value: "expert", label: "Expert" },
+                  ]}
+                />
             </div>
 
             {/* MCQ Choices */}
@@ -221,7 +214,7 @@ export function EditQuestionDialog({
                   onChange={(e) => setCorrectAnswer(e.target.value)}
                   placeholder="Enter the correct answer"
                   rows={2}
-                  className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+                  className="flex w-full rounded-[20px] border border-input bg-background px-4 py-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
                   required
                 />
               </div>
@@ -239,7 +232,7 @@ export function EditQuestionDialog({
                 }}
                 placeholder="Optional explanation for the answer"
                 rows={2}
-                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+                className="flex w-full rounded-[20px] border border-input bg-background px-4 py-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
               />
               <p className="text-xs text-muted-foreground text-right">
                 {explanation.length}/{MAX_EXPLANATION_LENGTH}

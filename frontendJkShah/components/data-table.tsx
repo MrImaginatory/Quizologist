@@ -19,13 +19,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { CustomSelect } from "@/components/ui/custom-select";
 import { Loader2 } from "lucide-react";
 
 interface Column<T> {
@@ -88,26 +82,23 @@ export function DataTable<T>({
             {pagination && onLimitChange && (
               <div className="flex items-center gap-2">
                 <p className="text-sm text-muted-foreground">Show</p>
-                <Select
+                <CustomSelect
                   value={pagination.limit.toString()}
-                  onValueChange={(value) => {
+                  onChange={(value) => {
                     if (value) {
                       onLimitChange(parseInt(value));
                       onPageChange?.(1);
                     }
                   }}
-                >
-                  <SelectTrigger className="w-20 h-9">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="5">5</SelectItem>
-                    <SelectItem value="10">10</SelectItem>
-                    <SelectItem value="20">20</SelectItem>
-                    <SelectItem value="50">50</SelectItem>
-                    <SelectItem value="100">100</SelectItem>
-                  </SelectContent>
-                </Select>
+                  className="w-24 h-9"
+                  options={[
+                    { value: "5", label: "5" },
+                    { value: "10", label: "10" },
+                    { value: "20", label: "20" },
+                    { value: "50", label: "50" },
+                    { value: "100", label: "100" },
+                  ]}
+                />
                 <p className="text-sm text-muted-foreground">per page</p>
               </div>
             )}

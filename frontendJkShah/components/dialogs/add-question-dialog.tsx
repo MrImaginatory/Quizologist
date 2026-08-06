@@ -12,13 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { CustomSelect } from "@/components/ui/custom-select";
 import { Loader2, Plus, X } from "lucide-react";
 import { useCourses } from "@/hooks/use-courses";
 import { useSubjects } from "@/hooks/use-subjects";
@@ -169,85 +163,71 @@ export function AddQuestionDialog({ open, onOpenChange, onSuccess }: AddQuestion
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>Course *</Label>
-                <Select value={courseId} onValueChange={(value) => {
-                  if (value) {
+                <CustomSelect
+                  id="course"
+                  value={courseId}
+                  onChange={(value) => {
                     setCourseId(value);
                     setSubjectId("");
                     setTopicId("");
-                  }
-                }}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue>
-                      {selectedCourse ? capitalize(selectedCourse.name) : isLoadingCourses ? "Loading..." : "Select course"}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {courses.map((course) => (
-                      <SelectItem key={course.id} value={course.id}>
-                        {capitalize(course.name)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  }}
+                  placeholder={isLoadingCourses ? "Loading..." : "Select course"}
+                  options={courses.map((course) => ({
+                    value: course.id,
+                    label: capitalize(course.name),
+                  }))}
+                />
               </div>
 
               <div className="space-y-2">
                 <Label>Subject *</Label>
-                <Select value={subjectId} onValueChange={(value) => {
-                  if (value) {
+                <CustomSelect
+                  id="subject"
+                  value={subjectId}
+                  onChange={(value) => {
                     setSubjectId(value);
                     setTopicId("");
-                  }
-                }} disabled={!courseId}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue>
-                      {selectedSubject ? capitalize(selectedSubject.name) : !courseId ? "Select course first" : isLoadingSubjects ? "Loading..." : "Select subject"}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {subjects.map((subject) => (
-                      <SelectItem key={subject.id} value={subject.id}>
-                        {capitalize(subject.name)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  }}
+                  disabled={!courseId}
+                  placeholder={!courseId ? "Select course first" : isLoadingSubjects ? "Loading..." : "Select subject"}
+                  options={subjects.map((subject) => ({
+                    value: subject.id,
+                    label: capitalize(subject.name),
+                  }))}
+                />
               </div>
 
               <div className="space-y-2">
                 <Label>Topic *</Label>
-                <Select value={topicId} onValueChange={(value) => { if (value) setTopicId(value); }} disabled={!subjectId}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue>
-                      {selectedTopic ? capitalize(selectedTopic.name) : !subjectId ? "Select subject first" : isLoadingTopics ? "Loading..." : "Select topic"}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {topics.map((topic) => (
-                      <SelectItem key={topic.id} value={topic.id}>
-                        {capitalize(topic.name)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <CustomSelect
+                  id="topic"
+                  value={topicId}
+                  onChange={(value) => setTopicId(value)}
+                  disabled={!subjectId}
+                  placeholder={!subjectId ? "Select subject first" : isLoadingTopics ? "Loading..." : "Select topic"}
+                  options={topics.map((topic) => ({
+                    value: topic.id,
+                    label: capitalize(topic.name),
+                  }))}
+                />
               </div>
             </div>
 
             {/* Difficulty */}
             <div className="space-y-2">
               <Label>Difficulty</Label>
-              <Select value={difficulty} onValueChange={(value) => { if (value) setDifficulty(value); }}>
-                <SelectTrigger className="w-full">
-                  <SelectValue>{capitalize(difficulty)}</SelectValue>
-                </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="beginner">Beginner</SelectItem>
-                    <SelectItem value="normal">Normal</SelectItem>
-                    <SelectItem value="mid">Mid</SelectItem>
-                    <SelectItem value="hard">Hard</SelectItem>
-                    <SelectItem value="expert">Expert</SelectItem>
-                  </SelectContent>
-                </Select>
+              <CustomSelect
+                id="difficulty"
+                value={difficulty}
+                onChange={(value) => setDifficulty(value)}
+                options={[
+                  { value: "beginner", label: "Beginner" },
+                  { value: "normal", label: "Normal" },
+                  { value: "mid", label: "Mid" },
+                  { value: "hard", label: "Hard" },
+                  { value: "expert", label: "Expert" },
+                ]}
+              />
               </div>
 
             {/* Question */}
@@ -262,7 +242,7 @@ export function AddQuestionDialog({ open, onOpenChange, onSuccess }: AddQuestion
                 }}
                 placeholder="Enter your question here"
                 rows={3}
-                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+                className="flex w-full rounded-[20px] border border-input bg-background px-4 py-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
                 required
               />
               <p className="text-xs text-muted-foreground text-right">
@@ -329,7 +309,7 @@ export function AddQuestionDialog({ open, onOpenChange, onSuccess }: AddQuestion
                 }}
                 placeholder="Optional explanation for the answer"
                 rows={2}
-                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+                className="flex w-full rounded-[20px] border border-input bg-background px-4 py-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
               />
               <p className="text-xs text-muted-foreground text-right">
                 {explanation.length}/{MAX_EXPLANATION_LENGTH}

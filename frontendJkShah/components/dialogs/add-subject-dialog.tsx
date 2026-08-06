@@ -12,13 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { CustomSelect } from "@/components/ui/custom-select";
 import { Loader2 } from "lucide-react";
 import { useCourses } from "@/hooks/use-courses";
 import { subjectsApi, Subject } from "@/lib/api";
@@ -106,20 +100,17 @@ export function AddSubjectDialog({ open, onOpenChange, editSubject, onSuccess }:
             )}
             <div className="grid gap-2">
               <Label htmlFor="course">Course *</Label>
-              <Select value={courseId} onValueChange={(value) => { if (value) setCourseId(value); }} required>
-                <SelectTrigger className="w-full">
-                  <SelectValue>
-                    {selectedCourse ? capitalize(selectedCourse.name) : isLoadingCourses ? "Loading..." : "Select course"}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {courses.map((course) => (
-                    <SelectItem key={course.id} value={course.id}>
-                      {capitalize(course.name)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <CustomSelect
+                id="course"
+                value={courseId}
+                onChange={(value) => setCourseId(value)}
+                placeholder={isLoadingCourses ? "Loading..." : "Select course"}
+                options={courses.map((course) => ({
+                  value: course.id,
+                  label: capitalize(course.name),
+                }))}
+                required
+              />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="name">Name *</Label>
@@ -143,7 +134,7 @@ export function AddSubjectDialog({ open, onOpenChange, editSubject, onSuccess }:
                 }}
                 placeholder="Optional description"
                 rows={3}
-                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none [&::-webkit-scrollbar]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-border"
+                className="flex w-full rounded-[20px] border border-input bg-background px-4 py-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none [&::-webkit-scrollbar]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-border"
               />
               <p className="text-xs text-muted-foreground text-right">
                 {description.length}/{MAX_DESCRIPTION_LENGTH}

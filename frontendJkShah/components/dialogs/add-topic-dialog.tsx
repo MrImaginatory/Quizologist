@@ -12,13 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { CustomSelect } from "@/components/ui/custom-select";
 import { Loader2 } from "lucide-react";
 import { useSubjects } from "@/hooks/use-subjects";
 import { topicsApi, Topic } from "@/lib/api";
@@ -106,20 +100,17 @@ export function AddTopicDialog({ open, onOpenChange, editTopic, onSuccess }: Add
             )}
             <div className="grid gap-2">
               <Label htmlFor="subject">Subject *</Label>
-              <Select value={subjectId} onValueChange={(value) => { if (value) setSubjectId(value); }} required>
-                <SelectTrigger className="w-full">
-                  <SelectValue>
-                    {selectedSubject ? capitalize(selectedSubject.name) : isLoadingSubjects ? "Loading..." : "Select subject"}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {subjects.map((subject) => (
-                    <SelectItem key={subject.id} value={subject.id}>
-                      {capitalize(subject.name)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <CustomSelect
+                id="subject"
+                value={subjectId}
+                onChange={(value) => setSubjectId(value)}
+                placeholder={isLoadingSubjects ? "Loading..." : "Select subject"}
+                options={subjects.map((subject) => ({
+                  value: subject.id,
+                  label: capitalize(subject.name),
+                }))}
+                required
+              />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="name">Name *</Label>
@@ -143,7 +134,7 @@ export function AddTopicDialog({ open, onOpenChange, editTopic, onSuccess }: Add
                 }}
                 placeholder="Optional description"
                 rows={3}
-                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none [&::-webkit-scrollbar]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-border"
+                className="flex w-full rounded-[20px] border border-input bg-background px-4 py-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none [&::-webkit-scrollbar]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-border"
               />
               <p className="text-xs text-muted-foreground text-right">
                 {description.length}/{MAX_DESCRIPTION_LENGTH}

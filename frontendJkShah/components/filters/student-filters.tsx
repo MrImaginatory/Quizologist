@@ -1,13 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { CustomSelect } from "@/components/ui/custom-select";
 import { X } from "lucide-react";
 import { capitalize } from "@/lib/utils";
 
@@ -68,44 +62,34 @@ export function StudentFilters({
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <Select
+      <CustomSelect
         value={courseId || "all"}
-        onValueChange={(value) => onCourseChange(value && value !== "all" ? value : "")}
-      >
-        <SelectTrigger className="w-[200px]">
-          <SelectValue>
-            {courseDisplay || (coursesLoading ? "Loading courses..." : "All Courses")}
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Courses</SelectItem>
-          {courses.map((course) => (
-            <SelectItem key={course.id} value={course.id}>
-              {capitalize(course.name)}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        onChange={(value) => onCourseChange(value && value !== "all" ? value : "")}
+        placeholder={coursesLoading ? "Loading courses..." : "All Courses"}
+        className="w-[200px]"
+        options={[
+          { value: "all", label: "All Courses" },
+          ...courses.map((course) => ({
+            value: course.id,
+            label: capitalize(course.name),
+          })),
+        ]}
+      />
 
-      <Select
+      <CustomSelect
         value={subjectId || "all"}
-        onValueChange={(value) => onSubjectChange(value && value !== "all" ? value : "")}
+        onChange={(value) => onSubjectChange(value && value !== "all" ? value : "")}
         disabled={!courseId || courseId === "all"}
-      >
-        <SelectTrigger className="w-[200px]">
-          <SelectValue>
-            {subjectDisplay || (subjectsLoading ? "Loading subjects..." : !courseId || courseId === "all" ? "Select course first" : "All Subjects")}
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Subjects</SelectItem>
-          {filteredSubjects.map((subject) => (
-            <SelectItem key={subject.id} value={subject.id}>
-              {capitalize(subject.name)}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        placeholder={subjectsLoading ? "Loading subjects..." : !courseId || courseId === "all" ? "Select course first" : "All Subjects"}
+        className="w-[200px]"
+        options={[
+          { value: "all", label: "All Subjects" },
+          ...filteredSubjects.map((subject) => ({
+            value: subject.id,
+            label: capitalize(subject.name),
+          })),
+        ]}
+      />
 
       {hasFilters && (
         <Button variant="ghost" size="sm" onClick={onClear}>
