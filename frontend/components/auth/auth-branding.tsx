@@ -31,7 +31,7 @@ export function AuthBranding() {
         <h1 className="text-3xl font-bold text-foreground mb-3">
           Welcome to {process.env.NEXT_PUBLIC_APP_NAME || "Quiz App"}
         </h1>
-        <p className="text-muted-foreground text-lg max-w-sm">
+        <p className="text-muted-foreground text-lg max-w-sm mx-auto">
           Master any subject with our interactive quiz platform
         </p>
       </div>

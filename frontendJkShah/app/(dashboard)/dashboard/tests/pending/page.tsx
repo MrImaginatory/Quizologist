@@ -7,13 +7,7 @@ import { predefinedTestsApi } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { CustomSelect } from "@/components/ui/custom-select";
 import { Loader2, Clock, Play, Calendar, AlertCircle, CheckCircle, Timer } from "lucide-react";
 import { capitalize } from "@/lib/utils";
 import { toast } from "sonner";
@@ -155,19 +149,19 @@ export default function PendingTestsPage() {
 
       {/* Filter */}
       <div className="flex items-center gap-4">
-        <Select value={filterStatus} onValueChange={(v) => { if (v) setFilterStatus(v); }}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter by status">
-              {capitalize(filterStatus === "all" ? "All Tests" : filterStatus)}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Tests</SelectItem>
-            <SelectItem value="available">Available</SelectItem>
-            <SelectItem value="upcoming">Upcoming</SelectItem>
-            <SelectItem value="expired">Expired</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="w-[180px]">
+          <CustomSelect
+            value={filterStatus}
+            onChange={(v) => setFilterStatus(v)}
+            placeholder="Filter by status"
+            options={[
+              { value: "all", label: "All Tests" },
+              { value: "available", label: "Available" },
+              { value: "upcoming", label: "Upcoming" },
+              { value: "expired", label: "Expired" },
+            ]}
+          />
+        </div>
         <p className="text-sm text-muted-foreground">
           {filteredTests.length} test(s) found
         </p>

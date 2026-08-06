@@ -128,7 +128,7 @@ function GroupedCheckboxList({
             placeholder={searchPlaceholder || "Search..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8 h-8 text-xs"
+            className="pl-8 h-8 text-xs focus-visible:ring-primary"
           />
         </div>
       </div>
@@ -555,12 +555,12 @@ export function StartTestDialog({ open, onOpenChange, onStartTest }: StartTestDi
                       }
                     }}
                   >
-                    <SelectTrigger className="w-full h-9">
+                    <SelectTrigger className="w-full h-9 focus:ring-primary focus-visible:ring-primary">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       {DURATION_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value.toString()}>
+                        <SelectItem key={opt.value} value={opt.value.toString()} className="focus:bg-primary focus:text-primary-foreground">
                           {opt.label}
                         </SelectItem>
                       ))}
@@ -576,7 +576,7 @@ export function StartTestDialog({ open, onOpenChange, onStartTest }: StartTestDi
                     }}
                     placeholder="e.g. 30"
                     min={1}
-                    className="h-9"
+                    className="h-9 focus-visible:ring-primary"
                   />
                 )}
               </div>
@@ -602,6 +602,7 @@ export function StartTestDialog({ open, onOpenChange, onStartTest }: StartTestDi
                     if (questionLimit < min) setQuestionLimit(min);
                     if (questionLimit > max) setQuestionLimit(max);
                   }}
+                  className="focus-visible:ring-primary"
                 />
                 <p className="text-xs text-muted-foreground">
                   Min: {durationConfig?.min} | Max: {durationConfig?.max}

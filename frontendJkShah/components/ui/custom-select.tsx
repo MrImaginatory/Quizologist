@@ -85,15 +85,20 @@ export function CustomSelect({
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
-  // Close on scroll/resize so it doesn't drift
+  // Close on scroll/resize so it doesn't drift — but ignore scrolls inside the dropdown
   useEffect(() => {
     if (!open) return;
-    const close = () => setOpen(false);
-    window.addEventListener("scroll", close, true);
-    window.addEventListener("resize", close);
+    const handleScroll = (e: Event) => {
+      // Don't close if the scroll happened inside the dropdown panel itself
+      if (dropdownRef.current?.contains(e.target as Node)) return;
+      setOpen(false);
+    };
+    const handleResize = () => setOpen(false);
+    window.addEventListener("scroll", handleScroll, true);
+    window.addEventListener("resize", handleResize);
     return () => {
-      window.removeEventListener("scroll", close, true);
-      window.removeEventListener("resize", close);
+      window.removeEventListener("scroll", handleScroll, true);
+      window.removeEventListener("resize", handleResize);
     };
   }, [open]);
 

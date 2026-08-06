@@ -27,7 +27,7 @@ interface AnalyticsFiltersProps {
 // Locations fetched from the database via API
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
-import { predefinedTestsApi } from "@/lib/api";
+import { locationsApi } from "@/lib/api";
 
 export function AnalyticsFilters({
   locationId,
@@ -48,17 +48,14 @@ export function AnalyticsFilters({
   const { courses, isLoading: coursesLoading } = useCourses({ limit: 100 });
   const { subjects, isLoading: subjectsLoading } = useSubjects({ limit: 100, courseId: courseId || undefined });
 
-  // Fetch locations from the database
-  const [locations, setLocations] = useState<{ id: string; city: string }[]>([]);
+  // Fetch locations from the database using centralized API
+  const [locations, setLocations] = useState<{ id: string; city: string; pincode?: string }[]>([]);
   useEffect(() => {
     const fetchLocations = async () => {
       try {
-        const res = await fetch("/api/user/location?limit=100", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
-        if (data.success && data.data?.locations) {
-          setLocations(data.data.locations);
+        const res = await locationsApi.getAll(1, 100, token || undefined);
+        if (res.success && res.data?.locations) {
+          setLocations(res.data.locations);
         }
       } catch {
         // Use fallback locations
@@ -83,7 +80,7 @@ export function AnalyticsFilters({
           onChange={(value) => onLocationChange(value === "all" ? "" : value)}
           options={[
             { value: "all", label: "All Locations" },
-            ...locations.map(l => ({ value: l.id, label: l.city }))
+            ...locations.map(l => ({ value: l.id, label: l.pincode ? `${l.city} - ${l.pincode}` : l.city }))
           ]}
         />
       </div>
