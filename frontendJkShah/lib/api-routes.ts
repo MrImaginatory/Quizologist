@@ -131,6 +131,7 @@ export const API_ROUTES = {
     STUDENT_STRENGTHS_WEAKNESSES: `${BASE_URL}/api/dashboard/student/strengths-weaknesses`,
     STUDENT_SKILL_RATING: `${BASE_URL}/api/dashboard/student/skill-rating`,
     STUDENT_REPEATED_QUESTIONS: `${BASE_URL}/api/dashboard/student/repeated-questions`,
+    LOCATION_PERFORMANCE: (locationId: string) => `${BASE_URL}/api/dashboard/location/${locationId}/performance`,
 
   },
 

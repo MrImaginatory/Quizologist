@@ -2,10 +2,17 @@ import { QueryTypes } from "sequelize";
 import { sequelize } from "../../config/database";
 
 export class DashboardService {
-  static async getAdminStats() {
+  static async getAdminStats(locationId?: string) {
+    const locationFilterStr = locationId ? `AND u.location_id = :locationId` : "";
+    const replacements = locationId ? { locationId } : {};
+
+    const testSessionsQuery = locationId
+      ? `SELECT COUNT(*) as count FROM test_sessions ts JOIN users u ON ts.student_id = u.id WHERE ts.status = 'completed' AND u.deleted_at IS NULL ${locationFilterStr}`
+      : `SELECT COUNT(*) as count FROM test_sessions WHERE status = 'completed'`;
+
     const [testsSubmitted] = await sequelize.query(
-      `SELECT COUNT(*) as count FROM test_sessions WHERE status = 'completed'`,
-      { type: QueryTypes.SELECT }
+      testSessionsQuery,
+      { type: QueryTypes.SELECT, replacements }
     ) as any[];
 
     const [totalQuestions] = await sequelize.query(
@@ -23,9 +30,13 @@ export class DashboardService {
       { type: QueryTypes.SELECT }
     ) as any[];
 
+    const studentsQuery = locationId
+      ? `SELECT COUNT(*) as count FROM users u WHERE role = 'student' AND deleted_at IS NULL ${locationFilterStr}`
+      : `SELECT COUNT(*) as count FROM users WHERE role = 'student' AND deleted_at IS NULL`;
+
     const [studentsCount] = await sequelize.query(
-      `SELECT COUNT(*) as count FROM users WHERE role = 'student' AND deleted_at IS NULL`,
-      { type: QueryTypes.SELECT }
+      studentsQuery,
+      { type: QueryTypes.SELECT, replacements }
     ) as any[];
 
     const [totalSubjects] = await sequelize.query(
@@ -33,9 +44,13 @@ export class DashboardService {
       { type: QueryTypes.SELECT }
     ) as any[];
 
+    const teachersQuery = locationId
+      ? `SELECT COUNT(*) as count FROM users u WHERE role = 'teacher' AND deleted_at IS NULL ${locationFilterStr}`
+      : `SELECT COUNT(*) as count FROM users WHERE role = 'teacher' AND deleted_at IS NULL`;
+
     const [totalTeachers] = await sequelize.query(
-      `SELECT COUNT(*) as count FROM users WHERE role = 'teacher' AND deleted_at IS NULL`,
-      { type: QueryTypes.SELECT }
+      teachersQuery,
+      { type: QueryTypes.SELECT, replacements }
     ) as any[];
 
     const usersByLocation = await sequelize.query(
@@ -198,6 +213,53 @@ export class DashboardService {
     return {
       questionsInEnrolledCourses,
       testsSubmitted: parseInt(testsSubmitted?.count || "0", 10),
+    };
+  }
+
+  static async getLocationPerformance(locationId: string) {
+    const [testsQuery] = await sequelize.query(
+      `SELECT COUNT(*) as count, AVG(score) as avg_score 
+       FROM test_sessions ts 
+       JOIN users u ON ts.student_id = u.id 
+       WHERE ts.status = 'completed' AND u.location_id = :locationId AND u.deleted_at IS NULL`,
+      { type: QueryTypes.SELECT, replacements: { locationId } }
+    ) as any[];
+
+    const testsTaken = parseInt(testsQuery?.count || "0", 10);
+    const averageScore = parseFloat(testsQuery?.avg_score || "0").toFixed(1);
+
+    const weakTopicsRaw = await sequelize.query(
+      `SELECT t.id as "topicId", t.name as "topicName", 
+              COUNT(ta.id) as "totalAttempts",
+              SUM(CASE WHEN ta.is_correct = true THEN 1 ELSE 0 END) as "correctAnswers"
+       FROM test_answers ta
+       JOIN test_sessions ts ON ta.test_session_id = ts.id
+       JOIN users u ON ts.student_id = u.id
+       JOIN questions q ON ta.question_id = q.id
+       JOIN topics t ON q.topic_id = t.id
+       WHERE u.location_id = :locationId AND ts.status = 'completed' AND ts.deleted_at IS NULL
+       GROUP BY t.id, t.name
+       HAVING COUNT(ta.id) >= 3`,
+       { type: QueryTypes.SELECT, replacements: { locationId } }
+    ) as any[];
+
+    const weakTopics = weakTopicsRaw.map(topic => {
+      const totalAttempts = parseInt(topic.totalAttempts, 10);
+      const correctAnswers = parseInt(topic.correctAnswers || "0", 10);
+      const accuracy = totalAttempts > 0 ? Math.round((correctAnswers / totalAttempts) * 100) : 0;
+      return {
+        topicId: topic.topicId,
+        topicName: topic.topicName,
+        totalAttempts,
+        correctAnswers,
+        accuracy
+      };
+    }).filter(topic => topic.accuracy < 40).sort((a, b) => a.accuracy - b.accuracy);
+
+    return {
+      testsTaken,
+      averageScore,
+      weakTopics
     };
   }
 }

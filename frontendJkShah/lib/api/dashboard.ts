@@ -9,8 +9,10 @@ import {
 } from "./types";
 
 export const dashboardApi = {
-  getStats: (token?: string) =>
-    apiRequest<DashboardStatsResponse>(API_ROUTES.DASHBOARD.STATS, { token }),
+  getStats: (locationId?: string, token?: string) => {
+    const url = locationId ? `${API_ROUTES.DASHBOARD.STATS}?locationId=${locationId}` : API_ROUTES.DASHBOARD.STATS;
+    return apiRequest<DashboardStatsResponse>(url, { token });
+  },
   getStudentAnalytics: (studentId: string, token?: string) =>
     apiRequest(API_ROUTES.DASHBOARD.STUDENT_ANALYTICS(studentId), { token }),
   getTeacherAnalytics: (teacherId: string, token?: string) =>
@@ -31,18 +33,22 @@ export const dashboardApi = {
     apiRequest(API_ROUTES.DASHBOARD.STUDENT_SKILL_RATING, { token }),
 
   // Admin Analytics
+  getLocationPerformance: (locationId: string, token?: string) =>
+    apiRequest<any>(API_ROUTES.DASHBOARD.LOCATION_PERFORMANCE(locationId), { token }),
+  
   getTeacherStudentRatio: (params: { location_id?: string }, token?: string) => {
     const searchParams = new URLSearchParams();
     if (params.location_id) searchParams.set("location_id", params.location_id);
     const query = searchParams.toString();
     return apiRequest<TeacherStudentRatioResponse>(`${API_ROUTES.DASHBOARD.ANALYTICS_TEACHER_STUDENT_RATIO}${query ? `?${query}` : ""}`, { token });
   },
-  getTopStudentsByLocation: (params: { location_id?: string; date_from?: string; date_to?: string; limit?: number }, token?: string) => {
+  getTopStudentsByLocation: (params: { location_id?: string; date_from?: string; date_to?: string; limit?: number; performance?: "top" | "low" }, token?: string) => {
     const searchParams = new URLSearchParams();
     if (params.location_id) searchParams.set("location_id", params.location_id);
     if (params.date_from) searchParams.set("date_from", params.date_from);
     if (params.date_to) searchParams.set("date_to", params.date_to);
     if (params.limit) searchParams.set("limit", params.limit.toString());
+    if (params.performance) searchParams.set("performance", params.performance);
     const query = searchParams.toString();
     return apiRequest<TopStudentsByLocationResponse>(`${API_ROUTES.DASHBOARD.ANALYTICS_TOP_STUDENTS}${query ? `?${query}` : ""}`, { token });
   },

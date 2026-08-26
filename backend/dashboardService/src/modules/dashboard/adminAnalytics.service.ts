@@ -18,6 +18,7 @@ export interface TopStudentsParams {
   date_from?: string;
   date_to?: string;
   limit?: number;
+  performance?: "top" | "low";
 }
 
 export interface LeastQuestionsParams {
@@ -116,7 +117,7 @@ export class AdminAnalyticsService {
   // ==================== Module 2: Top Students by Location ====================
 
   static async getTopStudentsByLocation(params: TopStudentsParams) {
-    const { location_id, date_from, date_to, limit = 10 } = params;
+    const { location_id, date_from, date_to, limit = 10, performance = "top" } = params;
 
     // Build date filters
     let dateFilter = "";
@@ -131,6 +132,9 @@ export class AdminAnalyticsService {
       replacements.dateTo = new Date(date_to);
     }
 
+    const orderBy = performance === "low" ? "ASC" : "DESC";
+    const havingClause = performance === "low" ? "HAVING AVG(ts.score) < 45" : "";
+
     // Get top students by average score
     const topStudents = await sequelize.query(
       `SELECT
@@ -142,7 +146,8 @@ export class AdminAnalyticsService {
        FROM test_sessions ts
        WHERE ts.status = 'completed' ${dateFilter}
        GROUP BY ts.student_id
-       ORDER BY avg_score DESC
+       ${havingClause}
+       ORDER BY avg_score ${orderBy}
        LIMIT :limit`,
       { type: QueryTypes.SELECT, replacements }
     ) as any[];

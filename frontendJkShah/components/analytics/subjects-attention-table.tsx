@@ -78,7 +78,7 @@ export function SubjectsAttentionTable({ data, isLoading }: SubjectsAttentionTab
               <Fragment key={subject.subjectId}>
                 <TableRow className="hover:bg-muted/50 transition-colors">
                   <TableCell className="font-medium">{capitalize(subject.subjectName)}</TableCell>
-                  <TableCell>{subject.courseName}</TableCell>
+                  <TableCell>{capitalize(subject.courseName)}</TableCell>
                   <TableCell>
                     <span className={`font-medium ${
                       subject.avgScore >= 70 ? "text-green-500" :

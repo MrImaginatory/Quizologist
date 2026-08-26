@@ -9,11 +9,12 @@ export class DashboardController {
   static async getStats(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { userId, role } = req.user!;
+      const locationId = req.query.locationId as string | undefined;
       let data;
 
       switch (role) {
         case "admin":
-          data = await DashboardService.getAdminStats();
+          data = await DashboardService.getAdminStats(locationId);
           break;
         case "teacher":
           data = await DashboardService.getTeacherStats(userId);
@@ -29,6 +30,16 @@ export class DashboardController {
         role,
         ...data,
       });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getLocationPerformance(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const locationId = req.params.locationId as string;
+      const data = await DashboardService.getLocationPerformance(locationId);
+      return ApiResponse.success(res, "Location performance retrieved successfully", data);
     } catch (error) {
       next(error);
     }
@@ -130,12 +141,13 @@ export class DashboardController {
 
   static async getTopStudentsByLocation(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { location_id, date_from, date_to, limit } = req.query;
+      const { location_id, date_from, date_to, limit, performance } = req.query;
       const data = await AdminAnalyticsService.getTopStudentsByLocation({
         location_id: location_id as string | undefined,
         date_from: date_from as string | undefined,
         date_to: date_to as string | undefined,
         limit: limit ? parseInt(limit as string, 10) : 10,
+        performance: performance as "top" | "low" | undefined,
       });
       return ApiResponse.success(res, "Top students retrieved", data);
     } catch (error) {

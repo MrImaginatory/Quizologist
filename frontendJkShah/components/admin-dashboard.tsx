@@ -26,7 +26,7 @@ export function AdminDashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await dashboardApi.getStats(token || undefined);
+        const response = await dashboardApi.getStats(undefined, token || undefined);
         setStats(response.data);
       } catch (err) {
         const message = err instanceof Error ? err.message : "Failed to fetch stats";

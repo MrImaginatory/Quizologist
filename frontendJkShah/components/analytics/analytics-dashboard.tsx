@@ -5,6 +5,8 @@ import { useAdminAnalytics } from "@/hooks/use-admin-analytics";
 import { AnalyticsFilters } from "./analytics-filters";
 import dynamic from "next/dynamic";
 import { TeacherStudentRatioCards } from "./teacher-student-ratio-cards";
+import { LocationPerformanceCards } from "./location-performance-cards";
+import { LocationWeakTopics } from "./location-weak-topics";
 import { TopStudentsTable } from "./top-students-table";
 import { SubjectsAttentionTable } from "./subjects-attention-table";
 import { Card, CardContent } from "@/components/ui/card";
@@ -36,16 +38,25 @@ const LeastQuestionsChart = dynamic(
 );
 
 export function AnalyticsDashboard() {
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<{
+    location_id: string;
+    date_from: string;
+    date_to: string;
+    subject_id: string;
+    course_id: string;
+    limit: number;
+    performance: "top" | "low";
+  }>({
     location_id: "",
     date_from: "",
     date_to: "",
     subject_id: "",
     course_id: "",
     limit: 10,
+    performance: "top",
   });
 
-  const { ratioData, topStudents, leastQuestions, subjectsAttention, isLoading, error } = useAdminAnalytics(filters);
+  const { ratioData, topStudents, leastQuestions, subjectsAttention, locationPerformance, isLoading, error } = useAdminAnalytics(filters);
 
   const handleFilterChange = useCallback((key: string, value: string | number) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -59,6 +70,7 @@ export function AnalyticsDashboard() {
       course_id: "",
       subject_id: "",
       limit: 10,
+      performance: "top",
     });
   }, []);
 
@@ -108,14 +120,35 @@ export function AnalyticsDashboard() {
 
       {/* Module 1: Teacher-Student Ratio */}
       <motion.div variants={itemVariants} className="space-y-4">
+        {filters.location_id && (
+          <LocationPerformanceCards 
+            data={locationPerformance} 
+            isLoading={isLoading && !locationPerformance} 
+            locationId={filters.location_id} 
+          />
+        )}
         <TeacherStudentRatioCards data={ratioData} isLoading={isLoading} />
         <TeacherStudentRatioChart data={ratioData} isLoading={isLoading} />
       </motion.div>
 
       {/* Module 2: Top Students */}
       <motion.div variants={itemVariants}>
-        <TopStudentsTable data={topStudents} isLoading={isLoading} />
+        <TopStudentsTable 
+          data={topStudents} 
+          isLoading={isLoading} 
+          performanceMode={filters.performance as "top" | "low"}
+          onPerformanceModeChange={(v: "top" | "low") => handleFilterChange("performance", v)}
+        />
       </motion.div>
+
+      {/* Weakest Topics placed below Top Students */}
+      {filters.location_id && (
+        <LocationWeakTopics 
+          data={locationPerformance} 
+          isLoading={isLoading && !locationPerformance} 
+          locationId={filters.location_id} 
+        />
+      )}
 
       {/* Module 3: Least Questions */}
       <motion.div variants={itemVariants}>

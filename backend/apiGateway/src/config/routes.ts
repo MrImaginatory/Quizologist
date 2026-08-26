@@ -433,6 +433,14 @@ export const routes: RouteConfig[] = [
   },
 
   // ==================== Dashboard Service ====================
+  // Location analytics — admin only
+  {
+    path: "/dashboard/location",
+    target: `${env.DASHBOARD_SERVICE_URL}/api/dashboard/location`,
+    auth: true,
+    roles: ["admin"],
+    methods: ["GET"],
+  },
   // Get dashboard stats — all authenticated users
   {
     path: "/dashboard/stats",

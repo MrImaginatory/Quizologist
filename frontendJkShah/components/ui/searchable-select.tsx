@@ -51,7 +51,7 @@ export function SearchableSelect({
   }, [open]);
 
   const selectedLabel = React.useMemo(() => {
-    if (!value || value === "all") return placeholder;
+    if (!value) return placeholder;
     const option = options.find((opt) => opt.value === value);
     return option ? option.label : placeholder;
   }, [value, options, placeholder]);
@@ -61,13 +61,27 @@ export function SearchableSelect({
       <PopoverTrigger
         ref={triggerRef}
         disabled={disabled}
-        className="flex h-10 w-full items-center justify-between gap-2 rounded-[50rem] border border-input bg-background px-4 py-2 text-sm ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-placeholder:text-muted-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+        className={cn(
+          "flex h-10 w-full items-center justify-between gap-2",
+          "rounded-[50rem] border border-input bg-background",
+          "px-4 py-2 text-sm",
+          "ring-offset-background transition-colors",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+          "disabled:cursor-not-allowed disabled:opacity-50",
+          open && "ring-2 ring-primary ring-offset-2",
+          !value && "text-muted-foreground",
+          "[&_svg]:pointer-events-none [&_svg]:shrink-0"
+        )}
       >
         <span className="truncate">{selectedLabel}</span>
-        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        <ChevronsUpDown className={cn(
+            "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200",
+            open && "rotate-180"
+          )} 
+        />
       </PopoverTrigger>
       <PopoverContent
-        className="p-0"
+        className="p-0 rounded-2xl border border-border bg-popover shadow-xl overflow-hidden"
         align="start"
         style={triggerWidth ? { width: `${triggerWidth}px` } : undefined}
       >
@@ -76,27 +90,12 @@ export function SearchableSelect({
           <CommandList>
             <CommandEmpty>{emptyText}</CommandEmpty>
             <CommandGroup>
-              <CommandItem
-                value="all"
-                onSelect={() => {
-                  onValueChange("all");
-                  setOpen(false);
-                }}
-              >
-                <Check
-                  className={cn(
-                    "mr-2 h-4 w-4",
-                    value === "all" || !value ? "opacity-100" : "opacity-0"
-                  )}
-                />
-                {placeholder}
-              </CommandItem>
               {options.map((option) => (
                 <CommandItem
                   key={option.value}
-                  value={option.value}
-                  onSelect={(currentValue) => {
-                    onValueChange(currentValue === value ? "" : currentValue);
+                  value={option.label}
+                  onSelect={() => {
+                    onValueChange(option.value);
                     setOpen(false);
                   }}
                 >

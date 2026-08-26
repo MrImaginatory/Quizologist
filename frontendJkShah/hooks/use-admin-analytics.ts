@@ -12,6 +12,7 @@ interface AnalyticsFilters {
   subject_id?: string;
   course_id?: string;
   limit?: number;
+  performance?: "top" | "low";
 }
 
 interface AdminAnalyticsData {
@@ -19,6 +20,7 @@ interface AdminAnalyticsData {
   topStudents: any | null;
   leastQuestions: any | null;
   subjectsAttention: any | null;
+  locationPerformance: any | null;
   isLoading: boolean;
   error: string;
   refetch: () => void;
@@ -48,6 +50,7 @@ export function useAdminAnalytics(filters: AnalyticsFilters = {}): AdminAnalytic
     date_from: filters.date_from,
     date_to: filters.date_to,
     limit: filters.limit || 10,
+    performance: filters.performance || "top",
   });
   
   const leastQuestionsUrl = buildUrl(API_ROUTES.DASHBOARD.ANALYTICS_LEAST_QUESTIONS, {
@@ -60,6 +63,10 @@ export function useAdminAnalytics(filters: AnalyticsFilters = {}): AdminAnalytic
     date_to: filters.date_to,
   });
   
+  const locationPerformanceUrl = filters.location_id
+    ? buildUrl(API_ROUTES.DASHBOARD.LOCATION_PERFORMANCE(filters.location_id), {})
+    : null;
+
   const { data: ratioRes, error: ratioErr } = useSWR(
     token ? ratioUrl : null,
     fetcher,
@@ -84,8 +91,14 @@ export function useAdminAnalytics(filters: AnalyticsFilters = {}): AdminAnalytic
     swrOptions
   );
 
+  const { data: locationPerformanceRes, error: locationPerformanceErr } = useSWR(
+    token && filters.location_id ? locationPerformanceUrl : null,
+    fetcher,
+    swrOptions
+  );
+
   // Check for token errors and logout
-  const errors = [ratioErr, topStudentsErr, leastQuestionsErr, subjectsErr].filter(Boolean);
+  const errors = [ratioErr, topStudentsErr, leastQuestionsErr, subjectsErr, locationPerformanceErr].filter(Boolean);
   for (const err of errors) {
     const message = err.message || "";
     if (message.toLowerCase().includes("invalid") && message.toLowerCase().includes("token")) {
@@ -95,6 +108,7 @@ export function useAdminAnalytics(filters: AnalyticsFilters = {}): AdminAnalytic
         topStudents: null,
         leastQuestions: null,
         subjectsAttention: null,
+        locationPerformance: null,
         isLoading: false,
         error: "",
         refetch: () => {},
@@ -102,7 +116,7 @@ export function useAdminAnalytics(filters: AnalyticsFilters = {}): AdminAnalytic
     }
   }
 
-  const isLoading = !ratioRes && !topStudentsRes && !leastQuestionsRes && !subjectsRes && !ratioErr;
+  const isLoading = Boolean(!ratioRes && !topStudentsRes && !leastQuestionsRes && !subjectsRes && (!locationPerformanceRes && filters.location_id) && !ratioErr);
   const error = errors.length > 0 ? errors[0].message : "";
 
   return {
@@ -110,6 +124,7 @@ export function useAdminAnalytics(filters: AnalyticsFilters = {}): AdminAnalytic
     topStudents: topStudentsRes?.data || null,
     leastQuestions: leastQuestionsRes?.data || null,
     subjectsAttention: subjectsRes?.data || null,
+    locationPerformance: locationPerformanceRes?.data || null,
     isLoading,
     error,
     refetch: () => mutate(),

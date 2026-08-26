@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { DatePicker } from "@/components/ui/date-picker";
 import { X } from "lucide-react";
 import { useCourses } from "@/hooks/use-courses";
@@ -74,10 +75,11 @@ export function AnalyticsFilters({
   return (
     <div className="flex flex-wrap items-end gap-3">
       {/* Location Filter */}
-      <div className="flex-1 min-w-[180px]">
-        <CustomSelect
+      <div className="flex-1 min-w-[220px]">
+        <SearchableSelect
           value={locationId || "all"}
-          onChange={(value) => onLocationChange(value === "all" ? "" : value)}
+          onValueChange={(value) => onLocationChange(value === "all" ? "" : value)}
+          placeholder="Select Location"
           options={[
             { value: "all", label: "All Locations" },
             ...locations.map(l => ({ value: l.id, label: l.pincode ? `${l.city} - ${l.pincode}` : l.city }))
@@ -86,13 +88,14 @@ export function AnalyticsFilters({
       </div>
 
       {/* Course Filter */}
-      <div className="flex-1 min-w-[180px]">
-        <CustomSelect
+      <div className="flex-1 min-w-[220px]">
+        <SearchableSelect
           value={courseId || "all"}
-          onChange={(value) => {
+          onValueChange={(value) => {
             onCourseChange(value === "all" ? "" : value);
             onSubjectChange("");
           }}
+          placeholder="Select Course"
           options={[
             { value: "all", label: "All Courses" },
             ...courses.map(c => ({ value: c.id, label: capitalize(c.name) }))
@@ -101,11 +104,12 @@ export function AnalyticsFilters({
       </div>
 
       {/* Subject Filter */}
-      <div className="flex-1 min-w-[180px]">
-        <CustomSelect
+      <div className="flex-1 min-w-[220px]">
+        <SearchableSelect
           value={subjectId || "all"}
-          onChange={(value) => onSubjectChange(value === "all" ? "" : value)}
+          onValueChange={(value) => onSubjectChange(value === "all" ? "" : value)}
           disabled={!courseId}
+          placeholder="Select Subject"
           options={[
             { value: "all", label: "All Subjects" },
             ...subjects.map(s => ({ value: s.id, label: capitalize(s.name) }))

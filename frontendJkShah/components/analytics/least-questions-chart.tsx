@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from "@/components/ui/chart";
 import { BookOpen, AlertTriangle } from "lucide-react";
+import { capitalize } from "@/lib/utils";
 import type { LeastQuestionsResponse } from "@/lib/api";
 
 const chartConfig = {
@@ -59,11 +60,11 @@ export function LeastQuestionsChart({ data, isLoading }: LeastQuestionsChartProp
   const needsAttention = data.topics.filter(t => t.status === "needs_questions").length;
 
   const chartData = data.topics.map((t) => ({
-    name: t.topicName.length > 20 ? t.topicName.substring(0, 20) + "..." : t.topicName,
+    name: t.topicName.length > 20 ? capitalize(t.topicName.substring(0, 20)) + "..." : capitalize(t.topicName),
     questionCount: t.questionCount,
-    fullName: t.topicName,
-    subject: t.subjectName,
-    course: t.courseName,
+    fullName: capitalize(t.topicName),
+    subject: capitalize(t.subjectName),
+    course: capitalize(t.courseName),
   }));
 
   return (

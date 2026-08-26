@@ -5,22 +5,34 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Trophy } from "lucide-react";
 import { capitalize } from "@/lib/utils";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { TopStudentsByLocationResponse } from "@/lib/api";
 
 interface TopStudentsTableProps {
   data: TopStudentsByLocationResponse["data"] | null;
   isLoading: boolean;
+  performanceMode: "top" | "low";
+  onPerformanceModeChange: (mode: "top" | "low") => void;
 }
 
-export function TopStudentsTable({ data, isLoading }: TopStudentsTableProps) {
+export function TopStudentsTable({ data, isLoading, performanceMode, onPerformanceModeChange }: TopStudentsTableProps) {
+  const isTop = performanceMode === "top";
+  const title = isTop ? "Top Performing Students" : "Weak Performing Students";
+
   if (isLoading) {
     return (
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="flex items-center gap-2">
-            <Trophy className="h-5 w-5" />
-            Top Performing Students
+            <Trophy className={`h-5 w-5 ${!isTop && "text-muted-foreground opacity-50"}`} />
+            {title}
           </CardTitle>
+          <Tabs value={performanceMode} onValueChange={onPerformanceModeChange as any}>
+            <TabsList className="grid w-[120px] grid-cols-2">
+              <TabsTrigger value="top">Top</TabsTrigger>
+              <TabsTrigger value="low">Low</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">Loading...</p>
@@ -32,11 +44,17 @@ export function TopStudentsTable({ data, isLoading }: TopStudentsTableProps) {
   if (!data || data.students.length === 0) {
     return (
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="flex items-center gap-2">
-            <Trophy className="h-5 w-5" />
-            Top Performing Students
+            <Trophy className={`h-5 w-5 ${!isTop && "text-muted-foreground opacity-50"}`} />
+            {title}
           </CardTitle>
+          <Tabs value={performanceMode} onValueChange={onPerformanceModeChange as any}>
+            <TabsList className="grid w-[120px] grid-cols-2">
+              <TabsTrigger value="top">Top</TabsTrigger>
+              <TabsTrigger value="low">Low</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">No student data available</p>
@@ -46,6 +64,7 @@ export function TopStudentsTable({ data, isLoading }: TopStudentsTableProps) {
   }
 
   const getRankBadge = (rank: number) => {
+    if (!isTop) return <Badge variant="outline">#{rank}</Badge>;
     if (rank === 1) return <Badge className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">1st</Badge>;
     if (rank === 2) return <Badge className="bg-gray-400/10 text-gray-400 border-gray-400/20">2nd</Badge>;
     if (rank === 3) return <Badge className="bg-orange-500/10 text-orange-500 border-orange-500/20">3rd</Badge>;
@@ -54,11 +73,17 @@ export function TopStudentsTable({ data, isLoading }: TopStudentsTableProps) {
 
   return (
     <Card className="overflow-hidden rounded-2xl">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="flex items-center gap-2">
-          <Trophy className="h-5 w-5" />
-          Top Performing Students
+          <Trophy className={`h-5 w-5 ${!isTop && "text-muted-foreground opacity-50"}`} />
+          {title}
         </CardTitle>
+        <Tabs value={performanceMode} onValueChange={onPerformanceModeChange as any}>
+          <TabsList className="grid w-[120px] grid-cols-2">
+            <TabsTrigger value="top">Top</TabsTrigger>
+            <TabsTrigger value="low">Low</TabsTrigger>
+          </TabsList>
+        </Tabs>
       </CardHeader>
       <CardContent>
         <Table>

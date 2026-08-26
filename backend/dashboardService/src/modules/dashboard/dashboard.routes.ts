@@ -18,6 +18,7 @@ router.get("/student/repeated-questions", DashboardController.getRepeatedQuestio
 
 
 // Admin Analytics
+router.get("/location/:locationId/performance", DashboardController.getLocationPerformance);
 router.get("/analytics/teacher-student-ratio", DashboardController.getTeacherStudentRatio);
 router.get("/analytics/top-students-by-location", DashboardController.getTopStudentsByLocation);
 router.get("/analytics/least-questions", DashboardController.getLeastQuestions);
