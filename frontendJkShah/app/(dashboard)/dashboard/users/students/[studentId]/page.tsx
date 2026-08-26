@@ -193,8 +193,8 @@ export default function StudentDetailsPage() {
                 {performance.strong.map((t: any) => (
                   <li key={t.topicId} className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium">{t.topicName}</p>
-                      <p className="text-xs text-muted-foreground">{t.subjectName}</p>
+                      <p className="font-medium">{capitalize(t.topicName)}</p>
+                      <p className="text-xs text-muted-foreground">{capitalize(t.subjectName)}</p>
                     </div>
                     <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
                       {t.accuracy}% Acc
@@ -219,8 +219,8 @@ export default function StudentDetailsPage() {
                 {performance.weak.map((t: any) => (
                   <li key={t.topicId} className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium">{t.topicName}</p>
-                      <p className="text-xs text-muted-foreground">{t.subjectName}</p>
+                      <p className="font-medium">{capitalize(t.topicName)}</p>
+                      <p className="text-xs text-muted-foreground">{capitalize(t.subjectName)}</p>
                     </div>
                     <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
                       {t.accuracy}% Acc
