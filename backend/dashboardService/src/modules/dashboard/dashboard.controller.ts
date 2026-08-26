@@ -180,4 +180,19 @@ export class DashboardController {
       next(error);
     }
   }
+
+  static async getStudentFullDetails(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const studentId = req.params.studentId as string;
+      const { userId, role } = req.user!;
+      
+      const data = await AdminAnalyticsService.getStudentFullDetails(studentId, userId, role);
+      return ApiResponse.success(res, "Student full details retrieved successfully", data);
+    } catch (error: any) {
+      if (error.message.includes("Unauthorized")) {
+        return ApiResponse.error(res, error.message, 403);
+      }
+      next(error);
+    }
+  }
 }

@@ -86,46 +86,97 @@ export function TopStudentsTable({ data, isLoading, performanceMode, onPerforman
         </Tabs>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Rank</TableHead>
-              <TableHead>Student</TableHead>
-              <TableHead>Location</TableHead>
-              <TableHead>Tests</TableHead>
-              <TableHead>Avg Score</TableHead>
-              <TableHead>Accuracy</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.students.map((student) => (
-              <TableRow key={student.id} className="hover:bg-muted/50 transition-colors">
-                <TableCell>{getRankBadge(student.rank)}</TableCell>
-                <TableCell>
-                  <div>
+        {/* Mobile View (Cards) */}
+        <div className="md:hidden space-y-4">
+          {data.students.map((student) => (
+            <Card key={student.id} className="p-4 bg-card border shadow-sm">
+              <div className="space-y-3">
+                <div className="flex items-start justify-between gap-4">
+                  <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Rank</span>
+                  <div className="text-sm text-right">{getRankBadge(student.rank)}</div>
+                </div>
+                <div className="flex items-start justify-between gap-4">
+                  <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Student</span>
+                  <div className="text-sm text-right">
                     <p className="font-medium">{capitalize(student.fname)} {capitalize(student.lname)}</p>
                     <p className="text-xs text-muted-foreground">{student.email}</p>
                   </div>
-                </TableCell>
-                <TableCell>{student.city}</TableCell>
-                <TableCell>{student.total_tests}</TableCell>
-                <TableCell>
-                  <span className={`font-medium ${
-                    student.avg_score >= 70 ? "text-green-500" :
-                    student.avg_score >= 50 ? "text-yellow-500" : "text-red-500"
-                  }`}>
-                    {student.avg_score.toFixed(1)}%
-                  </span>
-                </TableCell>
-                <TableCell>
-                  {student.total_questions > 0
-                    ? `${Math.round((student.total_correct / student.total_questions) * 100)}%`
-                    : "-"}
-                </TableCell>
+                </div>
+                <div className="flex items-start justify-between gap-4">
+                  <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Location</span>
+                  <div className="text-sm text-right break-words overflow-hidden">{student.city}</div>
+                </div>
+                <div className="flex items-start justify-between gap-4">
+                  <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Tests</span>
+                  <div className="text-sm text-right">{student.total_tests}</div>
+                </div>
+                <div className="flex items-start justify-between gap-4">
+                  <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Avg Score</span>
+                  <div className="text-sm text-right">
+                    <span className={`font-medium ${
+                      student.avg_score >= 70 ? "text-green-500" :
+                      student.avg_score >= 50 ? "text-yellow-500" : "text-red-500"
+                    }`}>
+                      {student.avg_score.toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-start justify-between gap-4">
+                  <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Accuracy</span>
+                  <div className="text-sm text-right">
+                    {student.total_questions > 0
+                      ? `${Math.round((student.total_correct / student.total_questions) * 100)}%`
+                      : "-"}
+                  </div>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        {/* Desktop View (Table) */}
+        <div className="hidden md:block overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Rank</TableHead>
+                <TableHead>Student</TableHead>
+                <TableHead>Location</TableHead>
+                <TableHead>Tests</TableHead>
+                <TableHead>Avg Score</TableHead>
+                <TableHead>Accuracy</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {data.students.map((student) => (
+                <TableRow key={student.id} className="hover:bg-muted/50 transition-colors">
+                  <TableCell>{getRankBadge(student.rank)}</TableCell>
+                  <TableCell>
+                    <div>
+                      <p className="font-medium">{capitalize(student.fname)} {capitalize(student.lname)}</p>
+                      <p className="text-xs text-muted-foreground">{student.email}</p>
+                    </div>
+                  </TableCell>
+                  <TableCell>{student.city}</TableCell>
+                  <TableCell>{student.total_tests}</TableCell>
+                  <TableCell>
+                    <span className={`font-medium ${
+                      student.avg_score >= 70 ? "text-green-500" :
+                      student.avg_score >= 50 ? "text-yellow-500" : "text-red-500"
+                    }`}>
+                      {student.avg_score.toFixed(1)}%
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    {student.total_questions > 0
+                      ? `${Math.round((student.total_correct / student.total_questions) * 100)}%`
+                      : "-"}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );

@@ -37,6 +37,7 @@ interface PaginationInfo {
 
 interface DataTableProps<T> {
   title: string;
+  description?: string;
   columns: Column<T>[];
   data: T[];
   isLoading?: boolean;
@@ -49,6 +50,7 @@ interface DataTableProps<T> {
 
 export function DataTable<T>({
   title,
+  description,
   columns,
   data,
   isLoading,
@@ -71,8 +73,11 @@ export function DataTable<T>({
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>{title}</CardTitle>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <CardTitle>{title}</CardTitle>
+            {description && <div className="text-sm text-muted-foreground mt-1">{description}</div>}
+          </div>
           <div className="flex items-center gap-4">
             {pagination && (
               <p className="text-sm text-muted-foreground">
@@ -116,7 +121,35 @@ export function DataTable<T>({
           <div className="py-8 text-center text-muted-foreground">No data found.</div>
         ) : (
           <>
-            <div className={useVirtual ? "overflow-auto max-h-[500px]" : "overflow-x-auto"} ref={parentRef}>
+            {/* Mobile View (Cards) */}
+            <div className="md:hidden space-y-4">
+              {data.map((item, rowIndex) => {
+                const rowNumber = pagination
+                  ? (pagination.page - 1) * pagination.limit + rowIndex + 1
+                  : rowIndex + 1;
+                return (
+                  <Card key={keyExtractor(item)} className="p-4 bg-card border shadow-sm">
+                    <div className="space-y-3">
+                      {columns.map((col) => (
+                        <div key={col.key} className="flex items-start justify-between gap-4">
+                          <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+                            {col.header}
+                          </span>
+                          <div className="text-sm text-right break-words overflow-hidden">
+                            {col.render
+                              ? col.render(item, rowNumber - 1)
+                              : String((item as Record<string, unknown>)[col.key] ?? "")}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+
+            {/* Desktop View (Table) */}
+            <div className={`hidden md:block ${useVirtual ? "overflow-auto max-h-[500px]" : "overflow-x-auto"}`} ref={parentRef}>
               <Table>
                 <TableHeader>
                   <TableRow>

@@ -23,5 +23,6 @@ router.get("/analytics/teacher-student-ratio", DashboardController.getTeacherStu
 router.get("/analytics/top-students-by-location", DashboardController.getTopStudentsByLocation);
 router.get("/analytics/least-questions", DashboardController.getLeastQuestions);
 router.get("/analytics/subjects-needing-attention", DashboardController.getSubjectsNeedingAttention);
+router.get("/admin/student/:studentId/details", DashboardController.getStudentFullDetails);
 
 export default router;

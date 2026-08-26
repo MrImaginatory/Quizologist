@@ -66,4 +66,6 @@ export const dashboardApi = {
     const query = searchParams.toString();
     return apiRequest<SubjectsAttentionResponse>(`${API_ROUTES.DASHBOARD.ANALYTICS_SUBJECTS_ATTENTION}${query ? `?${query}` : ""}`, { token });
   },
+  getStudentFullDetails: (studentId: string, token?: string) =>
+    apiRequest<any>(API_ROUTES.DASHBOARD.STUDENT_FULL_DETAILS(studentId), { token }),
 };

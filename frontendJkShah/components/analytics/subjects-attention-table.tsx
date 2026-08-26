@@ -62,33 +62,37 @@ export function SubjectsAttentionTable({ data, isLoading }: SubjectsAttentionTab
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Subject</TableHead>
-              <TableHead>Course</TableHead>
-              <TableHead>Avg Score</TableHead>
-              <TableHead>Students</TableHead>
-              <TableHead>Below Passing</TableHead>
-              <TableHead>Details</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.subjects.map((subject) => (
-              <Fragment key={subject.subjectId}>
-                <TableRow className="hover:bg-muted/50 transition-colors">
-                  <TableCell className="font-medium">{capitalize(subject.subjectName)}</TableCell>
-                  <TableCell>{capitalize(subject.courseName)}</TableCell>
-                  <TableCell>
+        {/* Mobile View (Cards) */}
+        <div className="md:hidden space-y-4">
+          {data.subjects.map((subject) => (
+            <Card key={subject.subjectId} className="p-4 bg-card border shadow-sm">
+              <div className="space-y-3">
+                <div className="flex items-start justify-between gap-4">
+                  <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Subject</span>
+                  <div className="text-sm text-right font-medium">{capitalize(subject.subjectName)}</div>
+                </div>
+                <div className="flex items-start justify-between gap-4">
+                  <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Course</span>
+                  <div className="text-sm text-right">{capitalize(subject.courseName)}</div>
+                </div>
+                <div className="flex items-start justify-between gap-4">
+                  <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Avg Score</span>
+                  <div className="text-sm text-right">
                     <span className={`font-medium ${
                       subject.avgScore >= 70 ? "text-green-500" :
                       subject.avgScore >= 50 ? "text-yellow-500" : "text-red-500"
                     }`}>
                       {subject.avgScore.toFixed(1)}%
                     </span>
-                  </TableCell>
-                  <TableCell>{subject.studentCount}</TableCell>
-                  <TableCell>
+                  </div>
+                </div>
+                <div className="flex items-start justify-between gap-4">
+                  <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Students</span>
+                  <div className="text-sm text-right">{subject.studentCount}</div>
+                </div>
+                <div className="flex items-start justify-between gap-4">
+                  <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Below Passing</span>
+                  <div className="text-sm text-right">
                     <Badge variant="outline" className={
                       subject.belowPassingCount > 0
                         ? "bg-red-500/10 text-red-500 border-red-500/20"
@@ -96,30 +100,29 @@ export function SubjectsAttentionTable({ data, isLoading }: SubjectsAttentionTab
                     }>
                       {subject.belowPassingCount}
                     </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {subject.lowPerformers.length > 0 && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => toggleExpand(subject.subjectId)}
-                      >
-                        <Users className="h-4 w-4 mr-1" />
-                        {expandedSubject === subject.subjectId ? (
-                          <ChevronUp className="h-4 w-4" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4" />
-                        )}
-                      </Button>
-                    )}
-                  </TableCell>
-                </TableRow>
-                {expandedSubject === subject.subjectId && (
-                  <TableRow key={`${subject.subjectId}-expanded`}>
-                    <TableCell colSpan={6} className="bg-muted/20 p-4">
-                      <div className="py-2">
+                  </div>
+                </div>
+                
+                {subject.lowPerformers.length > 0 && (
+                  <div className="pt-2 border-t">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full flex justify-between"
+                      onClick={() => toggleExpand(subject.subjectId)}
+                    >
+                      <span className="flex items-center"><Users className="h-4 w-4 mr-2" /> View Details</span>
+                      {expandedSubject === subject.subjectId ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
+                    </Button>
+                    
+                    {expandedSubject === subject.subjectId && (
+                      <div className="mt-3 bg-muted/20 rounded-md p-3">
                         <p className="text-sm font-medium mb-2">Low-Performing Students:</p>
-                        <div className="grid gap-1">
+                        <div className="grid gap-2">
                           {subject.lowPerformers.map((student) => (
                             <div key={student.studentId} className="flex items-center justify-between text-sm">
                               <span>{capitalize(student.fname)} {capitalize(student.lname)}</span>
@@ -132,13 +135,94 @@ export function SubjectsAttentionTable({ data, isLoading }: SubjectsAttentionTab
                           ))}
                         </div>
                       </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        {/* Desktop View (Table) */}
+        <div className="hidden md:block overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Subject</TableHead>
+                <TableHead>Course</TableHead>
+                <TableHead>Avg Score</TableHead>
+                <TableHead>Students</TableHead>
+                <TableHead>Below Passing</TableHead>
+                <TableHead>Details</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.subjects.map((subject) => (
+                <Fragment key={subject.subjectId}>
+                  <TableRow className="hover:bg-muted/50 transition-colors">
+                    <TableCell className="font-medium">{capitalize(subject.subjectName)}</TableCell>
+                    <TableCell>{capitalize(subject.courseName)}</TableCell>
+                    <TableCell>
+                      <span className={`font-medium ${
+                        subject.avgScore >= 70 ? "text-green-500" :
+                        subject.avgScore >= 50 ? "text-yellow-500" : "text-red-500"
+                      }`}>
+                        {subject.avgScore.toFixed(1)}%
+                      </span>
+                    </TableCell>
+                    <TableCell>{subject.studentCount}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={
+                        subject.belowPassingCount > 0
+                          ? "bg-red-500/10 text-red-500 border-red-500/20"
+                          : "bg-green-500/10 text-green-500 border-green-500/20"
+                      }>
+                        {subject.belowPassingCount}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {subject.lowPerformers.length > 0 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toggleExpand(subject.subjectId)}
+                        >
+                          <Users className="h-4 w-4 mr-1" />
+                          {expandedSubject === subject.subjectId ? (
+                            <ChevronUp className="h-4 w-4" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4" />
+                          )}
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
-                )}
-              </Fragment>
-            ))}
-          </TableBody>
-        </Table>
+                  {expandedSubject === subject.subjectId && (
+                    <TableRow key={`${subject.subjectId}-expanded`}>
+                      <TableCell colSpan={6} className="bg-muted/20 p-4">
+                        <div className="py-2">
+                          <p className="text-sm font-medium mb-2">Low-Performing Students:</p>
+                          <div className="grid gap-1">
+                            {subject.lowPerformers.map((student) => (
+                              <div key={student.studentId} className="flex items-center justify-between text-sm">
+                                <span>{capitalize(student.fname)} {capitalize(student.lname)}</span>
+                                <span className={`font-medium ${
+                                  student.avgScore >= 50 ? "text-yellow-500" : "text-red-500"
+                                }`}>
+                                  {student.avgScore.toFixed(1)}%
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </Fragment>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );

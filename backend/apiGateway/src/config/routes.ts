@@ -465,6 +465,14 @@ export const routes: RouteConfig[] = [
     roles: ["admin"],
     methods: ["GET"],
   },
+  // Student full details — admin and teacher
+  {
+    path: "/dashboard/admin/student",
+    target: `${env.DASHBOARD_SERVICE_URL}/api/dashboard/admin/student`,
+    auth: true,
+    roles: ["admin", "teacher"],
+    methods: ["GET"],
+  },
 ];
 
 export function findMatchingRoute(

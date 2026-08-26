@@ -8,9 +8,10 @@ import { capitalize, getAvatarColor, getInitials } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { MapPin } from "lucide-react";
+import { MapPin, Eye } from "lucide-react";
 import { AssignLocationDialog } from "@/components/dialogs/assign-location-dialog";
 import { useAuth } from "@/contexts/auth-context";
+import Link from "next/link";
 
 export default function StudentsPage() {
   const [page, setPage] = useState(1);
@@ -31,14 +32,14 @@ export default function StudentsPage() {
       key: "name",
       header: "Name",
       render: (user: User) => (
-        <div className="flex items-center gap-3">
+        <Link href={`/dashboard/users/students/${user.id}`} className="flex items-center gap-3 hover:underline">
           <Avatar className="h-8 w-8">
             <AvatarFallback className={`text-white text-xs font-medium ${getAvatarColor(user.fname + user.lname)}`}>
               {getInitials(user.fname, user.lname)}
             </AvatarFallback>
           </Avatar>
           <span>{capitalize(`${user.fname} ${user.lname}`)}</span>
-        </div>
+        </Link>
       ),
     },
     { key: "email", header: "Email" },
@@ -64,17 +65,29 @@ export default function StudentsPage() {
       key: "actions",
       header: "Actions",
       render: (user: User) => (
-        user.id !== currentUser?.id ? (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => handleAssignClick(user)}
-            title="Assign location"
-          >
-            <MapPin className="h-4 w-4" />
-          </Button>
-        ) : null
+        <div className="flex items-center gap-2">
+          {user.id !== currentUser?.id && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => handleAssignClick(user)}
+              title="Assign location"
+            >
+              <MapPin className="h-4 w-4" />
+            </Button>
+          )}
+          <Link href={`/dashboard/users/students/${user.id}`}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              title="View details"
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
       ),
     },
   ];

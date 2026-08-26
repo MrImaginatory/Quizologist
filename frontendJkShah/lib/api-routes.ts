@@ -132,7 +132,7 @@ export const API_ROUTES = {
     STUDENT_SKILL_RATING: `${BASE_URL}/api/dashboard/student/skill-rating`,
     STUDENT_REPEATED_QUESTIONS: `${BASE_URL}/api/dashboard/student/repeated-questions`,
     LOCATION_PERFORMANCE: (locationId: string) => `${BASE_URL}/api/dashboard/location/${locationId}/performance`,
-
+    STUDENT_FULL_DETAILS: (studentId: string) => `${BASE_URL}/api/dashboard/admin/student/${studentId}/details`,
   },
 
   // Locations
