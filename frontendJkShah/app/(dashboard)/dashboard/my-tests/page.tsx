@@ -13,6 +13,8 @@ import { DataTable } from "@/components/data-table";
 import { StartTestDialog } from "@/components/dialogs/start-test-dialog";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { toast } from "sonner";
+import { PreAssessmentBanner } from "@/components/pre-assessment-banner";
+import { usePreAssessmentStatus } from "@/hooks/use-preassessment-status";
 
 const statusColors: Record<string, string> = {
   completed: "bg-green-500/10 text-green-500 border-green-500/20",
@@ -30,6 +32,9 @@ export default function MyTestsPage() {
   const [showAbandonDialog, setShowAbandonDialog] = useState(false);
   const [isAbandoning, setIsAbandoning] = useState(false);
   const { tests, total, completedCount, totalPages, isLoading, error, refetch } = useTestHistory({ page, limit });
+  const { status: preAssessmentStatus } = usePreAssessmentStatus();
+
+  const isPreAssessmentPending = preAssessmentStatus?.required && !preAssessmentStatus.completed;
 
   const columns = [
     { key: "sno", header: "#", render: (_t: TestHistory, index: number) => index + 1 },
@@ -136,14 +141,18 @@ export default function MyTestsPage() {
 
   return (
     <div className="space-y-6">
+      <PreAssessmentBanner />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">My Tests</h1>
           <p className="text-muted-foreground">View your test history and performance</p>
         </div>
         <div className="flex items-center gap-2">
-
-          <Button onClick={() => setShowStartDialog(true)}>
+          <Button 
+            onClick={() => setShowStartDialog(true)}
+            disabled={isPreAssessmentPending}
+            title={isPreAssessmentPending ? "Complete the pre-assessment first" : ""}
+          >
             <Play className="mr-2 h-4 w-4" />
             Start Test
           </Button>

@@ -7,6 +7,7 @@ import { Sparkles } from "lucide-react";
 import { StudentDashboard } from "@/components/student-dashboard";
 import { AdminDashboard } from "@/components/admin-dashboard";
 import { TeacherDashboard } from "@/components/teacher-dashboard";
+import { PreAssessmentBanner } from "@/components/pre-assessment-banner";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -40,6 +41,7 @@ export default function DashboardPage() {
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
       </motion.div>
 
+      {user?.role === "student" && <PreAssessmentBanner />}
       {user?.role === "student" && <StudentDashboard />}
       {user?.role === "admin" && <AdminDashboard />}
       {user?.role === "teacher" && <TeacherDashboard />}
