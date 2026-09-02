@@ -492,6 +492,14 @@ export class PredefinedTestService {
       throw ApiError.notFound("Predefined test not found");
     }
 
+    if (!test.is_pre_assessment) {
+      const { PreAssessmentService } = require("../preAssessment/preAssessment.service");
+      const preAssessmentStatus = await PreAssessmentService.getStatus(studentId);
+      if (preAssessmentStatus.required && !preAssessmentStatus.completed) {
+        throw ApiError.forbidden("Complete the pre-assessment before starting any test.");
+      }
+    }
+
     if (test.status !== "active") {
       throw ApiError.badRequest("Test is not active");
     }

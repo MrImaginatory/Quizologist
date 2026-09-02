@@ -12,6 +12,7 @@ import Subject from "../subject/subject.model";
 import Topic from "../topic/topic.model";
 import TeacherAssignment from "../teacherAssignment/teacherAssignment.model";
 import { UserSkillRatingService } from "../userSkillRating/userSkillRating.service";
+import { PreAssessmentService } from "../preAssessment/preAssessment.service";
 import {
   StartTestInput,
   TestIdParam,
@@ -128,6 +129,12 @@ function stripQuestionForTest(q: any) {
 
 export class TestSessionService {
   static async start(data: StartTestInput, studentId: string, studentName: string) {
+    // Check pre-assessment status
+    const preAssessmentStatus = await PreAssessmentService.getStatus(studentId);
+    if (preAssessmentStatus.required && !preAssessmentStatus.completed) {
+      throw ApiError.forbidden("Complete the pre-assessment before starting any test.");
+    }
+
     // Check if student already has an in_progress test
     const activeTest = await TestSession.findOne({
       where: {
