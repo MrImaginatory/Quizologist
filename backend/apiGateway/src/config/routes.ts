@@ -226,6 +226,14 @@ export const routes: RouteConfig[] = [
   },
 
   // ==================== Test Service ====================
+  // Pre-assessment — student only
+  {
+    path: "/test/pre-assessment",
+    target: `${env.TEST_SERVICE_URL}/api/test/pre-assessment`,
+    auth: true,
+    roles: ["student"],
+    methods: ["GET", "POST"],
+  },
   // Start test — student only
   {
     path: "/test/start",

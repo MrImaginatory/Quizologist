@@ -100,7 +100,9 @@ export class PredefinedTestService {
     const { page, limit, status, course_id } = filters;
     const offset = (page - 1) * limit;
 
-    const whereConditions: any = {};
+    const whereConditions: any = {
+      is_pre_assessment: false, // Hide auto-generated pre-assessments from the admin/teacher view
+    };
 
     // Teacher can only see their own tests
     if (userRole === "teacher") {
@@ -541,8 +543,8 @@ export class PredefinedTestService {
       },
     });
 
-    // Count total attempts (from predefined_test_students + test_sessions)
-    const totalAttempts = Math.max(existingStudentTests.length, sessionCount);
+    // Count total attempts (from test_sessions)
+    const totalAttempts = sessionCount;
 
     if (totalAttempts >= test.max_attempts) {
       throw ApiError.badRequest("Maximum attempts reached");
@@ -713,7 +715,9 @@ export class PredefinedTestService {
     const TestAnswer = require("../testAnswer/testAnswer.model").default;
 
     const testSession = await TestSession.create({
-      test_id: `PREDEFINED_${testId.slice(0, 8)}_${Date.now()}`,
+      test_id: test.is_pre_assessment 
+        ? `PREASSESSMENT_${testId.slice(0, 8)}_${Date.now()}`
+        : `PREDEFINED_${testId.slice(0, 8)}_${Date.now()}`,
       student_id: studentId,
       predefined_test_id: testId,
       status: "in_progress",
