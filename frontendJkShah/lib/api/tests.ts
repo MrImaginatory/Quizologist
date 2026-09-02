@@ -11,6 +11,7 @@ import {
   PredefinedTestDetailResponse,
   CreatePredefinedTestPayload,
   PredefinedTestStartResponse,
+  PreAssessmentStatusResponse,
 } from "./types";
 
 export const testsApi = {
@@ -100,4 +101,12 @@ export const predefinedTestsApi = {
     apiRequest(`${API_ROUTES.PREDEFINED_TESTS.JOIN(token)}`, { token: authToken }),
   start: (id: string, token?: string) =>
     apiRequest<PredefinedTestStartResponse>(API_ROUTES.PREDEFINED_TESTS.START(id), { method: "POST", token }),
+};
+
+// Pre-Assessment API
+export const preAssessmentApi = {
+  getStatus: (token?: string) =>
+    apiRequest<PreAssessmentStatusResponse>(API_ROUTES.PRE_ASSESSMENT.STATUS, { token }),
+  start: (token?: string) =>
+    apiRequest<PredefinedTestStartResponse>(API_ROUTES.PRE_ASSESSMENT.START, { method: "POST", token }),
 };

@@ -114,6 +114,12 @@ export const API_ROUTES = {
     JOIN: (token: string) => `${BASE_URL}/api/test/predefined/join/${token}`,
   },
 
+  // Pre-Assessment
+  PRE_ASSESSMENT: {
+    STATUS: `${BASE_URL}/api/test/pre-assessment/status`,
+    START: `${BASE_URL}/api/test/pre-assessment/start`,
+  },
+
   // Dashboard
   DASHBOARD: {
     STATS: `${BASE_URL}/api/dashboard/stats`,

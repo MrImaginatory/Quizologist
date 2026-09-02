@@ -792,8 +792,22 @@ export interface PredefinedTest {
   subject_ids: string[] | null;
   topic_ids: string[] | null;
   test_link_token: string | null;
+  is_pre_assessment: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface PreAssessmentStatus {
+  required: boolean;
+  completed: boolean;
+  sessionId?: string;
+  predefinedTestId?: string;
+}
+
+export interface PreAssessmentStatusResponse {
+  success: boolean;
+  message: string;
+  data: PreAssessmentStatus;
 }
 
 export interface PredefinedTestResponse {
