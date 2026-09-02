@@ -7,6 +7,7 @@ import "./config/associations";
 import { extractGatewayUser } from "./middlewares/gatewayUser.middleware";
 import testSessionRoutes from "./modules/testSession/testSession.routes";
 import predefinedTestRoutes from "./modules/predefinedTest/predefinedTest.routes";
+import preAssessmentRoutes from "./modules/preAssessment/preAssessment.routes";
 import { createSocketServer } from "./socket/socketServer";
 import { ApiError } from "./utils/ApiError";
 import { ApiResponse } from "./utils/ApiResponse";
@@ -23,6 +24,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(requestLogger(logger));
 
 app.use("/api/test/predefined", extractGatewayUser, predefinedTestRoutes);
+app.use("/api/test/pre-assessment", extractGatewayUser, preAssessmentRoutes);
 app.use("/api/test/time-based", extractGatewayUser, timeBasedRoutes);
 app.use("/api/test", extractGatewayUser, testSessionRoutes);
 
