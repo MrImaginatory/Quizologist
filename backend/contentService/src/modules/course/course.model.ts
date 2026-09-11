@@ -27,7 +27,7 @@ Course.init(
       primaryKey: true,
     },
     name: {
-      type: DataTypes.STRING(100),
+      type: DataTypes.STRING(250),
       allowNull: false,
       unique: true,
       set(value: string) {

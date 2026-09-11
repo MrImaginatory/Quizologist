@@ -108,7 +108,7 @@ module.exports = {
       name: 'quizologist-frontend',
       script: 'npm',
       args: 'start',
-      cwd: '/home/quizo/Quizologist/frontend',
+      cwd: '/home/quizo/Quizologist/frontendJkShah',
       env: {
         NODE_ENV: 'production',
         PORT: 5002

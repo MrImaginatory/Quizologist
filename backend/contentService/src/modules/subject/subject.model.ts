@@ -28,7 +28,7 @@ Subject.init(
       primaryKey: true,
     },
     name: {
-      type: DataTypes.STRING(100),
+      type: DataTypes.STRING(250),
       allowNull: false,
       set(value: string) {
         this.setDataValue("name", value.toLowerCase());
