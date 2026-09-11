@@ -65,7 +65,7 @@ export function TeacherDashboard() {
     const fetchData = async () => {
       try {
         const [statsRes, topStudentsRes, weakRes, coverageRes] = await Promise.all([
-          dashboardApi.getStats(token || undefined),
+          dashboardApi.getStats(undefined, token || undefined),
           teachersApi.getTopStudents({ limit: 10 }, token || undefined),
           teachersApi.getWeaknessSummary({}, token || undefined),
           teachersApi.getQuestionCoverage({ limit: 10 }, token || undefined),
