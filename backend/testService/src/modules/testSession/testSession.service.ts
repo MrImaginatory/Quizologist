@@ -404,16 +404,20 @@ export class TestSessionService {
     sessionId: string,
     studentId: string,
     currentQuestionIndex: number,
-    isCorrect?: boolean // whether the last answer was correct
+    isCorrect?: boolean, // whether the last answer was correct
+    preloadedSession?: any // optional pre-fetched session to skip redundant DB round-trip
   ) {
-    const session = await TestSession.findByPk(sessionId, {
+    // Use pre-fetched session if provided (avoids redundant DB round-trip from socket handler)
+    const session = preloadedSession ?? await TestSession.findByPk(sessionId, {
       include: [{ model: TestSelection, as: "selections" }],
     });
 
     if (!session) throw ApiError.notFound(RESPONSE_MESSAGES.ERROR.TEST_NOT_FOUND);
 
+    // Only fetch question_id and createdAt — we only need IDs to build the exclusion list
     const existingAnswers = await TestAnswer.findAll({
       where: { test_session_id: sessionId },
+      attributes: ["question_id", "createdAt"],
       order: [["createdAt", "ASC"]],
     });
 
@@ -466,17 +470,21 @@ export class TestSessionService {
     const primaryWhere: any = { [Op.or]: questionConditions };
     if (excludedIds.length > 0) primaryWhere.id = { [Op.notIn]: excludedIds };
 
-    const primaryBatch = await Question.findAll({
-      where: primaryWhere,
-      include: [
-        { model: Topic, as: "topic", attributes: ["id", "name"] },
-        { model: Subject, as: "subject", attributes: ["id", "name"] },
-        { model: Course, as: "course", attributes: ["id", "name"] },
-      ],
-      order: sequelize.random(),
-      limit: 1,
-    });
-    if (primaryBatch.length > 0) selectedQuestion = primaryBatch[0];
+    // count+offset random selection: avoids ORDER BY RAND() full-table sort (O(n log n) → O(index))
+    const primaryCount = await Question.count({ where: primaryWhere });
+    if (primaryCount > 0) {
+      const randomOffset = Math.floor(Math.random() * primaryCount);
+      const found = await Question.findOne({
+        where: primaryWhere,
+        include: [
+          { model: Topic, as: "topic", attributes: ["id", "name"] },
+          { model: Subject, as: "subject", attributes: ["id", "name"] },
+          { model: Course, as: "course", attributes: ["id", "name"] },
+        ],
+        offset: randomOffset,
+      });
+      if (found) selectedQuestion = found;
+    }
 
     // Fallback: any unseen question from selections (no difficulty filter)
     if (!selectedQuestion) {
@@ -488,17 +496,21 @@ export class TestSessionService {
       });
       const fallbackWhere: any = { [Op.or]: selConditions };
       if (excludedIds.length > 0) fallbackWhere.id = { [Op.notIn]: excludedIds };
-      const fallback = await Question.findAll({
-        where: fallbackWhere,
-        include: [
-          { model: Topic, as: "topic", attributes: ["id", "name"] },
-          { model: Subject, as: "subject", attributes: ["id", "name"] },
-          { model: Course, as: "course", attributes: ["id", "name"] },
-        ],
-        order: sequelize.random(),
-        limit: 1,
-      });
-      if (fallback.length > 0) selectedQuestion = fallback[0];
+      // count+offset for fallback as well — avoids ORDER BY RAND() on the full questions table
+      const fallbackCount = await Question.count({ where: fallbackWhere });
+      if (fallbackCount > 0) {
+        const fallbackOffset = Math.floor(Math.random() * fallbackCount);
+        const found = await Question.findOne({
+          where: fallbackWhere,
+          include: [
+            { model: Topic, as: "topic", attributes: ["id", "name"] },
+            { model: Subject, as: "subject", attributes: ["id", "name"] },
+            { model: Course, as: "course", attributes: ["id", "name"] },
+          ],
+          offset: fallbackOffset,
+        });
+        if (found) selectedQuestion = found;
+      }
     }
 
     if (!selectedQuestion) return null;

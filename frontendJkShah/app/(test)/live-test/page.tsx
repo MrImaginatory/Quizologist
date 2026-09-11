@@ -61,6 +61,9 @@ function LiveTestContent() {
   const [error, setError] = useState("");
 
   const questionStartTime = useRef<number>(Date.now());
+  // Tracks whether join_test has been sent for the current socket connection.
+  // Prevents a duplicate join_test every time testSession updates (e.g. nextQuestion added).
+  const hasJoinedRef = useRef(false);
 
   // Persist state to localStorage on every change
   useEffect(() => {
@@ -138,9 +141,15 @@ function LiveTestContent() {
     fetchTest();
   }, [testId, token]);
 
-  // Join test room when connected
+  // Join test room when connected — send only once per socket connection.
+  // Reset the flag on disconnect so the test is re-joined automatically on reconnect.
   useEffect(() => {
-    if (isConnected && testId && testSession) {
+    if (!isConnected) {
+      hasJoinedRef.current = false;
+      return;
+    }
+    if (testId && testSession && !hasJoinedRef.current) {
+      hasJoinedRef.current = true;
       joinTest(testId);
     }
   }, [isConnected, testId, testSession, joinTest]);

@@ -5,6 +5,7 @@ import { TestSessionService } from "../modules/testSession/testSession.service";
 import TestSession from "../modules/testSession/testSession.model";
 import TestAnswer from "../modules/testAnswer/testAnswer.model";
 import Question from "../modules/question/question.model";
+import TestSelection from "../modules/testSelection/testSelection.model";
 import { UserSkillRatingService } from "../modules/userSkillRating/userSkillRating.service";
 
 interface JoinTestPayload {
@@ -146,6 +147,7 @@ export function registerSocketHandlers(socket: Socket, studentId: string, logger
       // Verify session exists and belongs to this student
       const session = await TestSession.findOne({
         where: { id: testId, student_id: studentId, status: "in_progress" },
+        include: [{ model: TestSelection, as: "selections" }],
       });
 
       if (!session) {
@@ -157,11 +159,15 @@ export function registerSocketHandlers(socket: Socket, studentId: string, logger
       const expired = await checkAndAutoSubmit(socket, session, studentId, logger);
       if (expired) return;
 
-      // Find existing answer record
-      const existingAnswer = await TestAnswer.findOne({
-        where: { test_session_id: testId, question_id: questionId },
-      });
+      // Parallelize independent reads: existing answer check + question lookup
+      const [existingAnswer, answeredQuestion] = await Promise.all([
+        TestAnswer.findOne({ where: { test_session_id: testId, question_id: questionId } }),
+        Question.findByPk(questionId),
+      ]);
 
+      const isCorrectAnswer = answeredQuestion ? answeredQuestion.correctAnswer === answer : false;
+
+      // Upsert answer record
       if (existingAnswer) {
         // Update existing answer
         await existingAnswer.update({
@@ -188,27 +194,22 @@ export function registerSocketHandlers(socket: Socket, studentId: string, logger
       // Calculate remaining time
       const timeRemaining = getTimeRemaining(session.ends_at);
 
-      // Lookup question once for both skill update and difficulty advancement
-      const answeredQuestion = await Question.findByPk(questionId);
-      const isCorrectAnswer = answeredQuestion ? answeredQuestion.correctAnswer === answer : false;
-
       // Update internal skill rating (for history/dashboard only — not sent to frontend)
+      // Fire-and-forget: does not affect question selection or the response
       if (session.skill_score_snapshot !== null && answeredQuestion) {
-        try {
-          await UserSkillRatingService.updateScore({
-            userId: studentId,
-            isCorrect: isCorrectAnswer,
-            questionDifficultyScore: (answeredQuestion as any).difficulty_score || 3.0,
-            timeTaken,
-            totalQuestionsInTest: session.total_questions,
-            durationMinutes: session.duration_minutes,
-          });
-        } catch (scoreErr: any) {
+        UserSkillRatingService.updateScore({
+          userId: studentId,
+          isCorrect: isCorrectAnswer,
+          questionDifficultyScore: (answeredQuestion as any).difficulty_score || 3.0,
+          timeTaken,
+          totalQuestionsInTest: session.total_questions,
+          durationMinutes: session.duration_minutes,
+        }).catch((scoreErr: any) => {
           logger.error("Skill score update error", { error: scoreErr.message });
-        }
+        });
       }
 
-      // Adaptive next question generation
+      // Adaptive next question generation (pass pre-fetched session to avoid double DB lookup)
       let nextQuestion: any = null;
       if (session.skill_score_snapshot !== null && questionIndex + 1 < session.total_questions) {
         try {
@@ -216,7 +217,8 @@ export function registerSocketHandlers(socket: Socket, studentId: string, logger
             session.id,
             studentId,
             questionIndex,
-            isCorrectAnswer
+            isCorrectAnswer,
+            session
           );
         } catch (nextErr: any) {
           logger.error("Next question generation error", { error: nextErr.message });
@@ -242,6 +244,7 @@ export function registerSocketHandlers(socket: Socket, studentId: string, logger
 
       const session = await TestSession.findOne({
         where: { id: testId, student_id: studentId, status: "in_progress" },
+        include: [{ model: TestSelection, as: "selections" }],
       });
 
       if (!session) {
@@ -287,7 +290,8 @@ export function registerSocketHandlers(socket: Socket, studentId: string, logger
             session.id,
             studentId,
             questionIndex,
-            false // skipped = stay at same difficulty
+            false, // skipped = stay at same difficulty
+            session
           );
         } catch (nextErr: any) {
           logger.error("Next question generation error", { error: nextErr.message });

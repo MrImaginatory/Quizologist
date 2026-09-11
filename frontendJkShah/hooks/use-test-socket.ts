@@ -53,19 +53,17 @@ export function useTestSocket(options: UseTestSocketOptions = {}) {
   const [isConnected, setIsConnected] = useState(false);
   const heartbeatRef = useRef<NodeJS.Timeout | null>(null);
 
-  const {
-    onTestJoined,
-    onAnswerRecorded,
-    onTimeUpdate,
-    onTestSubmitted,
-    onError,
-  } = options;
+  // Store callbacks in a ref so socket event handlers always call the latest version
+  // without needing to recreate the socket when the parent component re-renders
+  const callbacksRef = useRef(options);
+  useEffect(() => {
+    callbacksRef.current = options;
+  });
 
   useEffect(() => {
     if (!token) return;
 
     let socket: Socket;
-    let heartbeat: NodeJS.Timeout | null = null;
 
     const connectSocket = async () => {
       const { io } = await import("socket.io-client");
@@ -93,23 +91,23 @@ export function useTestSocket(options: UseTestSocketOptions = {}) {
       });
 
       socket.on("test_joined", (data: TestJoinedData) => {
-        onTestJoined?.(data);
+        callbacksRef.current.onTestJoined?.(data);
       });
 
       socket.on("answer_recorded", (data: AnswerRecordedData) => {
-        onAnswerRecorded?.(data);
+        callbacksRef.current.onAnswerRecorded?.(data);
       });
 
       socket.on("time_update", (data: TimeUpdateData) => {
-        onTimeUpdate?.(data);
+        callbacksRef.current.onTimeUpdate?.(data);
       });
 
       socket.on("test_submitted", (data: TestSubmittedData) => {
-        onTestSubmitted?.(data);
+        callbacksRef.current.onTestSubmitted?.(data);
       });
 
       socket.on("error", (data: ErrorData) => {
-        onError?.(data);
+        callbacksRef.current.onError?.(data);
       });
 
       socketRef.current = socket;
@@ -118,9 +116,6 @@ export function useTestSocket(options: UseTestSocketOptions = {}) {
     connectSocket();
 
     return () => {
-      if (heartbeat) {
-        clearInterval(heartbeat);
-      }
       socket?.disconnect();
     };
   }, [token]);
