@@ -298,15 +298,12 @@ export function StartTestDialog({ open, onOpenChange, onStartTest }: StartTestDi
     if (updated[index].subjectIds.length > 0) {
       setLoadingTopicsMap((prev) => ({ ...prev, [index]: true }));
       try {
-        const allTopics: { id: string; name: string }[] = [];
         const courseId = updated[index].courseId;
-        for (const sid of updated[index].subjectIds) {
-          const response = await enrollmentsApi.getEnrolledTopics(courseId, sid, token || undefined);
-          allTopics.push(...response.data.topics);
-        }
-        const uniqueTopics = allTopics.filter((topic, i, self) =>
-          i === self.findIndex((t) => t.id === topic.id)
-        );
+        const subjectIdsJoined = updated[index].subjectIds.join(",");
+        
+        const response = await enrollmentsApi.getEnrolledTopics(courseId, subjectIdsJoined, token || undefined);
+        const uniqueTopics = response.data.topics;
+        
         setTopicsMap((prev) => ({ ...prev, [index]: uniqueTopics }));
       } catch (err) {
         console.error("Failed to fetch topics:", err);
@@ -336,16 +333,12 @@ export function StartTestDialog({ open, onOpenChange, onStartTest }: StartTestDi
     if (updated[index].subjectIds.length > 0) {
       setLoadingTopicsMap((prev) => ({ ...prev, [index]: true }));
       try {
-        const allTopics: { id: string; name: string }[] = [];
         const courseId = updated[index].courseId;
-        for (const subjectId of updated[index].subjectIds) {
-          const response = await enrollmentsApi.getEnrolledTopics(courseId, subjectId, token || undefined);
-          allTopics.push(...response.data.topics);
-        }
-        // Remove duplicates by id
-        const uniqueTopics = allTopics.filter((topic, i, self) =>
-          i === self.findIndex((t) => t.id === topic.id)
-        );
+        const subjectIdsJoined = updated[index].subjectIds.join(",");
+        
+        const response = await enrollmentsApi.getEnrolledTopics(courseId, subjectIdsJoined, token || undefined);
+        const uniqueTopics = response.data.topics;
+        
         setTopicsMap((prev) => ({ ...prev, [index]: uniqueTopics }));
       } catch (err) {
         console.error("Failed to fetch topics:", err);

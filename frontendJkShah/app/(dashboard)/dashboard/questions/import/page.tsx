@@ -98,6 +98,7 @@ export default function ImportQuestionsPage() {
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [importProgress, setImportProgress] = useState({ current: 0, total: 0 });
   const [showErrors, setShowErrors] = useState(false);
+  const [imageErrorRowIndices, setImageErrorRowIndices] = useState<Set<number>>(new Set());
 
   const handleDownloadTemplate = async () => {
     try {
@@ -277,13 +278,32 @@ export default function ImportQuestionsPage() {
       // Check if missing items are now in maps
       const allCoursesPresent = missingHierarchy.every((mc) => courseMap.has(normalizeName(mc.name)));
       if (allCoursesPresent) {
-        const resolved = rawParsedQuestions.map((row) => resolveRow(row));
+        const resolved = rawParsedQuestions.map((row, idx) => {
+          if (imageErrorRowIndices.has(idx)) {
+            return {
+              type: "mcq" as const,
+              question: row.question || `Row ${idx + 1}`,
+              choices: [],
+              correctAnswer: "",
+              difficulty: row.difficulty || "normal",
+              topic_id: "",
+              subject_id: "",
+              course_id: "",
+              courseName: row.courseName,
+              subjectName: row.subjectName,
+              topicName: row.topicName,
+              status: "error" as const,
+              error: "Row contains an image — only text is allowed in the Excel sheet",
+            };
+          }
+          return resolveRow(row);
+        });
         setParsedQuestions(resolved);
         setStep("preview");
         setIsResolvingMissing(false);
       }
     }
-  }, [isResolvingMissing, missingHierarchy, courseMap, subjectMap, topicsBySubject, rawParsedQuestions, resolveRow]);
+  }, [isResolvingMissing, missingHierarchy, courseMap, subjectMap, topicsBySubject, rawParsedQuestions, resolveRow, imageErrorRowIndices]);
 
   const handleCreateMissing = async () => {
     setIsLoading(true);
@@ -315,10 +335,32 @@ export default function ImportQuestionsPage() {
       }
 
       const sheet = workbook.Sheets[sheetName];
+
+      // Detect rows that contain embedded images.
+      // SheetJS stores images in sheet['!images'] as an array of objects with
+      // an `from` anchor { r: <0-based row>, c: <0-based col> }.
+      // Row 0 is the header row, so data rows start at r=1 → data index 0.
+      const imageRowSet = new Set<number>();
+      const sheetImages = (sheet as any)["!images"] as any[] | undefined;
+      if (sheetImages && sheetImages.length > 0) {
+        for (const img of sheetImages) {
+          // anchor may live under img.from, img.anchor, or img.position depending on SheetJS version
+          const fromRow: number | undefined =
+            img?.from?.r ?? img?.anchor?.from?.r ?? img?.position?.r;
+          if (fromRow !== undefined && fromRow >= 1) {
+            // convert 0-based sheet row to 0-based data-array index (subtract 1 for header)
+            imageRowSet.add(fromRow - 1);
+          }
+        }
+      }
+
       const raw = XLSX.utils.sheet_to_json(sheet);
 
+      // Track which raw rows have images so we can flag them as errors later
+      const imageErrorRows = new Set<number>();
+
       const parsed: ParsedQuestion[] = raw
-        .map((row: unknown) => {
+        .map((row: unknown, rowIndex: number) => {
           const r = row as Record<string, string>;
 
           // Support multiple column name variations
@@ -330,6 +372,11 @@ export default function ImportQuestionsPage() {
             }
             return "";
           };
+
+          if (imageRowSet.has(rowIndex)) {
+            // Mark this row index so resolveRow can emit an error later
+            imageErrorRows.add(rowIndex);
+          }
 
           return {
             courseName: getFieldValue(["Course Name", "Course", "course_name", "course"]),
@@ -349,6 +396,9 @@ export default function ImportQuestionsPage() {
           };
         })
         .filter((row) => row.question.trim() !== "");
+
+      // Persist image-affected row indices to state (needed by the async isResolvingMissing flow)
+      setImageErrorRowIndices(new Set(imageErrorRows));
 
       // Parse Reference sheet if it exists
       let refSheetName = workbook.SheetNames.find(
@@ -438,9 +488,40 @@ export default function ImportQuestionsPage() {
         });
         setMissingHierarchy(missingList);
         setRawParsedQuestions(parsed);
+        // Notify about image rows even in missing-hierarchy flow
+        if (imageErrorRows.size > 0) {
+          toast.error(
+            `${imageErrorRows.size} row(s) contain embedded images and will be skipped. Only text is allowed.`
+          );
+        }
         setStep("confirm_missing");
       } else {
-        const resolved = parsed.map((row) => resolveRow(row));
+        const resolved = parsed.map((row, idx) => {
+          if (imageErrorRows.has(idx)) {
+            // This row had an embedded image — skip it with an error
+            return {
+              type: "mcq" as const,
+              question: row.question || `Row ${idx + 1}`,
+              choices: [],
+              correctAnswer: "",
+              difficulty: row.difficulty || "normal",
+              topic_id: "",
+              subject_id: "",
+              course_id: "",
+              courseName: row.courseName,
+              subjectName: row.subjectName,
+              topicName: row.topicName,
+              status: "error" as const,
+              error: "Row contains an image — only text is allowed in the Excel sheet",
+            };
+          }
+          return resolveRow(row);
+        });
+        if (imageErrorRows.size > 0) {
+          toast.error(
+            `${imageErrorRows.size} row(s) were skipped because they contain embedded images. Only text is allowed.`
+          );
+        }
         setParsedQuestions(resolved);
         setStep("preview");
       }

@@ -38,7 +38,7 @@ export const getEnrolledSubjectsSchema = z.object({
 
 export const getEnrolledTopicsSchema = z.object({
   course_id: z.string().uuid("Invalid course ID format"),
-  subject_id: z.string().uuid("Invalid subject ID format"),
+  subject_id: z.string().optional(),
 });
 
 export type GetEnrolledSubjectsInput = z.infer<typeof getEnrolledSubjectsSchema>;

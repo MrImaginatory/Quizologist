@@ -11,3 +11,4 @@ requirements.txt
 *.xlsx
 venv
 .claude
+*.har
