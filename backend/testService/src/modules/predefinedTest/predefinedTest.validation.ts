@@ -6,6 +6,7 @@ const uuidSchema = z.string().uuid("Invalid UUID format");
 export const createPredefinedTestSchema = z.object({
   title: z.string().min(1, "Title is required").max(255, "Title must be at most 255 characters"),
   description: z.string().max(1000, "Description must be at most 1000 characters").optional(),
+  is_pre_assessment: z.boolean().optional(),
   is_scheduled: z.boolean().default(false),
   start_time: z.string().datetime().optional(),
   end_time: z.string().datetime().optional(),
@@ -60,6 +61,7 @@ export const createPredefinedTestSchema = z.object({
 export const updatePredefinedTestSchema = z.object({
   title: z.string().min(1).max(255).optional(),
   description: z.string().max(1000).optional(),
+  is_pre_assessment: z.boolean().optional(),
   is_scheduled: z.boolean().optional(),
   start_time: z.string().datetime().optional(),
   end_time: z.string().datetime().optional(),

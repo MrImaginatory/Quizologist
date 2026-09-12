@@ -12,6 +12,8 @@ import { Loader2, Clock, Play, Calendar, AlertCircle, CheckCircle, Timer } from 
 import { capitalize } from "@/lib/utils";
 import { toast } from "sonner";
 import { useState, useMemo } from "react";
+import { PreAssessmentBanner } from "@/components/pre-assessment-banner";
+import { usePreAssessmentStatus } from "@/hooks/use-preassessment-status";
 
 type TestStatus = "available" | "upcoming" | "expired" | "completed";
 
@@ -21,6 +23,9 @@ export default function PendingTestsPage() {
   const { tests, isLoading, error } = usePendingTests();
   const [startingId, setStartingId] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const { status: preAssessmentStatus } = usePreAssessmentStatus();
+
+  const isPreAssessmentPending = preAssessmentStatus?.required && !preAssessmentStatus.completed;
 
   const handleStartTest = async (testId: string) => {
     setStartingId(testId);
@@ -103,6 +108,7 @@ export default function PendingTestsPage() {
 
   return (
     <div className="space-y-6">
+      <PreAssessmentBanner />
       <div>
         <h1 className="text-3xl font-bold">Available Tests</h1>
         <p className="text-muted-foreground">
@@ -189,7 +195,12 @@ export default function PendingTestsPage() {
             return (
               <Card key={test.id} className="relative overflow-hidden">
                 {/* Status Badge */}
-                <div className="absolute top-4 right-4">
+                <div className="absolute top-4 right-4 flex flex-col gap-2 items-end">
+                  {test.is_pre_assessment && (
+                    <Badge variant="default" className="bg-amber-500 hover:bg-amber-600">
+                      Pre-Assessment
+                    </Badge>
+                  )}
                   <Badge variant="outline" className={config.color}>
                     <span className="mr-1">{config.icon}</span>
                     {config.label}
@@ -247,7 +258,16 @@ export default function PendingTestsPage() {
                   {/* Start Button */}
                   <Button
                     className="w-full"
-                    disabled={!isAvailable || startingId === test.id}
+                    disabled={
+                      !isAvailable || 
+                      startingId === test.id || 
+                      (isPreAssessmentPending && !test.is_pre_assessment)
+                    }
+                    title={
+                      isPreAssessmentPending && !test.is_pre_assessment
+                        ? "Complete the pre-assessment first"
+                        : ""
+                    }
                     onClick={() => handleStartTest(test.id)}
                   >
                     {startingId === test.id ? (

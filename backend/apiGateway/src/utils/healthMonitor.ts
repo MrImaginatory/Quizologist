@@ -72,10 +72,26 @@ export function startHealthChecker(serviceUrls: { name: string; url: string }[])
         if (response.ok) {
           logHealth(service.name, "UP");
         } else {
-          logHealth(service.name, "DOWN", response.statusText);
+          const errorMsg = `HTTP Error ${response.status}: ${response.statusText}`;
+          logHealth(service.name, "DOWN", errorMsg);
         }
       } catch (error: any) {
-        logHealth(service.name, "DOWN", error.message);
+        let errorMsg = error.message || "Unknown error";
+        
+        if (error.name === 'AbortError' || error.name === 'TimeoutError') {
+          errorMsg = "Connection timed out after 5000ms";
+        } else if (error.cause) {
+          const causeCode = error.cause.code;
+          if (causeCode === 'ECONNREFUSED') {
+            errorMsg = "Connection refused (Service may be down or not running)";
+          } else if (causeCode === 'ECONNRESET') {
+            errorMsg = "Connection reset by peer";
+          } else {
+            errorMsg = `Fetch failed: ${error.cause.message || causeCode}`;
+          }
+        }
+        
+        logHealth(service.name, "DOWN", errorMsg);
       }
     }
   };

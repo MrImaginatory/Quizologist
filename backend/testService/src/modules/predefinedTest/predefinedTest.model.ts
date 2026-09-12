@@ -25,6 +25,7 @@ interface PredefinedTestAttributes {
   subject_ids: string[] | null;
   topic_ids: string[] | null;
   test_link_token: string | null;
+  is_pre_assessment: boolean;
   createdAt?: Date;
   updatedAt?: Date;
   deletedAt?: Date | null;
@@ -46,6 +47,7 @@ type PredefinedTestCreationAttributes = Optional<
   | "subject_ids"
   | "topic_ids"
   | "test_link_token"
+  | "is_pre_assessment"
   | "createdAt"
   | "updatedAt"
   | "deletedAt"
@@ -75,6 +77,7 @@ class PredefinedTest
   declare subject_ids: string[] | null;
   declare topic_ids: string[] | null;
   declare test_link_token: string | null;
+  declare is_pre_assessment: boolean;
   declare createdAt: Date;
   declare updatedAt: Date;
   declare deletedAt: Date | null;
@@ -170,6 +173,11 @@ PredefinedTest.init(
       type: DataTypes.STRING(100),
       allowNull: true,
       unique: true,
+    },
+    is_pre_assessment: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
     },
   },
   {
