@@ -89,7 +89,8 @@ export function exportTestResultToPDF(result: TestResult, user: UserData) {
     doc.setFont("helvetica", "bold");
     doc.setTextColor(0);
     const questionLabel = `Q${index + 1}. `;
-    const questionText = doc.splitTextToSize(q.question, contentWidth - 10);
+    const cleanQuestion = q.question.replace(/^(?:<[^>]*>)?\s*(?:Q\s*\d+|\d+)\s*[.)\]]?\s*/i, (match, p1) => p1 || '');
+    const questionText = doc.splitTextToSize(cleanQuestion, contentWidth - 15);
     doc.text(questionLabel, margin, yPos);
     doc.text(questionText, margin + 12, yPos);
     yPos += questionText.length * 5 + 4;
@@ -151,8 +152,10 @@ export function exportTestResultToPDF(result: TestResult, user: UserData) {
       checkNewPage(12);
       doc.setFont("helvetica", "italic");
       doc.setTextColor(100);
-      doc.text(meta.join("  |  "), margin, yPos);
-      yPos += 5;
+      const metaText = meta.join("  |  ");
+      const metaLines = doc.splitTextToSize(metaText, contentWidth);
+      doc.text(metaLines, margin, yPos);
+      yPos += metaLines.length * 4 + 1;
     }
 
     if (q.explanation) {
