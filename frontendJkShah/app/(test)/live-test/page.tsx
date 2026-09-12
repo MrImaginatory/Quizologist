@@ -591,7 +591,7 @@ function LiveTestContent() {
             </div>
 
             <h2 className="text-xl sm:text-2xl font-semibold mb-8 leading-relaxed">
-              {question.question}
+              {currentQuestion + 1}. {question.question.replace(/^(?:<[^>]*>)?\s*(?:Q\s*\d+|\d+)\s*[.)\]]?\s*/i, (match, p1) => p1 || '')}
             </h2>
 
             <div className="space-y-3">

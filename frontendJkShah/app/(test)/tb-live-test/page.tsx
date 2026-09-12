@@ -389,7 +389,7 @@ function TimeBasedLiveTestContent() {
 
                 <AnimatePresence mode="wait">
                   <motion.div key={`${question.id}-${currentQuestion}`} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }}>
-                    <h2 className="text-xl sm:text-2xl font-semibold mb-8 leading-relaxed" dangerouslySetInnerHTML={{ __html: question.question }} />
+                    <h2 className="text-xl sm:text-2xl font-semibold mb-8 leading-relaxed" dangerouslySetInnerHTML={{ __html: question.question.replace(/^(?:<[^>]*>)?\s*(?:Q\s*\d+|\d+)\s*[.)\]]?\s*/i, (match, p1) => (p1 || '') + (currentQuestion + 1) + '. ') }} />
                     <div className="space-y-3">
                       {question.choices?.map((choice, choiceIndex) => {
                         const letter = String.fromCharCode(65 + choiceIndex);
