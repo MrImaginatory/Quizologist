@@ -8,13 +8,8 @@ class Course extends Model {
 
 Course.init(
   {
-    id: {
-      type: DataTypes.UUID,
-      primaryKey: true,
-    },
-    name: {
-      type: DataTypes.STRING(100),
-    },
+    id: { type: DataTypes.UUID, primaryKey: true },
+    name: { type: DataTypes.STRING(100) },
   },
   {
     sequelize,

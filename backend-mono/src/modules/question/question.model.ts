@@ -1,112 +1,35 @@
-import { DataTypes, Model, Optional } from "sequelize";
+import { DataTypes, Model } from "sequelize";
 import { sequelize } from "../../config/database";
-import { QuestionAttributes, QuestionType, DifficultyLevel } from "../../types";
 
-type QuestionCreationAttributes = Optional<
-  QuestionAttributes,
-  | "id"
-  | "choices"
-  | "explanation"
-  | "videoUrl"
-  | "difficulty"
-  | "difficulty_score"
-  | "createdAt"
-  | "updatedAt"
-  | "deletedAt"
->;
-
-class Question
-  extends Model<QuestionAttributes, QuestionCreationAttributes>
-  implements QuestionAttributes
-{
+class Question extends Model {
   declare id: string;
-  declare type: QuestionType;
+  declare type: string;
   declare question: string;
   declare choices: string[] | null;
   declare correctAnswer: string;
   declare explanation: string | null;
   declare videoUrl: string | null;
-  declare difficulty: DifficultyLevel;
+  declare difficulty: string;
   declare difficulty_score: number;
   declare topic_id: string;
   declare subject_id: string;
   declare course_id: string;
-  declare questionAddedBy: string;
-  declare createdAt: Date;
-  declare updatedAt: Date;
-  declare deletedAt: Date | null;
 }
 
 Question.init(
   {
-    id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      primaryKey: true,
-    },
-    type: {
-      type: DataTypes.ENUM("mcq", "descriptive"),
-      allowNull: false,
-    },
-    question: {
-      type: DataTypes.TEXT,
-      allowNull: false,
-    },
-    choices: {
-      type: DataTypes.JSONB,
-      allowNull: true,
-      defaultValue: null,
-    },
-    correctAnswer: {
-      type: DataTypes.TEXT,
-      allowNull: false,
-    },
-    explanation: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-    },
-    videoUrl: {
-      type: DataTypes.STRING(500),
-      allowNull: true,
-    },
-    difficulty: {
-      type: DataTypes.ENUM("beginner", "normal", "mid", "hard", "expert"),
-      allowNull: false,
-      defaultValue: "normal",
-    },
-    difficulty_score: {
-      type: DataTypes.FLOAT,
-      allowNull: false,
-      defaultValue: 3.0,
-    },
-    topic_id: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: "topics",
-        key: "id",
-      },
-    },
-    subject_id: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: "subjects",
-        key: "id",
-      },
-    },
-    course_id: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: "courses",
-        key: "id",
-      },
-    },
-    questionAddedBy: {
-      type: DataTypes.UUID,
-      allowNull: true,
-    },
+    id: { type: DataTypes.UUID, primaryKey: true },
+    type: { type: DataTypes.ENUM("mcq", "descriptive") },
+    question: { type: DataTypes.TEXT },
+    choices: { type: DataTypes.JSONB, allowNull: true },
+    correctAnswer: { type: DataTypes.TEXT },
+    explanation: { type: DataTypes.TEXT, allowNull: true },
+    videoUrl: { type: DataTypes.STRING(500), allowNull: true },
+    difficulty: { type: DataTypes.ENUM("beginner", "normal", "mid", "hard", "expert") },
+    difficulty_score: { type: DataTypes.FLOAT, defaultValue: 3.0 },
+    topic_id: { type: DataTypes.UUID },
+    subject_id: { type: DataTypes.UUID },
+    course_id: { type: DataTypes.UUID },
   },
   {
     sequelize,
@@ -115,15 +38,6 @@ Question.init(
     paranoid: true,
     underscored: true,
     modelName: "Question",
-    indexes: [
-      {
-        unique: true,
-        fields: ["question", "topic_id"],
-        where: {
-          deleted_at: null,
-        },
-      },
-    ],
   }
 );
 

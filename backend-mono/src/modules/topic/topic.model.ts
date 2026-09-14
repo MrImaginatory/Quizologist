@@ -9,16 +9,9 @@ class Topic extends Model {
 
 Topic.init(
   {
-    id: {
-      type: DataTypes.UUID,
-      primaryKey: true,
-    },
-    name: {
-      type: DataTypes.STRING(100),
-    },
-    subject_id: {
-      type: DataTypes.UUID,
-    },
+    id: { type: DataTypes.UUID, primaryKey: true },
+    name: { type: DataTypes.STRING(100) },
+    subject_id: { type: DataTypes.UUID },
   },
   {
     sequelize,
