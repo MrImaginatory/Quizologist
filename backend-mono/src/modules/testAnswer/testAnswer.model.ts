@@ -42,6 +42,10 @@ TestAnswer.init(
       type: DataTypes.TEXT,
       allowNull: true,
     },
+    is_correct: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+    },
     is_skipped: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,

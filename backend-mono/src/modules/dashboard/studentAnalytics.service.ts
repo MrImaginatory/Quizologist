@@ -31,10 +31,11 @@ export class StudentAnalyticsService {
       include: [
         {
           model: Question,
+          as: "question",
           attributes: ["topic_id", "subject_id", "difficulty"],
           include: [
-            { model: Topic, attributes: ["id", "name"] },
-            { model: Subject, attributes: ["id", "name"] },
+            { model: Topic, as: "topic", attributes: ["id", "name"] },
+            { model: Subject, as: "subject", attributes: ["id", "name"] },
           ],
         },
       ],
@@ -46,12 +47,12 @@ export class StudentAnalyticsService {
     >();
 
     for (const answer of answers) {
-      const q = (answer as any).Question;
-      if (!q || !q.Topic) continue;
+      const q = (answer as any).question;
+      if (!q || !q.topic) continue;
 
       const topicId = q.topic_id;
-      const topicName = q.Topic.name;
-      const subjectName = q.Subject?.name || "";
+      const topicName = q.topic.name;
+      const subjectName = q.subject?.name || "";
 
       if (!topicMap.has(topicId)) {
         topicMap.set(topicId, {
@@ -65,7 +66,7 @@ export class StudentAnalyticsService {
 
       const topic = topicMap.get(topicId)!;
       topic.total++;
-      if (answer.is_correct) topic.correct++;
+      if ((answer as any).is_correct) topic.correct++;
       topic.totalTime += answer.time_taken || 0;
     }
 
@@ -115,8 +116,9 @@ export class StudentAnalyticsService {
       include: [
         {
           model: Question,
+          as: "question",
           attributes: ["subject_id"],
-          include: [{ model: Subject, attributes: ["id", "name"] }],
+          include: [{ model: Subject, as: "subject", attributes: ["id", "name"] }],
         },
       ],
     });
@@ -127,11 +129,11 @@ export class StudentAnalyticsService {
     >();
 
     for (const answer of answers) {
-      const q = (answer as any).Question;
-      if (!q || !q.Subject) continue;
+      const q = (answer as any).question;
+      if (!q || !q.subject) continue;
 
       const subjectId = q.subject_id;
-      const subjectName = q.Subject.name;
+      const subjectName = q.subject.name;
 
       if (!subjectMap.has(subjectId)) {
         subjectMap.set(subjectId, { name: subjectName, correct: 0, total: 0, totalTime: 0 });
@@ -139,7 +141,7 @@ export class StudentAnalyticsService {
 
       const subject = subjectMap.get(subjectId)!;
       subject.total++;
-      if (answer.is_correct) subject.correct++;
+      if ((answer as any).is_correct) subject.correct++;
       subject.totalTime += answer.time_taken || 0;
     }
 
@@ -189,6 +191,7 @@ export class StudentAnalyticsService {
       include: [
         {
           model: Question,
+          as: "question",
           attributes: ["difficulty"],
         },
       ],
@@ -197,7 +200,7 @@ export class StudentAnalyticsService {
     const diffMap = new Map<string, { correct: number; total: number }>();
 
     for (const answer of answers) {
-      const q = (answer as any).Question;
+      const q = (answer as any).question;
       if (!q) continue;
 
       const diff = q.difficulty || "normal";
@@ -207,7 +210,7 @@ export class StudentAnalyticsService {
 
       const d = diffMap.get(diff)!;
       d.total++;
-      if (answer.is_correct) d.correct++;
+      if ((answer as any).is_correct) d.correct++;
     }
 
     const difficulties = Array.from(diffMap.entries()).map(([level, data]) => ({
@@ -243,8 +246,9 @@ export class StudentAnalyticsService {
       include: [
         {
           model: Question,
+          as: "question",
           attributes: ["topic_id"],
-          include: [{ model: Topic, attributes: ["id", "name"] }],
+          include: [{ model: Topic, as: "topic", attributes: ["id", "name"] }],
         },
       ],
     });
@@ -252,11 +256,11 @@ export class StudentAnalyticsService {
     const timeMap = new Map<string, { name: string; totalTime: number; count: number }>();
 
     for (const answer of answers) {
-      const q = (answer as any).Question;
-      if (!q || !q.Topic) continue;
+      const q = (answer as any).question;
+      if (!q || !q.topic) continue;
 
       const topicId = q.topic_id;
-      const topicName = q.Topic.name;
+      const topicName = q.topic.name;
 
       if (!timeMap.has(topicId)) {
         timeMap.set(topicId, { name: topicName, totalTime: 0, count: 0 });
@@ -395,10 +399,11 @@ export class StudentAnalyticsService {
       include: [
         {
           model: Question,
+          as: "question",
           attributes: ["id", "question"],
           include: [
-            { model: Subject, attributes: ["name"] },
-            { model: Topic, attributes: ["name"] },
+            { model: Subject, as: "subject", attributes: ["name"] },
+            { model: Topic, as: "topic", attributes: ["name"] },
           ],
         },
       ],
@@ -418,7 +423,7 @@ export class StudentAnalyticsService {
     >();
 
     for (const answer of answers) {
-      const q = (answer as any).Question;
+      const q = (answer as any).question;
       if (!q) continue;
 
       const key = `${answer.test_session_id}_${q.id}`;
@@ -427,8 +432,8 @@ export class StudentAnalyticsService {
         groupMap.set(key, {
           questionId: q.id,
           question: q.question || "Unknown question text",
-          subjectName: q.Subject?.name || "-",
-          topicName: q.Topic?.name || "-",
+          subjectName: q.subject?.name || "-",
+          topicName: q.topic?.name || "-",
           totalAttempts: 0,
           incorrectAttempts: 0,
         });
@@ -436,7 +441,7 @@ export class StudentAnalyticsService {
 
       const group = groupMap.get(key)!;
       group.totalAttempts++;
-      if (answer.is_correct === false) {
+      if ((answer as any).is_correct === false) {
         group.incorrectAttempts++;
       }
     }
