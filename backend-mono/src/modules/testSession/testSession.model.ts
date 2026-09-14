@@ -22,6 +22,7 @@ class TestSession extends Model {
   declare score: number;
   declare disconnect_count: number;
   declare last_question_index: number;
+  declare skill_score_snapshot: number | null;
   declare started_at: Date;
   declare completed_at: Date | null;
   declare createdAt: Date;
@@ -103,6 +104,10 @@ TestSession.init(
     last_question_index: {
       type: DataTypes.INTEGER,
       defaultValue: 0,
+    },
+    skill_score_snapshot: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
     },
     started_at: {
       type: DataTypes.DATE,

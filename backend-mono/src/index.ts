@@ -13,6 +13,7 @@ import { findMatchingRoute } from "./config/routes";
 import { ApiError } from "./utils/ApiError";
 import { ApiResponse } from "./utils/ApiResponse";
 import { createLogger, requestLogger } from "./utils/logger";
+import { createSocketServer } from "./socket/socketServer";
 
 // Import all routers
 import userRoutes from "./modules/user/user.routes";
@@ -136,6 +137,7 @@ const startServer = async () => {
   await seedAdmin();
 
   const server = http.createServer(app);
+  createSocketServer(server, logger);
 
   server.listen(env.PORT, () => {
     logger.info("Monolith Server started", { port: env.PORT, environment: env.NODE_ENV });
