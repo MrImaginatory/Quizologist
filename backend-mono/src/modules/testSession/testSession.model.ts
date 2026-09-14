@@ -4,6 +4,9 @@ import { sequelize } from "../../config/database";
 class TestSession extends Model {
   declare id: string;
   declare test_id: string;
+  declare predefined_test_id?: string;
+  declare test_type?: string;
+  declare tb_state?: any;
   declare student_id: string;
   declare status: "pending" | "in_progress" | "completed" | "abandoned";
   declare subject_id: string | null;

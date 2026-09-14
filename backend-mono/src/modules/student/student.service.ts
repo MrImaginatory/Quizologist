@@ -1,5 +1,5 @@
 import { Op, fn, col, literal } from "sequelize";
-import Student from "./student.model";
+import User from "../user/user.model";
 import Enrollment from "../enrollment/enrollment.model";
 import Course from "../course/course.model";
 import Subject from "../subject/subject.model";
@@ -54,7 +54,7 @@ export class StudentService {
       }
     }
 
-    const { rows: users, count: countResult } = await Student.findAndCountAll({
+    const { rows: users, count: countResult } = await User.findAndCountAll({
       where: whereConditions,
       attributes: {
         exclude: ["password"],
@@ -87,13 +87,13 @@ export class StudentService {
   static async getStudentEnrollments(studentId: string, page: number, limit: number) {
     const offset = (page - 1) * limit;
 
-    const student = await Student.findOne({
+    const student = await User.findOne({
       where: { id: studentId, role: "student" },
       attributes: { exclude: ["password"] },
     });
 
     if (!student) {
-      throw ApiError.notFound("Student not found");
+      throw ApiError.notFound("User not found");
     }
 
     const { rows: enrollments, count: total } = await Enrollment.findAndCountAll({

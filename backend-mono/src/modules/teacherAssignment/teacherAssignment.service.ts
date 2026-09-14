@@ -1,7 +1,7 @@
 import { fn, col, Op, QueryTypes } from "sequelize";
 import { sequelize } from "../../config/database";
 import TeacherAssignment from "./teacherAssignment.model";
-import Teacher from "../teacher/teacher.model";
+import User from "../user/user.model";
 import Course from "../course/course.model";
 import Subject from "../subject/subject.model";
 import Topic from "../topic/topic.model";
@@ -82,7 +82,7 @@ export class TeacherAssignmentService {
   static async getTeachersWithCounts(page: number, limit: number): Promise<any> {
     const offset = (page - 1) * limit;
 
-    const { rows: teachers, count: total } = await Teacher.findAndCountAll({
+    const { rows: teachers, count: total } = await User.findAndCountAll({
       where: { role: "teacher" },
       attributes: {
         exclude: ["password"],
@@ -166,12 +166,12 @@ export class TeacherAssignmentService {
   static async assignCourse(data: AssignCourseInput): Promise<any> {
     const { teacher_id, course_id } = data;
 
-    const teacher = await Teacher.findOne({
+    const teacher = await User.findOne({
       where: { id: teacher_id, role: "teacher" },
     });
 
     if (!teacher) {
-      throw ApiError.notFound("Teacher not found");
+      throw ApiError.notFound("User not found");
     }
 
     const course = await Course.findByPk(course_id);
@@ -188,7 +188,7 @@ export class TeacherAssignmentService {
     });
 
     if (existing) {
-      throw ApiError.conflict("Teacher is already assigned to this course");
+      throw ApiError.conflict("User is already assigned to this course");
     }
 
     const assignment = await TeacherAssignment.create({
@@ -202,12 +202,12 @@ export class TeacherAssignmentService {
   static async assignSubject(data: AssignSubjectInput): Promise<any> {
     const { teacher_id, course_id, subject_id } = data;
 
-    const teacher = await Teacher.findOne({
+    const teacher = await User.findOne({
       where: { id: teacher_id, role: "teacher" },
     });
 
     if (!teacher) {
-      throw ApiError.notFound("Teacher not found");
+      throw ApiError.notFound("User not found");
     }
 
     const course = await Course.findByPk(course_id);
@@ -233,7 +233,7 @@ export class TeacherAssignmentService {
     });
 
     if (existing) {
-      throw ApiError.conflict("Teacher is already assigned to this subject");
+      throw ApiError.conflict("User is already assigned to this subject");
     }
 
     const assignment = await TeacherAssignment.create({
@@ -274,7 +274,7 @@ export class TeacherAssignmentService {
     const { rows: assignments, count: total } = await TeacherAssignment.findAndCountAll({
       where: whereConditions,
       include: [
-        { model: Teacher, as: "teacher", attributes: ["id", "fname", "lname", "email"] },
+        { model: User, as: "teacher", attributes: ["id", "fname", "lname", "email"] },
         { model: Course, as: "course", attributes: ["id", "name"] },
         { model: Subject, as: "subject", attributes: ["id", "name"] },
       ],
@@ -295,13 +295,13 @@ export class TeacherAssignmentService {
   }
 
   static async getTeacherAssignments(teacherId: string) {
-    const teacher = await Teacher.findOne({
+    const teacher = await User.findOne({
       where: { id: teacherId, role: "teacher" },
       attributes: { exclude: ["password"] },
     });
 
     if (!teacher) {
-      throw ApiError.notFound("Teacher not found");
+      throw ApiError.notFound("User not found");
     }
 
     const assignments = await TeacherAssignment.findAll({
@@ -383,12 +383,12 @@ export class TeacherAssignmentService {
   static async bulkAssignSubjects(data: BulkAssignSubjectsInput): Promise<any> {
     const { teacher_id, course_id, subject_ids } = data;
 
-    const teacher = await Teacher.findOne({
+    const teacher = await User.findOne({
       where: { id: teacher_id, role: "teacher" },
     });
 
     if (!teacher) {
-      throw ApiError.notFound("Teacher not found");
+      throw ApiError.notFound("User not found");
     }
 
     const course = await Course.findByPk(course_id);
@@ -556,7 +556,7 @@ export class TeacherAssignmentService {
       ];
     }
 
-    const students = await Teacher.findAll({
+    const students = await User.findAll({
       where: studentWhere,
       attributes: ["id", "fname", "lname", "email"],
       raw: true,
@@ -676,7 +676,7 @@ export class TeacherAssignmentService {
 
     // If searching by student name/email, filter student IDs first
     if (search) {
-      const matchingStudents = await Teacher.findAll({
+      const matchingStudents = await User.findAll({
         where: {
           id: { [Op.in]: studentIds },
           role: "student",
@@ -712,7 +712,7 @@ export class TeacherAssignmentService {
     });
 
     const testStudentIds = [...new Set(tests.map((t) => t.student_id))];
-    const testStudents = await Teacher.findAll({
+    const testStudents = await User.findAll({
       where: {
         id: { [Op.in]: testStudentIds },
       },
@@ -836,7 +836,7 @@ export class TeacherAssignmentService {
 
     const studentIdsWithTests = [...studentStats.keys()];
 
-    const students = await Teacher.findAll({
+    const students = await User.findAll({
       where: {
         id: { [Op.in]: studentIdsWithTests },
         role: "student",

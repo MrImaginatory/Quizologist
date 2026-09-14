@@ -10,9 +10,9 @@ import "./config/associations";
 import { authenticate } from "./middlewares/auth.middleware";
 import { authorize } from "./middlewares/rbac.middleware";
 import { findMatchingRoute } from "./config/routes";
-import { ApiError } from "./shared/utils/ApiError";
-import { ApiResponse } from "./shared/utils/ApiResponse";
-import { createLogger, requestLogger } from "./shared/utils/logger";
+import { ApiError } from "./utils/ApiError";
+import { ApiResponse } from "./utils/ApiResponse";
+import { createLogger, requestLogger } from "./utils/logger";
 
 // Import all routers
 import userRoutes from "./modules/user/user.routes";

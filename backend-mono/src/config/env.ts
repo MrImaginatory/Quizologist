@@ -17,4 +17,6 @@ export const env = {
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "7d",
 
   BCRYPT_SALT_ROUNDS: parseInt(process.env.BCRYPT_SALT_ROUNDS || "10", 10),
+  MIN_ATTEMPTS: parseInt(process.env.MIN_ATTEMPTS || "3", 10),
+  PREDEFINED_TEST_MIN_DEACTIVATE_MINUTES: parseInt(process.env.PREDEFINED_TEST_MIN_DEACTIVATE_MINUTES || "5", 10),
 };

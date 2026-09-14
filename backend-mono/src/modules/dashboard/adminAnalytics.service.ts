@@ -3,7 +3,12 @@ import { sequelize } from "../../config/database";
 import { QueryTypes } from "sequelize";
 
 // Models (read-only, timestamps disabled)
-import { TestSession, TestAnswer, Question, Topic, Subject, Course } from "../models";
+import TestSession from "../testSession/testSession.model";
+import TestAnswer from "../testAnswer/testAnswer.model";
+import Question from "../question/question.model";
+import Topic from "../topic/topic.model";
+import Subject from "../subject/subject.model";
+import Course from "../course/course.model";
 import { StudentAnalyticsService } from "./studentAnalytics.service";
 
 // We need to import User and Location models for analytics

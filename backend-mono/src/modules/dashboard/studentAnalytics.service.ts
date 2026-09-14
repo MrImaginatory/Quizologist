@@ -1,5 +1,11 @@
 import { Op, fn, col, literal } from "sequelize";
-import { TestSession, TestAnswer, Question, Topic, Subject, Course, UserSkillRating } from "../models";
+import TestSession from "../testSession/testSession.model";
+import TestAnswer from "../testAnswer/testAnswer.model";
+import Question from "../question/question.model";
+import Topic from "../topic/topic.model";
+import Subject from "../subject/subject.model";
+import Course from "../course/course.model";
+import UserSkillRating from "../userSkillRating/userSkillRating.model";
 import { env } from "../../config/env";
 
 const MIN_ATTEMPTS = env.MIN_ATTEMPTS;
@@ -300,7 +306,7 @@ export class StudentAnalyticsService {
         correct: t.correct,
         incorrect: t.incorrect,
         totalQuestions: t.total_questions,
-        date: t.created_at,
+        date: t.createdAt,
       }));
     };
 

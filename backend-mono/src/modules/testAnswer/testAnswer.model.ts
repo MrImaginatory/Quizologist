@@ -3,6 +3,7 @@ import { sequelize } from "../../config/database";
 
 class TestAnswer extends Model {
   declare id: string;
+  declare is_correct?: boolean;
   declare test_session_id: string;
   declare question_id: string;
   declare selected_answer: string | null;
