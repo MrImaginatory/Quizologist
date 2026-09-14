@@ -1,0 +1,28 @@
+import { Router, Router as ExpressRouter } from "express";
+import { DashboardController } from "./dashboard.controller";
+
+const router: ExpressRouter = Router();
+
+// KPI Stats
+router.get("/stats", DashboardController.getStats);
+
+// Student Analytics
+router.get("/student/topic-performance", DashboardController.getTopicPerformance);
+router.get("/student/subject-performance", DashboardController.getSubjectPerformance);
+router.get("/student/difficulty-breakdown", DashboardController.getDifficultyBreakdown);
+router.get("/student/time-analysis", DashboardController.getTimeAnalysis);
+router.get("/student/performance-trends", DashboardController.getPerformanceTrends);
+router.get("/student/strengths-weaknesses", DashboardController.getStrengthsWeaknesses);
+router.get("/student/skill-rating", DashboardController.getSkillRating);
+router.get("/student/repeated-questions", DashboardController.getRepeatedQuestions);
+
+
+// Admin Analytics
+router.get("/location/:locationId/performance", DashboardController.getLocationPerformance);
+router.get("/analytics/teacher-student-ratio", DashboardController.getTeacherStudentRatio);
+router.get("/analytics/top-students-by-location", DashboardController.getTopStudentsByLocation);
+router.get("/analytics/least-questions", DashboardController.getLeastQuestions);
+router.get("/analytics/subjects-needing-attention", DashboardController.getSubjectsNeedingAttention);
+router.get("/admin/student/:studentId/details", DashboardController.getStudentFullDetails);
+
+export default router;

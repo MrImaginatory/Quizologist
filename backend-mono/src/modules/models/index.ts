@@ -1,0 +1,171 @@
+import { DataTypes, Model } from "sequelize";
+import { sequelize } from "../../config/database";
+
+// ============ Test Session ============
+class TestSession extends Model {
+  declare id: string;
+  declare test_id: string;
+  declare student_id: string;
+  declare status: string;
+  declare total_questions: number;
+  declare attempted: number;
+  declare skipped: number;
+  declare correct: number;
+  declare incorrect: number;
+  declare score: number;
+  declare started_at: Date;
+  declare completed_at: Date | null;
+  declare created_at: Date;
+}
+
+TestSession.init(
+  {
+    id: { type: DataTypes.UUID, primaryKey: true },
+    test_id: { type: DataTypes.STRING(100) },
+    student_id: { type: DataTypes.UUID },
+    status: { type: DataTypes.STRING },
+    total_questions: { type: DataTypes.INTEGER },
+    attempted: { type: DataTypes.INTEGER },
+    skipped: { type: DataTypes.INTEGER },
+    correct: { type: DataTypes.INTEGER },
+    incorrect: { type: DataTypes.INTEGER },
+    score: { type: DataTypes.DECIMAL(5, 2) },
+    started_at: { type: DataTypes.DATE },
+    completed_at: { type: DataTypes.DATE },
+    created_at: { type: DataTypes.DATE },
+  },
+  { sequelize, tableName: "test_sessions", timestamps: false, paranoid: false }
+);
+
+// ============ Test Answer ============
+class TestAnswer extends Model {
+  declare id: string;
+  declare test_session_id: string;
+  declare question_id: string;
+  declare selected_answer: string | null;
+  declare is_correct: boolean | null;
+  declare time_taken: number;
+  declare is_skipped: boolean;
+}
+
+TestAnswer.init(
+  {
+    id: { type: DataTypes.UUID, primaryKey: true },
+    test_session_id: { type: DataTypes.UUID },
+    question_id: { type: DataTypes.UUID },
+    selected_answer: { type: DataTypes.TEXT },
+    is_correct: { type: DataTypes.BOOLEAN },
+    time_taken: { type: DataTypes.INTEGER },
+    is_skipped: { type: DataTypes.BOOLEAN },
+  },
+  { sequelize, tableName: "test_answers", timestamps: false, paranoid: false }
+);
+
+// ============ Question ============
+class Question extends Model {
+  declare id: string;
+  declare topic_id: string;
+  declare subject_id: string;
+  declare course_id: string;
+  declare difficulty: string;
+  declare question: string;
+}
+
+Question.init(
+  {
+    id: { type: DataTypes.UUID, primaryKey: true },
+    topic_id: { type: DataTypes.UUID },
+    subject_id: { type: DataTypes.UUID },
+    course_id: { type: DataTypes.UUID },
+    difficulty: { type: DataTypes.STRING },
+    question: { type: DataTypes.TEXT },
+  },
+  { sequelize, tableName: "questions", timestamps: false, paranoid: false }
+);
+
+// ============ Topic ============
+class Topic extends Model {
+  declare id: string;
+  declare name: string;
+  declare subject_id: string;
+}
+
+Topic.init(
+  {
+    id: { type: DataTypes.UUID, primaryKey: true },
+    name: { type: DataTypes.STRING(100) },
+    subject_id: { type: DataTypes.UUID },
+  },
+  { sequelize, tableName: "topics", timestamps: false, paranoid: false }
+);
+
+// ============ Subject ============
+class Subject extends Model {
+  declare id: string;
+  declare name: string;
+  declare course_id: string;
+}
+
+Subject.init(
+  {
+    id: { type: DataTypes.UUID, primaryKey: true },
+    name: { type: DataTypes.STRING(100) },
+    course_id: { type: DataTypes.UUID },
+  },
+  { sequelize, tableName: "subjects", timestamps: false, paranoid: false }
+);
+
+// ============ Course ============
+class Course extends Model {
+  declare id: string;
+  declare name: string;
+}
+
+Course.init(
+  {
+    id: { type: DataTypes.UUID, primaryKey: true },
+    name: { type: DataTypes.STRING(100) },
+  },
+  { sequelize, tableName: "courses", timestamps: false, paranoid: false }
+);
+
+// ============ User Skill Rating ============
+class UserSkillRating extends Model {
+  declare id: string;
+  declare user_id: string;
+  declare skill_score: number;
+  declare total_answers: number;
+  declare correct_answers: number;
+  declare current_streak: number;
+  declare best_streak: number;
+  declare last_answered_at: Date | null;
+}
+
+UserSkillRating.init(
+  {
+    id: { type: DataTypes.UUID, primaryKey: true },
+    user_id: { type: DataTypes.UUID },
+    skill_score: { type: DataTypes.FLOAT, defaultValue: 3.0 },
+    total_answers: { type: DataTypes.INTEGER, defaultValue: 0 },
+    correct_answers: { type: DataTypes.INTEGER, defaultValue: 0 },
+    current_streak: { type: DataTypes.INTEGER, defaultValue: 0 },
+    best_streak: { type: DataTypes.INTEGER, defaultValue: 0 },
+    last_answered_at: { type: DataTypes.DATE },
+  },
+  { sequelize, tableName: "user_skill_ratings", timestamps: true, paranoid: false }
+);
+
+// ============ Associations ============
+TestAnswer.belongsTo(TestSession, { foreignKey: "test_session_id" });
+TestAnswer.belongsTo(Question, { foreignKey: "question_id" });
+
+TestSession.hasMany(TestAnswer, { foreignKey: "test_session_id" });
+
+Question.belongsTo(Topic, { foreignKey: "topic_id" });
+Question.belongsTo(Subject, { foreignKey: "subject_id" });
+Question.belongsTo(Course, { foreignKey: "course_id" });
+
+Topic.belongsTo(Subject, { foreignKey: "subject_id" });
+Subject.belongsTo(Course, { foreignKey: "course_id" });
+
+export { TestSession, TestAnswer, Question, Topic, Subject, Course, UserSkillRating };
