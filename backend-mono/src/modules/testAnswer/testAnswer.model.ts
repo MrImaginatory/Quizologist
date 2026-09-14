@@ -1,42 +1,13 @@
-import { DataTypes, Model, Optional } from "sequelize";
+import { DataTypes, Model } from "sequelize";
 import { sequelize } from "../../config/database";
 
-interface TestAnswerAttributes {
-  id: string;
-  test_session_id: string;
-  question_id: string;
-  selected_answer: string | null;
-  is_correct: boolean | null;
-  time_taken: number;
-  is_skipped: boolean;
-  submitted_at: Date | null;
-  createdAt?: Date;
-  updatedAt?: Date;
-  deletedAt?: Date | null;
-}
-
-type TestAnswerCreationAttributes = Optional<
-  TestAnswerAttributes,
-  | "id"
-  | "selected_answer"
-  | "is_correct"
-  | "submitted_at"
-  | "createdAt"
-  | "updatedAt"
-  | "deletedAt"
->;
-
-class TestAnswer
-  extends Model<TestAnswerAttributes, TestAnswerCreationAttributes>
-  implements TestAnswerAttributes
-{
+class TestAnswer extends Model {
   declare id: string;
   declare test_session_id: string;
   declare question_id: string;
   declare selected_answer: string | null;
-  declare is_correct: boolean | null;
-  declare time_taken: number;
   declare is_skipped: boolean;
+  declare time_taken: number | null;
   declare submitted_at: Date | null;
   declare createdAt: Date;
   declare updatedAt: Date;
@@ -61,23 +32,22 @@ TestAnswer.init(
     question_id: {
       type: DataTypes.UUID,
       allowNull: false,
+      references: {
+        model: "questions",
+        key: "id",
+      },
     },
     selected_answer: {
       type: DataTypes.TEXT,
       allowNull: true,
     },
-    is_correct: {
-      type: DataTypes.BOOLEAN,
-      allowNull: true,
-    },
-    time_taken: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 0,
-    },
     is_skipped: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
+    },
+    time_taken: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
     submitted_at: {
       type: DataTypes.DATE,

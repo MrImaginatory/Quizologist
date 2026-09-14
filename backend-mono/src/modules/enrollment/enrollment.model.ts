@@ -1,26 +1,7 @@
-import { DataTypes, Model, Optional } from "sequelize";
+import { DataTypes, Model } from "sequelize";
 import { sequelize } from "../../config/database";
 
-interface EnrollmentAttributes {
-  id: string;
-  student_id: string;
-  course_id: string;
-  subject_id: string | null;
-  topic_id: string | null;
-  createdAt?: Date;
-  updatedAt?: Date;
-  deletedAt?: Date | null;
-}
-
-type EnrollmentCreationAttributes = Optional<
-  EnrollmentAttributes,
-  "id" | "subject_id" | "topic_id" | "createdAt" | "updatedAt" | "deletedAt"
->;
-
-class Enrollment
-  extends Model<EnrollmentAttributes, EnrollmentCreationAttributes>
-  implements EnrollmentAttributes
-{
+class Enrollment extends Model {
   declare id: string;
   declare student_id: string;
   declare course_id: string;
@@ -74,15 +55,6 @@ Enrollment.init(
     paranoid: true,
     underscored: true,
     modelName: "Enrollment",
-    indexes: [
-      {
-        unique: true,
-        fields: ["student_id", "course_id", "subject_id", "topic_id"],
-        where: {
-          deleted_at: null,
-        },
-      },
-    ],
   }
 );
 
