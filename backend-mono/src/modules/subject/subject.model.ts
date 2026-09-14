@@ -1,50 +1,23 @@
-import { DataTypes, Model, Optional } from "sequelize";
+import { DataTypes, Model } from "sequelize";
 import { sequelize } from "../../config/database";
-import { SubjectAttributes } from "../../types";
 
-type SubjectCreationAttributes = Optional<
-  SubjectAttributes,
-  "id" | "description" | "createdAt" | "updatedAt" | "deletedAt"
->;
-
-class Subject
-  extends Model<SubjectAttributes, SubjectCreationAttributes>
-  implements SubjectAttributes
-{
+class Subject extends Model {
   declare id: string;
   declare name: string;
-  declare description: string | null;
   declare course_id: string;
-  declare createdAt: Date;
-  declare updatedAt: Date;
-  declare deletedAt: Date | null;
 }
 
 Subject.init(
   {
     id: {
       type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     name: {
-      type: DataTypes.STRING(250),
-      allowNull: false,
-      set(value: string) {
-        this.setDataValue("name", value.toLowerCase());
-      },
-    },
-    description: {
-      type: DataTypes.TEXT,
-      allowNull: true,
+      type: DataTypes.STRING(100),
     },
     course_id: {
       type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: "courses",
-        key: "id",
-      },
     },
   },
   {

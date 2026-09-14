@@ -1,50 +1,23 @@
-import { DataTypes, Model, Optional } from "sequelize";
+import { DataTypes, Model } from "sequelize";
 import { sequelize } from "../../config/database";
-import { TopicAttributes } from "../../types";
 
-type TopicCreationAttributes = Optional<
-  TopicAttributes,
-  "id" | "description" | "createdAt" | "updatedAt" | "deletedAt"
->;
-
-class Topic
-  extends Model<TopicAttributes, TopicCreationAttributes>
-  implements TopicAttributes
-{
+class Topic extends Model {
   declare id: string;
   declare name: string;
-  declare description: string | null;
   declare subject_id: string;
-  declare createdAt: Date;
-  declare updatedAt: Date;
-  declare deletedAt: Date | null;
 }
 
 Topic.init(
   {
     id: {
       type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     name: {
-      type: DataTypes.STRING(250),
-      allowNull: false,
-      set(value: string) {
-        this.setDataValue("name", value.toLowerCase());
-      },
-    },
-    description: {
-      type: DataTypes.TEXT,
-      allowNull: true,
+      type: DataTypes.STRING(100),
     },
     subject_id: {
       type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: "subjects",
-        key: "id",
-      },
     },
   },
   {
