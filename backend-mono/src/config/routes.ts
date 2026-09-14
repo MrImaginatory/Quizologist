@@ -2,41 +2,44 @@ import { env } from "./env";
 
 export interface RouteConfig {
   path: string;
-   applies to all.
+
+  auth: boolean;
+  roles?: string[];
+  methods?: string[]; // HTTP methods this rule applies to. If omitted, applies to all.
 }
 
 export const routes: RouteConfig[] = [
   // ==================== User Service ====================
   {
     path: "/user/me",
-    
+
     auth: true,
   },
   {
     path: "/user/signup",
-    
+
     auth: false,
   },
   {
     path: "/user/login",
-    
+
     auth: false,
   },
   {
     path: "/user/location",
-    
+
     auth: true,
     roles: ["admin"],
   },
   {
     path: "/user/role",
-    
+
     auth: true,
     roles: ["admin"],
   },
   {
     path: "/user",
-    
+
     auth: true,
     roles: ["admin"],
   },
@@ -45,7 +48,7 @@ export const routes: RouteConfig[] = [
   // Bulk hierarchy import — admin only
   {
     path: "/content/bulk-hierarchy",
-    
+
     auth: true,
     roles: ["admin"],
     methods: ["POST"],
@@ -53,7 +56,7 @@ export const routes: RouteConfig[] = [
   // Course — write operations admin only
   {
     path: "/content/course",
-    
+
     auth: true,
     roles: ["admin"],
     methods: ["POST", "PUT", "DELETE"],
@@ -61,7 +64,7 @@ export const routes: RouteConfig[] = [
   // Course — read operations all authenticated users
   {
     path: "/content/course",
-    
+
     auth: true,
     roles: ["admin", "teacher", "student"],
     methods: ["GET"],
@@ -69,7 +72,7 @@ export const routes: RouteConfig[] = [
   // Subject — write operations admin only
   {
     path: "/content/subject",
-    
+
     auth: true,
     roles: ["admin"],
     methods: ["POST", "PUT", "DELETE"],
@@ -77,7 +80,7 @@ export const routes: RouteConfig[] = [
   // Subject — read operations all authenticated users
   {
     path: "/content/subject",
-    
+
     auth: true,
     roles: ["admin", "teacher", "student"],
     methods: ["GET"],
@@ -85,7 +88,7 @@ export const routes: RouteConfig[] = [
   // Topic — write operations admin only
   {
     path: "/content/topic",
-    
+
     auth: true,
     roles: ["admin"],
     methods: ["POST", "PUT", "DELETE"],
@@ -93,7 +96,7 @@ export const routes: RouteConfig[] = [
   // Topic — read operations all authenticated users
   {
     path: "/content/topic",
-    
+
     auth: true,
     roles: ["admin", "teacher", "student"],
     methods: ["GET"],
@@ -103,14 +106,14 @@ export const routes: RouteConfig[] = [
   // Import endpoints — admin and teacher only (must come before /question)
   {
     path: "/question/import-template",
-    
+
     auth: true,
     roles: ["admin", "teacher"],
     methods: ["GET"],
   },
   {
     path: "/question/bulk",
-    
+
     auth: true,
     roles: ["admin", "teacher"],
     methods: ["POST"],
@@ -119,21 +122,21 @@ export const routes: RouteConfig[] = [
   // Write operations — admin and teacher only
   {
     path: "/question",
-    
+
     auth: true,
     roles: ["admin", "teacher"],
     methods: ["POST"],
   },
   {
     path: "/question",
-    
+
     auth: true,
     roles: ["admin", "teacher"],
     methods: ["PUT"],
   },
   {
     path: "/question",
-    
+
     auth: true,
     roles: ["admin", "teacher"],
     methods: ["DELETE"],
@@ -142,7 +145,7 @@ export const routes: RouteConfig[] = [
   // Read operations — all authenticated users
   {
     path: "/question",
-    
+
     auth: true,
     roles: ["admin", "teacher", "student"],
     methods: ["GET"],
@@ -152,7 +155,7 @@ export const routes: RouteConfig[] = [
   // Get students with filters — admin only
   {
     path: "/student/list",
-    
+
     auth: true,
     roles: ["admin"],
     methods: ["GET"],
@@ -160,7 +163,7 @@ export const routes: RouteConfig[] = [
   // Get student enrollments by ID — admin only
   {
     path: "/student",
-    
+
     auth: true,
     roles: ["admin"],
     methods: ["GET"],
@@ -168,7 +171,7 @@ export const routes: RouteConfig[] = [
   // Enroll — student only
   {
     path: "/enrollment",
-    
+
     auth: true,
     roles: ["student"],
     methods: ["POST"],
@@ -176,7 +179,7 @@ export const routes: RouteConfig[] = [
   // View own enrollments — student only
   {
     path: "/enrollment",
-    
+
     auth: true,
     roles: ["student"],
     methods: ["GET"],
@@ -184,7 +187,7 @@ export const routes: RouteConfig[] = [
   // Get enrolled courses — student only
   {
     path: "/enrollment/courses",
-    
+
     auth: true,
     roles: ["student"],
     methods: ["GET"],
@@ -192,7 +195,7 @@ export const routes: RouteConfig[] = [
   // Get enrolled subjects for a course — student only
   {
     path: "/enrollment/subjects",
-    
+
     auth: true,
     roles: ["student"],
     methods: ["GET"],
@@ -200,7 +203,7 @@ export const routes: RouteConfig[] = [
   // Get enrolled topics for a subject — student only
   {
     path: "/enrollment/topics",
-    
+
     auth: true,
     roles: ["student"],
     methods: ["GET"],
@@ -208,7 +211,7 @@ export const routes: RouteConfig[] = [
   // View enrollments by student ID — admin and teacher
   {
     path: "/enrollment/student",
-    
+
     auth: true,
     roles: ["admin", "teacher"],
     methods: ["GET"],
@@ -216,7 +219,7 @@ export const routes: RouteConfig[] = [
   // Unenroll — student only
   {
     path: "/enrollment",
-    
+
     auth: true,
     roles: ["student"],
     methods: ["DELETE"],
@@ -226,7 +229,7 @@ export const routes: RouteConfig[] = [
   // Pre-assessment — student only
   {
     path: "/test/pre-assessment",
-    
+
     auth: true,
     roles: ["student"],
     methods: ["GET", "POST"],
@@ -234,7 +237,7 @@ export const routes: RouteConfig[] = [
   // Start test — student only
   {
     path: "/test/start",
-    
+
     auth: true,
     roles: ["student"],
     methods: ["POST"],
@@ -242,7 +245,7 @@ export const routes: RouteConfig[] = [
   // Start time-based test - student only
   {
     path: "/test/time-based/start",
-    
+
     auth: true,
     roles: ["student"],
     methods: ["POST"],
@@ -250,7 +253,7 @@ export const routes: RouteConfig[] = [
   // Submit test — student only
   {
     path: "/test/submit",
-    
+
     auth: true,
     roles: ["student"],
     methods: ["POST"],
@@ -258,7 +261,7 @@ export const routes: RouteConfig[] = [
   // Abandon test — student only
   {
     path: "/test/abandon",
-    
+
     auth: true,
     roles: ["student"],
     methods: ["POST"],
@@ -266,7 +269,7 @@ export const routes: RouteConfig[] = [
   // Test history — student only
   {
     path: "/test/history",
-    
+
     auth: true,
     roles: ["student"],
     methods: ["GET"],
@@ -274,7 +277,7 @@ export const routes: RouteConfig[] = [
   // Get student performance, results, summary — admin, teacher; student (own data via service check)
   {
     path: "/test/student",
-    
+
     auth: true,
     roles: ["student", "admin", "teacher"],
     methods: ["GET"],
@@ -282,7 +285,7 @@ export const routes: RouteConfig[] = [
   // Get test detail for admin — admin and teacher
   {
     path: "/test/detail",
-    
+
     auth: true,
     roles: ["admin", "teacher"],
     methods: ["GET"],
@@ -290,7 +293,7 @@ export const routes: RouteConfig[] = [
   // Get all tests — admin only
   {
     path: "/test/all",
-    
+
     auth: true,
     roles: ["admin"],
     methods: ["GET"],
@@ -298,7 +301,7 @@ export const routes: RouteConfig[] = [
   // Get test result — student only
   {
     path: "/test/result",
-    
+
     auth: true,
     roles: ["student"],
     methods: ["GET"],
@@ -308,7 +311,7 @@ export const routes: RouteConfig[] = [
   // Get pending tests — student only
   {
     path: "/test/predefined/pending",
-    
+
     auth: true,
     roles: ["student"],
     methods: ["GET"],
@@ -316,7 +319,7 @@ export const routes: RouteConfig[] = [
   // Join test by token — student only
   {
     path: "/test/predefined/join",
-    
+
     auth: true,
     roles: ["student"],
     methods: ["GET"],
@@ -324,7 +327,7 @@ export const routes: RouteConfig[] = [
   // All predefined test POST operations — admin, teacher, student (test service handles role check)
   {
     path: "/test/predefined",
-    
+
     auth: true,
     roles: ["admin", "teacher", "student"],
     methods: ["POST"],
@@ -332,7 +335,7 @@ export const routes: RouteConfig[] = [
   // Get all predefined tests — admin and teacher
   {
     path: "/test/predefined",
-    
+
     auth: true,
     roles: ["admin", "teacher"],
     methods: ["GET"],
@@ -340,7 +343,7 @@ export const routes: RouteConfig[] = [
   // Get predefined test by ID — admin, teacher, student
   {
     path: "/test/predefined",
-    
+
     auth: true,
     roles: ["admin", "teacher", "student"],
     methods: ["GET"],
@@ -348,7 +351,7 @@ export const routes: RouteConfig[] = [
   // Update predefined test — admin and teacher
   {
     path: "/test/predefined",
-    
+
     auth: true,
     roles: ["admin", "teacher"],
     methods: ["PUT"],
@@ -356,7 +359,7 @@ export const routes: RouteConfig[] = [
   // Delete predefined test — admin and teacher
   {
     path: "/test/predefined",
-    
+
     auth: true,
     roles: ["admin", "teacher"],
     methods: ["DELETE"],
@@ -365,7 +368,7 @@ export const routes: RouteConfig[] = [
   // Get test by ID — student only (MUST be AFTER /test/predefined routes)
   {
     path: "/test",
-    
+
     auth: true,
     roles: ["student"],
     methods: ["GET"],
@@ -375,7 +378,7 @@ export const routes: RouteConfig[] = [
   // Get teachers with assignment counts — admin only
   {
     path: "/teacher/list",
-    
+
     auth: true,
     roles: ["admin"],
     methods: ["GET"],
@@ -383,7 +386,7 @@ export const routes: RouteConfig[] = [
   // Assign course to teacher — admin only
   {
     path: "/teacher/assign/course",
-    
+
     auth: true,
     roles: ["admin"],
     methods: ["POST"],
@@ -391,7 +394,7 @@ export const routes: RouteConfig[] = [
   // Assign subject to teacher — admin only
   {
     path: "/teacher/assign/subject",
-    
+
     auth: true,
     roles: ["admin"],
     methods: ["POST"],
@@ -399,7 +402,7 @@ export const routes: RouteConfig[] = [
   // Bulk assign subjects — admin and teacher
   {
     path: "/teacher/assign/bulk-subjects",
-    
+
     auth: true,
     roles: ["admin", "teacher"],
     methods: ["POST"],
@@ -407,7 +410,7 @@ export const routes: RouteConfig[] = [
   // Remove assignment — admin only
   {
     path: "/teacher/unenroll",
-    
+
     auth: true,
     roles: ["admin", "teacher"],
     methods: ["DELETE"],
@@ -415,7 +418,7 @@ export const routes: RouteConfig[] = [
   // Get all assignments — admin only
   {
     path: "/teacher/teacher-enrollment",
-    
+
     auth: true,
     roles: ["admin", "teacher"],
     methods: ["GET"],
@@ -423,7 +426,7 @@ export const routes: RouteConfig[] = [
   // Get teacher assignments — admin and teacher
   {
     path: "/teacher/teacher",
-    
+
     auth: true,
     roles: ["admin", "teacher"],
     methods: ["GET"],
@@ -431,7 +434,7 @@ export const routes: RouteConfig[] = [
   // Teaching data — teacher sees their own students/tests
   {
     path: "/teacher/teaching",
-    
+
     auth: true,
     roles: ["admin", "teacher"],
     methods: ["GET"],
@@ -441,7 +444,7 @@ export const routes: RouteConfig[] = [
   // Location analytics — admin only
   {
     path: "/dashboard/location",
-    
+
     auth: true,
     roles: ["admin"],
     methods: ["GET"],
@@ -449,7 +452,7 @@ export const routes: RouteConfig[] = [
   // Get dashboard stats — all authenticated users
   {
     path: "/dashboard/stats",
-    
+
     auth: true,
     roles: ["admin", "teacher", "student"],
     methods: ["GET"],
@@ -457,7 +460,7 @@ export const routes: RouteConfig[] = [
   // Student analytics — student only
   {
     path: "/dashboard/student",
-    
+
     auth: true,
     roles: ["student"],
     methods: ["GET"],
@@ -465,7 +468,7 @@ export const routes: RouteConfig[] = [
   // Admin analytics — admin only
   {
     path: "/dashboard/analytics",
-    
+
     auth: true,
     roles: ["admin"],
     methods: ["GET"],
@@ -473,7 +476,7 @@ export const routes: RouteConfig[] = [
   // Student full details — admin and teacher
   {
     path: "/dashboard/admin/student",
-    
+
     auth: true,
     roles: ["admin", "teacher"],
     methods: ["GET"],
