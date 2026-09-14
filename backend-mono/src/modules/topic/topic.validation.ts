@@ -4,7 +4,7 @@ export const createTopicSchema = z.object({
   name: z
     .string()
     .min(1, "Topic name is required")
-    .max(250, "Topic name must be at most 250 characters"),
+    .max(500, "Topic name must be at most 500 characters"),
   description: z.string().max(1024, "Description must be at most 1024 characters").optional(),
   subject_id: z.string().uuid("Invalid subject ID format"),
 });
@@ -13,7 +13,7 @@ export const updateTopicSchema = z.object({
   name: z
     .string()
     .min(1, "Topic name is required")
-    .max(250, "Topic name must be at most 250 characters")
+    .max(500, "Topic name must be at most 500 characters")
     .optional(),
   description: z.string().max(1024, "Description must be at most 1024 characters").optional(),
   subject_id: z.string().uuid("Invalid subject ID format").optional(),

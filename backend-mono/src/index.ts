@@ -106,7 +106,7 @@ app.use("/api/question", questionRoutes);
 app.use("/api/content/course", courseRoutes);
 app.use("/api/content/subject", subjectRoutes);
 app.use("/api/content/topic", topicRoutes);
-// app.use("/api/content/bulk-hierarchy", contentBulkRoutes); // adjust if needed
+app.use("/api/content/bulk-hierarchy", contentBulkRoutes);
 
 // User Service
 app.use("/api/user/location", locationRoutes);
@@ -121,8 +121,14 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof ApiError) {
     return ApiResponse.error(res, err.message, err.statusCode);
   }
+  if (err.name === "ZodError") {
+    const zodError = err as any;
+    const details = zodError.errors.map((e: any) => `${e.path.join('.')}: ${e.message}`).join(', ');
+    return ApiResponse.error(res, `Validation failed: ${details}`, 400);
+  }
   logger.error("Unhandled error", { error: err.message, stack: err.stack });
-  return ApiResponse.error(res, "Internal server error", 500);
+  const message = env.NODE_ENV === "development" ? err.message : "Internal server error";
+  return ApiResponse.error(res, message, 500);
 });
 
 const startServer = async () => {

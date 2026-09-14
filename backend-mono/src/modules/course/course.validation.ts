@@ -4,7 +4,7 @@ export const createCourseSchema = z.object({
   name: z
     .string()
     .min(1, "Course name is required")
-    .max(250, "Course name must be at most 250 characters"),
+    .max(500, "Course name must be at most 500 characters"),
   description: z.string().max(1024, "Description must be at most 1024 characters").optional(),
 });
 
@@ -12,7 +12,7 @@ export const updateCourseSchema = z.object({
   name: z
     .string()
     .min(1, "Course name is required")
-    .max(250, "Course name must be at most 250 characters")
+    .max(500, "Course name must be at most 500 characters")
     .optional(),
   description: z.string().max(1024, "Description must be at most 1024 characters").optional(),
 });
