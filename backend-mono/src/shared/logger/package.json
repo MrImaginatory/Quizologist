@@ -1,0 +1,9 @@
+{
+  "name": "@quizologist/logger",
+  "version": "1.0.0",
+  "description": "Shared logging utility for Quizologist services",
+  "main": "index.ts",
+  "dependencies": {
+    "winston": "^3.17.0"
+  }
+}
