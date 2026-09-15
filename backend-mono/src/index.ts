@@ -41,7 +41,7 @@ import dashboardRoutes from "./modules/dashboard/dashboard.routes";
 const logger = createLogger("backend-mono");
 const app = express();
 
-app.use(cors());
+app.use(cors({ origin: env.CORS_ALLOWED_ORIGINS }));
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use(requestLogger(logger));

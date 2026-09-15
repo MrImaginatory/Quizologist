@@ -26,4 +26,8 @@ export const env = {
   BCRYPT_SALT_ROUNDS: parseInt(process.env.BCRYPT_SALT_ROUNDS || "10", 10),
   MIN_ATTEMPTS: parseInt(process.env.MIN_ATTEMPTS || "3", 10),
   PREDEFINED_TEST_MIN_DEACTIVATE_MINUTES: parseInt(process.env.PREDEFINED_TEST_MIN_DEACTIVATE_MINUTES || "5", 10),
+  
+  CORS_ALLOWED_ORIGINS: process.env.CORS_ALLOWED_ORIGINS 
+    ? process.env.CORS_ALLOWED_ORIGINS.split(",").map((o) => o.trim()) 
+    : ["http://localhost:5002", "http://localhost:3000"],
 };

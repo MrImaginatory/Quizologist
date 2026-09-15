@@ -5,11 +5,12 @@ import { JwtToken } from "../utils/jwtToken";
 import { registerSocketHandlers } from "./socketHandler";
 import { registerTimeBasedHandlers } from "./timeBasedSocketHandler";
 import { sessionManager } from "./sessionManager";
+import { env } from "../config/env";
 
 export function createSocketServer(httpServer: HttpServer, logger: winston.Logger): Server {
   const io = new Server(httpServer, {
     cors: {
-      origin: "*",
+      origin: env.CORS_ALLOWED_ORIGINS,
       methods: ["GET", "POST"],
     },
     pingTimeout: 60000,
