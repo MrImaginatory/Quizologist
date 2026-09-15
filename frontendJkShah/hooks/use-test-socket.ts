@@ -72,10 +72,11 @@ export function useTestSocket(options: UseTestSocketOptions = {}) {
       socket = io(socketUrl, {
         path: "/socket.io",
         auth: { token },
-        transports: ["websocket"],
         reconnection: true,
-        reconnectionAttempts: 5,
+        reconnectionAttempts: Infinity,
         reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+        timeout: 20000,
       });
 
       socket.on("connect", () => {
