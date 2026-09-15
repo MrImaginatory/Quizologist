@@ -7,11 +7,16 @@ import Subject from "../subject/subject.model";
 import Course from "../course/course.model";
 import UserSkillRating from "../userSkillRating/userSkillRating.model";
 import { env } from "../../config/env";
+import { redisService } from "../../services/redis.service";
 
 const MIN_ATTEMPTS = env.MIN_ATTEMPTS;
 
 export class StudentAnalyticsService {
   static async getTopicPerformance(studentId: string) {
+    const cacheKey = `topic_perf_${studentId}`;
+    const cached = await redisService.getCache<any>(cacheKey);
+    if (cached) return cached;
+
     const completedTests = await TestSession.findAll({
       where: { student_id: studentId, status: "completed" },
       attributes: ["id"],
@@ -90,13 +95,19 @@ export class StudentAnalyticsService {
       .filter((t) => t.totalAttempts >= 1)
       .sort((a, b) => a.accuracy - b.accuracy);
 
-    return {
+    const result = {
       topics,
       totalTests: completedTests.length,
     };
+
+    await redisService.setCache(cacheKey, result, 300);
+    return result;
   }
 
   static async getSubjectPerformance(studentId: string) {
+    const cacheKey = `subject_perf_${studentId}`;
+    const cached = await redisService.getCache<any>(cacheKey);
+    if (cached) return cached;
     const completedTests = await TestSession.findAll({
       where: { student_id: studentId, status: "completed" },
       attributes: ["id"],
@@ -288,6 +299,10 @@ export class StudentAnalyticsService {
   }
 
   static async getPerformanceTrends(studentId: string) {
+    const cacheKey = `perf_trends_${studentId}`;
+    const cached = await redisService.getCache<any>(cacheKey);
+    if (cached) return cached;
+
     const now = new Date();
     const d15 = new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000);
     const d30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
@@ -320,23 +335,26 @@ export class StudentAnalyticsService {
       getTrend(d60),
     ]);
 
-    return {
+    const result = {
       last15Days: trend15,
       last30Days: trend30,
       last60Days: trend60,
     };
+
+    await redisService.setCache(cacheKey, result, 300);
+    return result;
   }
 
   static async getStrengthsWeaknesses(studentId: string) {
     const topicData = await this.getTopicPerformance(studentId);
 
-    const strong = topicData.topics.filter((t) => t.status === "strong").slice(0, 5);
-    const weak = topicData.topics.filter((t) => t.status === "weak").slice(0, 5);
+    const strong = topicData.topics.filter((t: any) => t.status === "strong").slice(0, 5);
+    const weak = topicData.topics.filter((t: any) => t.status === "weak").slice(0, 5);
 
     const overallAccuracy =
       topicData.topics.length > 0
         ? Math.round(
-            topicData.topics.reduce((sum, t) => sum + t.accuracy, 0) /
+            topicData.topics.reduce((sum: number, t: any) => sum + t.accuracy, 0) /
               topicData.topics.length
           )
         : 0;

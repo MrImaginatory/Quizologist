@@ -1,8 +1,13 @@
 import { QueryTypes } from "sequelize";
 import { sequelize } from "../../config/database";
+import { redisService } from "../../services/redis.service";
 
 export class DashboardService {
   static async getAdminStats(locationId?: string) {
+    const cacheKey = `admin_stats_${locationId || "all"}`;
+    const cached = await redisService.getCache(cacheKey);
+    if (cached) return cached;
+
     const locationFilterStr = locationId ? `AND u.location_id = :locationId` : "";
     const replacements = locationId ? { locationId } : {};
 
@@ -64,7 +69,7 @@ export class DashboardService {
       { type: QueryTypes.SELECT }
     ) as any[];
 
-    return {
+    const result = {
       testsSubmitted: parseInt(testsSubmitted?.count || "0", 10),
       totalQuestions: parseInt(totalQuestions?.count || "0", 10),
       totalTopics: parseInt(totalTopics?.count || "0", 10),
@@ -74,9 +79,15 @@ export class DashboardService {
       totalTeachers: parseInt(totalTeachers?.count || "0", 10),
       usersByLocation,
     };
+
+    await redisService.setCache(cacheKey, result, 300);
+    return result;
   }
 
   static async getTeacherStats(teacherId: string) {
+    const cacheKey = `teacher_stats_${teacherId}`;
+    const cached = await redisService.getCache(cacheKey);
+    if (cached) return cached;
     const questionsAddedResult = await sequelize.query(
       `SELECT COUNT(*) as count FROM questions WHERE question_added_by = :teacherId AND deleted_at IS NULL`,
       { type: QueryTypes.SELECT, replacements: { teacherId } }
@@ -167,15 +178,21 @@ export class DashboardService {
       ? parseInt(questionsAddedResult[0]?.count || "0", 10)
       : 0;
 
-    return {
+    const result = {
       questionsAdded: questionsAddedCount,
       studentsInCourses,
       testsSubmitted,
       questionsInCourses,
     };
+
+    await redisService.setCache(cacheKey, result, 300);
+    return result;
   }
 
   static async getStudentStats(studentId: string) {
+    const cacheKey = `student_stats_${studentId}`;
+    const cached = await redisService.getCache(cacheKey);
+    if (cached) return cached;
     const enrolledCourses = await sequelize.query(
       `SELECT course_id FROM enrollments WHERE student_id = :studentId AND deleted_at IS NULL`,
       { type: QueryTypes.SELECT, replacements: { studentId } }
@@ -210,13 +227,19 @@ export class DashboardService {
       { type: QueryTypes.SELECT, replacements: { studentId } }
     ) as any[];
 
-    return {
+    const result = {
       questionsInEnrolledCourses,
       testsSubmitted: parseInt(testsSubmitted?.count || "0", 10),
     };
+
+    await redisService.setCache(cacheKey, result, 300);
+    return result;
   }
 
   static async getLocationPerformance(locationId: string) {
+    const cacheKey = `location_perf_${locationId}`;
+    const cached = await redisService.getCache(cacheKey);
+    if (cached) return cached;
     const [testsQuery] = await sequelize.query(
       `SELECT COUNT(*) as count, AVG(score) as avg_score 
        FROM test_sessions ts 
@@ -256,10 +279,13 @@ export class DashboardService {
       };
     }).filter(topic => topic.accuracy < 40).sort((a, b) => a.accuracy - b.accuracy);
 
-    return {
+    const result = {
       testsTaken,
       averageScore,
-      weakTopics
+      weakTopics: weakTopics.slice(0, 5) // Top 5 weakest topics
     };
+
+    await redisService.setCache(cacheKey, result, 300);
+    return result;
   }
 }
