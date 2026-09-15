@@ -77,7 +77,7 @@ interface ImportResult {
   totalRows: number;
   imported: number;
   failed: number;
-  errors: { row: number; reason: string }[];
+  errors: { row: number; question?: string; reason: string }[];
 }
 
 export default function ImportQuestionsPage() {
@@ -835,12 +835,14 @@ export default function ImportQuestionsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {parsedQuestions.map((q, index) => (
+                  {parsedQuestions.map((q, index) => {
+                    const truncate = (str: string, len = 20) => str.length > len ? str.substring(0, len) + "..." : str;
+                    return (
                     <TableRow key={index}>
                       <TableCell>{index + 1}</TableCell>
-                      <TableCell>{capitalize(q.courseName)}</TableCell>
-                      <TableCell>{capitalize(q.subjectName)}</TableCell>
-                      <TableCell>{capitalize(q.topicName)}</TableCell>
+                      <TableCell title={q.courseName}>{truncate(capitalize(q.courseName))}</TableCell>
+                      <TableCell title={q.subjectName}>{truncate(capitalize(q.subjectName))}</TableCell>
+                      <TableCell title={q.topicName}>{truncate(capitalize(q.topicName))}</TableCell>
                       <TableCell className="max-w-[200px] truncate" title={q.question}>
                         {q.question}
                       </TableCell>
@@ -878,7 +880,8 @@ export default function ImportQuestionsPage() {
                         </Button>
                       </TableCell>
                     </TableRow>
-                  ))}
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
@@ -958,7 +961,14 @@ export default function ImportQuestionsPage() {
                       {importResult.errors.map((err, i) => (
                         <li key={i} className="flex gap-2 items-start py-1.5 border-b border-border/45 last:border-0">
                           <span className="font-medium text-red-400/90 whitespace-nowrap">Row {err.row}:</span>
-                          <span>{err.reason}</span>
+                          <div className="flex flex-col flex-1">
+                            {err.question && (
+                              <span className="text-muted-foreground/80 italic text-xs mb-0.5 line-clamp-2" title={err.question}>
+                                "{err.question}"
+                              </span>
+                            )}
+                            <span>{err.reason}</span>
+                          </div>
                         </li>
                       ))}
                     </ul>

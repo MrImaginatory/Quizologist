@@ -44,7 +44,7 @@ export interface BulkImportResult {
   totalRows: number;
   imported: number;
   failed: number;
-  errors: { row: number; reason: string }[];
+  errors: { row: number; question?: string; reason: string }[];
 }
 
 export class QuestionImportService {
@@ -217,7 +217,7 @@ export class QuestionImportService {
     user?: { userId: string; role: string }
   ): Promise<BulkImportResult> {
     const BATCH_SIZE = 500;
-    const errors: { row: number; reason: string }[] = [];
+    const errors: { row: number; question?: string; reason: string }[] = [];
     let imported = 0;
 
     // 1. Teacher authorization check (once)
@@ -243,26 +243,35 @@ export class QuestionImportService {
       if (allowedPairs) {
         const pairKey = `${q.course_id}|${q.subject_id || ""}`;
         if (!allowedPairs.has(pairKey)) {
-          errors.push({ row, reason: "You are not assigned to this course/subject combination" });
+          errors.push({ row, question: q.question, reason: "You are not assigned to this course/subject combination" });
           continue;
         }
       }
 
+      // Strip leading numbering like "1. ", "12."
+      q.question = q.question.replace(/^\d+\.\s*/, "");
+
       const validChoices = q.choices.filter((c) => c && c.trim() !== "");
       if (validChoices.length < 2) {
-        errors.push({ row, reason: "At least 2 valid options are required" });
+        errors.push({ row, question: q.question, reason: "At least 2 valid options are required" });
+        continue;
+      }
+
+      const uniqueChoices = new Set(validChoices);
+      if (uniqueChoices.size !== validChoices.length) {
+        errors.push({ row, question: q.question, reason: "Duplicate options found (multiple options have the same text)" });
         continue;
       }
 
       if (!validChoices.includes(q.correctAnswer)) {
-        errors.push({ row, reason: "Correct answer does not match any provided option" });
+        errors.push({ row, question: q.question, reason: "Correct answer does not match any provided option" });
         continue;
       }
 
       // Validate difficulty
       const difficulty = q.difficulty ? q.difficulty.toLowerCase().trim() : "normal";
       if (!VALID_DIFFICULTIES.includes(difficulty)) {
-        errors.push({ row, reason: `Invalid difficulty '${q.difficulty}'. Must be one of: ${VALID_DIFFICULTIES.join(", ")}` });
+        errors.push({ row, question: q.question, reason: `Invalid difficulty '${q.difficulty}'. Must be one of: ${VALID_DIFFICULTIES.join(", ")}` });
         continue;
       }
 
@@ -302,12 +311,12 @@ export class QuestionImportService {
     for (let i = 0; i < validRows.length; i += BATCH_SIZE) {
       const batch = validRows.slice(i, i + BATCH_SIZE);
       const batchRecords: any[] = [];
-      const batchErrors: { row: number; reason: string }[] = [];
+      const batchErrors: { row: number; question?: string; reason: string }[] = [];
 
       for (const item of batch) {
         const row = item.index + 2;
         if (existingSet.has(item.dedupeKey)) {
-          batchErrors.push({ row, reason: "A question with this text already exists for this topic" });
+          batchErrors.push({ row, question: item.data.question, reason: "A question with this text already exists for this topic" });
           continue;
         }
         batchRecords.push(item.data);
@@ -331,9 +340,15 @@ export class QuestionImportService {
               const originalIndex = validRows.findIndex(
                 (r) => r.data.question === record.question && r.data.topic_id === record.topic_id
               );
+              let userFriendlyReason = innerErr.message || "Failed to create question";
+              if (userFriendlyReason.includes("questions_topic_id_fkey") || userFriendlyReason.includes("foreign key constraint")) {
+                userFriendlyReason = "The selected Topic, Subject, or Course does not exist or was recently deleted.";
+              }
+
               batchErrors.push({
                 row: originalIndex >= 0 ? originalIndex + 2 : i + 2,
-                reason: innerErr.message || "Failed to create question",
+                question: record.question,
+                reason: userFriendlyReason,
               });
             }
           }
