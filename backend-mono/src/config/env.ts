@@ -18,6 +18,8 @@ export const env = {
   DB_POOL_ACQUIRE: parseInt(process.env.DB_POOL_ACQUIRE || "30000", 10),
   DB_POOL_IDLE: parseInt(process.env.DB_POOL_IDLE || "10000", 10),
 
+  REDIS_URL: process.env.REDIS_URL || "redis://localhost:6379",
+
   JWT_SECRET: process.env.JWT_SECRET || "default_secret",
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "7d",
 
