@@ -15,6 +15,12 @@ export const sequelize = new Sequelize(
       paranoid: true,
       underscored: true,
     },
+    pool: {
+      max: env.DB_POOL_MAX,
+      min: env.DB_POOL_MIN,
+      acquire: env.DB_POOL_ACQUIRE,
+      idle: env.DB_POOL_IDLE,
+    }
   }
 );
 

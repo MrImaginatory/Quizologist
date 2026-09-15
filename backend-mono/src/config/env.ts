@@ -13,6 +13,11 @@ export const env = {
   DB_ALTER_TABLES: process.env.DB_ALTER_TABLES === "true",
   DB_DROP_TABLES: process.env.DB_DROP_TABLES === "true",
 
+  DB_POOL_MAX: parseInt(process.env.DB_POOL_MAX || "20", 10),
+  DB_POOL_MIN: parseInt(process.env.DB_POOL_MIN || "5", 10),
+  DB_POOL_ACQUIRE: parseInt(process.env.DB_POOL_ACQUIRE || "30000", 10),
+  DB_POOL_IDLE: parseInt(process.env.DB_POOL_IDLE || "10000", 10),
+
   JWT_SECRET: process.env.JWT_SECRET || "default_secret",
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "7d",
 
