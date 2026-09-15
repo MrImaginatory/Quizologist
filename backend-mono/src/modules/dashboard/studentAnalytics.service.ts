@@ -301,7 +301,7 @@ export class StudentAnalyticsService {
           created_at: { [Op.gte]: since },
         },
         order: [["created_at", "ASC"]],
-        attributes: ["id", "score", "correct", "incorrect", "total_questions", "created_at"],
+        attributes: ["id", "score", "correct", "incorrect", "total_questions", "createdAt"],
       });
 
       return tests.map((t) => ({
