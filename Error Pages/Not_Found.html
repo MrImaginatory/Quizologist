@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>404 - Page Not Found | J.K. Shah Classes</title>
+  
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'media',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#3b82f6',
+              600: '#1d4ed8',
+              700: '#1e40af',
+              800: '#1e3a8a',
+              900: '#172554',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Floating character / object animation */
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+      }
+      50% {
+        transform: translateY(-16px) rotate(2deg);
+      }
+    }
+
+    /* Radar scan pulse */
+    @keyframes pulseRing {
+      0% {
+        transform: scale(0.85);
+        opacity: 0.8;
+      }
+      50% {
+        transform: scale(1.15);
+        opacity: 0.3;
+      }
+      100% {
+        transform: scale(0.85);
+        opacity: 0.8;
+      }
+    }
+
+    /* Twinkling ambient stars */
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.2; transform: scale(0.8); }
+      50% { opacity: 1; transform: scale(1.2); }
+    }
+
+    /* Orbiting element */
+    @keyframes orbit {
+      from { transform: rotate(0deg) translateX(45px) rotate(0deg); }
+      to { transform: rotate(360deg) translateX(45px) rotate(-360deg); }
+    }
+
+    .animate-float {
+      animation: float 5s ease-in-out infinite;
+      transform-origin: center;
+    }
+
+    .animate-pulse-ring {
+      animation: pulseRing 3.5s ease-in-out infinite;
+      transform-origin: center;
+    }
+
+    .star-1 { animation: twinkle 2.2s infinite ease-in-out; }
+    .star-2 { animation: twinkle 3.1s infinite ease-in-out 0.8s; }
+    .star-3 { animation: twinkle 2.7s infinite ease-in-out 1.5s; }
+    .star-4 { animation: twinkle 3.5s infinite ease-in-out 0.4s; }
+
+    .orbit-item {
+      animation: orbit 12s linear infinite;
+      transform-origin: 200px 170px;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 flex flex-col justify-between transition-colors duration-300 font-sans selection:bg-blue-600 selection:text-white antialiased">
+  
+  <!-- Subtle Background Grid & Glow (Adapts to Light/Dark) -->
+  <div class="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
+    <div class="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-blue-500/10 dark:bg-blue-600/15 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-0 right-0 w-80 h-80 bg-indigo-500/10 dark:bg-indigo-600/10 rounded-full blur-3xl"></div>
+  </div>
+
+  <!-- Main Content Section -->
+  <main class="flex-1 flex flex-col items-center justify-center px-4 py-8 max-w-4xl mx-auto w-full text-center">
+    
+    <!-- Brand Logo -->
+    <a 
+      href="https://jkshahclasses.com/" 
+      class="inline-flex items-center justify-center mb-4 transition-transform duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-xl p-1"
+      title="J.K. Shah Classes"
+    >
+      <img 
+        src="https://jkshahclasses.com/uploads/2026/09/6stOrpUo.png" 
+        alt="J.K. Shah Classes" 
+        class="h-12 sm:h-16 w-auto max-w-[260px] object-contain drop-shadow-sm"
+        onerror="this.onerror=null; this.parentElement.innerHTML='<span class=\'text-2xl font-black tracking-tight text-blue-600 dark:text-blue-400\'>J.K. SHAH CLASSES</span>';"
+      />
+    </a>
+
+    <!-- Status Pill directly below the logo -->
+    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold tracking-wide uppercase bg-blue-100 text-blue-800 dark:bg-blue-950/70 dark:text-blue-300 border border-blue-200 dark:border-blue-800/80 mb-6 shadow-sm">
+      <span class="w-2 h-2 rounded-full bg-blue-600 dark:bg-blue-400 animate-ping"></span>
+      Error 404 • Page Not Found
+    </div>
+
+    <!-- Animated Vector Illustration -->
+    <div class="relative w-full max-w-[380px] sm:max-w-[460px] mb-8 select-none">
+      <svg viewBox="0 0 400 320" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto drop-shadow-xl overflow-visible">
+        
+        <!-- Background Ambient Stars -->
+        <g class="text-blue-400/50 dark:text-blue-300/40">
+          <circle cx="50" cy="50" r="2.5" fill="currentColor" class="star-1" />
+          <circle cx="340" cy="70" r="3" fill="currentColor" class="star-2" />
+          <circle cx="70" cy="220" r="2" fill="currentColor" class="star-3" />
+          <circle cx="325" cy="240" r="3.5" fill="currentColor" class="star-4" />
+          <path d="M90 100 L93 103 L90 106 L87 103 Z" fill="currentColor" class="star-2" />
+          <path d="M310 140 L314 144 L310 148 L306 144 Z" fill="currentColor" class="star-3" />
+        </g>
+
+        <!-- Base Platform Shadow -->
+        <ellipse cx="200" cy="280" rx="130" ry="16" class="fill-slate-300/40 dark:fill-slate-900/60" />
+
+        <!-- Floating Group (Animated) -->
+        <g class="animate-float">
+          <!-- Pulse Concentric Rings around central 0 -->
+          <circle cx="200" cy="165" r="54" class="animate-pulse-ring stroke-blue-400/30 dark:stroke-blue-500/20" stroke-width="2" stroke-dasharray="4 4" fill="none" />
+          <circle cx="200" cy="165" r="70" class="stroke-blue-500/20 dark:stroke-blue-400/10" stroke-width="1.5" fill="none" />
+
+          <!-- Digit '4' (Left) -->
+          <g class="drop-shadow-md">
+            <text x="75" y="205" font-size="110" font-weight="900" font-family="'Inter', sans-serif" class="fill-slate-800 dark:fill-slate-100" style="letter-spacing: -4px;">4</text>
+            <path d="M125 105 L80 180 H140 V205" stroke="currentColor" class="stroke-blue-500/20 dark:stroke-blue-400/20" stroke-width="3" fill="none" />
+          </g>
+
+          <!-- Central Portal / Radar Search '0' -->
+          <g transform="translate(200, 165)">
+            <!-- Outer Ring Base -->
+            <circle cx="0" cy="0" r="46" class="fill-white dark:fill-slate-900 stroke-blue-600 dark:stroke-blue-500" stroke-width="6" />
+            
+            <!-- Glass Center Inner -->
+            <circle cx="0" cy="0" r="36" class="fill-blue-50/80 dark:fill-blue-950/70" />
+            
+            <!-- Magnifying/Compass Graticule -->
+            <line x1="-36" y1="0" x2="36" y2="0" class="stroke-blue-300/40 dark:stroke-blue-600/40" stroke-width="1.5" />
+            <line x1="0" y1="-36" x2="0" y2="36" class="stroke-blue-300/40 dark:stroke-blue-600/40" stroke-width="1.5" />
+            
+            <!-- Cute Lost Compass Needle / Pointer -->
+            <polygon points="0,-24 7,-4 0,2 -7,-4" class="fill-blue-600 dark:fill-blue-400" />
+            <polygon points="0,24 7,4 0,-2 -7,4" class="fill-rose-500/80" />
+            <circle cx="0" cy="0" r="4.5" class="fill-white dark:fill-slate-950 stroke-blue-600 dark:stroke-blue-400" stroke-width="2" />
+          </g>
+
+          <!-- Orbiting Mini Satellite / Graduation Cap Book -->
+          <g class="orbit-item">
+            <circle cx="0" cy="0" r="8" class="fill-amber-400 dark:fill-amber-300 shadow" />
+            <circle cx="0" cy="0" r="12" class="stroke-amber-400/40" stroke-width="1" fill="none" />
+          </g>
+
+          <!-- Digit '4' (Right) -->
+          <g class="drop-shadow-md">
+            <text x="250" y="205" font-size="110" font-weight="900" font-family="'Inter', sans-serif" class="fill-slate-800 dark:fill-slate-100" style="letter-spacing: -4px;">4</text>
+          </g>
+
+          <!-- Floating Compass Dot Left -->
+          <g transform="translate(85, 75)">
+            <circle cx="10" cy="10" r="7" class="fill-emerald-500 dark:fill-emerald-400" />
+            <path d="M7 10 L9 12 L13 8" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </g>
+        </g>
+      </svg>
+    </div>
+
+    <!-- Main Headings -->
+    <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-4">
+      Looks like you're a bit lost!
+    </h1>
+    
+    <p class="max-w-xl text-base sm:text-lg text-slate-600 dark:text-slate-300 font-normal leading-relaxed mb-8">
+      The page or lecture you are searching for might have been moved, renamed, or is temporarily unavailable. Let's redirect you back to your learning track.
+    </p>
+
+    <!-- Action Buttons -->
+    <div class="flex flex-col sm:flex-row items-center gap-3.5 w-full sm:w-auto">
+      <!-- Primary Back to Home Button -->
+      <a 
+        id="homeBtn"
+        href="https://jkshahclasses.com/" 
+        class="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-blue-500/30"
+      >
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg>
+        <span>Back to Home</span>
+      </a>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="w-full max-w-7xl mx-auto px-6 py-6 border-t border-slate-200/80 dark:border-slate-900 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 dark:text-slate-500 gap-4">
+    <p>© <span id="currentYear"></span> J.K. Shah Classes. All rights reserved.</p>
+  </footer>
+
+  <!-- Script for Year & Fallback verification -->
+  <script>
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+    // Ensure link click executes smoothly across touch/mouse
+    const homeBtn = document.getElementById('homeBtn');
+    homeBtn.addEventListener('click', function(e) {
+      // Direct navigation to official destination
+      window.location.href = 'https://jkshahclasses.com/';
+    });
+  </script>
+</body>
+</html>
