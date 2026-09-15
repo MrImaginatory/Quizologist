@@ -294,24 +294,28 @@ export class QuestionImportService {
       });
     }
 
-    // 3. Batch duplicate check using DB (only for topic_ids in this batch)
-    const batchTopicIds = [...new Set(validRows.map((r) => r.data.topic_id))];
-    const existingQuestions = await Question.findAll({
-      where: {
-        topic_id: { [Op.in]: batchTopicIds },
-        deletedAt: null,
-      },
-      attributes: ["question", "topic_id"],
-    });
-    const existingSet = new Set(
-      existingQuestions.map((q) => `${q.question.toLowerCase()}|${q.topic_id}`)
-    );
-
-    // 4. Process in batches using Sequelize bulkCreate
+    // 3. Process in batches using Sequelize bulkCreate
     for (let i = 0; i < validRows.length; i += BATCH_SIZE) {
       const batch = validRows.slice(i, i + BATCH_SIZE);
       const batchRecords: any[] = [];
       const batchErrors: { row: number; question?: string; reason: string }[] = [];
+
+      // Duplicate check limited to this batch's topics and question strings
+      const batchTopicIds = [...new Set(batch.map((r) => r.data.topic_id))];
+      const batchQuestionTexts = [...new Set(batch.map((r) => r.data.question))];
+      
+      const existingQuestions = await Question.findAll({
+        where: {
+          topic_id: { [Op.in]: batchTopicIds },
+          question: { [Op.in]: batchQuestionTexts },
+          deletedAt: null,
+        },
+        attributes: ["question", "topic_id"],
+      });
+      
+      const existingSet = new Set(
+        existingQuestions.map((q) => `${q.question.toLowerCase()}|${q.topic_id}`)
+      );
 
       for (const item of batch) {
         const row = item.index + 2;
