@@ -1,4 +1,9 @@
 pm2 start dist/index.js --name "backend-mono"
 pm2 start npm --name "frontend-jkshah" -- start -- -p 5002
+---
 pm2 save
 pm2 startup
+---
+pm2 restart backend-mono
+pm2 restart frontend-jkshah
+---
