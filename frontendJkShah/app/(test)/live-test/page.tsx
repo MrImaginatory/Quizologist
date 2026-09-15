@@ -257,8 +257,10 @@ function LiveTestContent() {
     if (testId && token) {
       try {
         await testsApi.abandon(testId, token);
-      } catch (err) {
+      } catch (err: any) {
         console.error("Failed to abandon test:", err);
+        setError(err.data?.message || err.message || "Failed to abandon test");
+        return; // Do not navigate away
       }
       localStorage.removeItem(`test_state_${testId}`);
     }
@@ -490,15 +492,17 @@ function LiveTestContent() {
               <span>{formatTime(timeLeft)}</span>
             </div>
 
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => setShowCancelConfirm(true)}
-              className="gap-1.5"
-            >
-              <X className="h-4 w-4" />
-              <span className="hidden sm:inline">Cancel</span>
-            </Button>
+            {!(testSession as any)?.predefinedTest?.is_pre_assessment && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setShowCancelConfirm(true)}
+                className="gap-1.5"
+              >
+                <X className="h-4 w-4" />
+                <span className="hidden sm:inline">Cancel</span>
+              </Button>
+            )}
           </div>
         </div>
       </header>
@@ -676,9 +680,15 @@ function LiveTestContent() {
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               ) : (
-                <Button onClick={() => setShowConfirmSubmit(true)} className="gap-1.5">
-                  Submit
-                </Button>
+                <span title={answeredCount < Math.min(35, Math.ceil(0.95 * totalQuestions)) ? `For submission minimum of ${Math.min(35, Math.ceil(0.95 * totalQuestions))} required` : ""}>
+                  <Button 
+                    onClick={() => setShowConfirmSubmit(true)} 
+                    className="gap-1.5"
+                    disabled={answeredCount < Math.min(35, Math.ceil(0.95 * totalQuestions))}
+                  >
+                    Submit
+                  </Button>
+                </span>
               )}
             </div>
           </div>

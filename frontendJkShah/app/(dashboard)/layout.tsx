@@ -1,8 +1,10 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { RouteGuard } from "@/components/auth/route-guard";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { usePreAssessmentStatus } from "@/hooks/use-preassessment-status";
 
 // Role-based route access configuration
 // Key: URL path prefix, Value: allowed roles
@@ -53,7 +55,18 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const allowedRoles = getAllowedRoles(pathname);
+  
+  const { status } = usePreAssessmentStatus();
+
+  useEffect(() => {
+    // If the student has already started a pre-assessment, force them to complete it
+    // They cannot navigate the dashboard until it's done.
+    if (status?.required && status?.sessionId) {
+      router.push(`/live-test?id=${status.sessionId}`);
+    }
+  }, [status, router]);
 
   return (
     <RouteGuard requireAuth={true} allowedRoles={allowedRoles}>

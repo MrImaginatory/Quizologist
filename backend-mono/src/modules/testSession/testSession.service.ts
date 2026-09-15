@@ -13,6 +13,7 @@ import Topic from "../topic/topic.model";
 import TeacherAssignment from "../teacherAssignment/teacherAssignment.model";
 import { UserSkillRatingService } from "../userSkillRating/userSkillRating.service";
 import { PreAssessmentService } from "../preAssessment/preAssessment.service";
+import PredefinedTest from "../predefinedTest/predefinedTest.model";
 import {
   StartTestInput,
   TestIdParam,
@@ -347,6 +348,11 @@ export class TestSessionService {
       attributes: TIMESTAMP_EXCLUDE,
       include: [
         SELECTION_INCLUDE,
+        {
+          model: PredefinedTest,
+          as: "predefinedTest",
+          attributes: ["is_pre_assessment"],
+        },
         {
           model: TestAnswer,
           as: "answers",
@@ -1237,6 +1243,13 @@ export class TestSessionService {
   static async submit(testId: string, studentId: string) {
     const session = await TestSession.findOne({
       where: { id: testId, student_id: studentId },
+      include: [
+        {
+          model: PredefinedTest,
+          as: "predefinedTest",
+          attributes: ["is_pre_assessment"],
+        },
+      ],
     });
 
     if (!session) {
@@ -1255,6 +1268,13 @@ export class TestSessionService {
     const answers = await TestAnswer.findAll({
       where: { test_session_id: testId },
     });
+
+    if ((session as any).predefinedTest?.is_pre_assessment) {
+      const attemptedCount = answers.filter((a) => !a.is_skipped && a.selected_answer).length;
+      if (attemptedCount < 35) {
+        throw ApiError.badRequest("You must answer at least 35 questions before submitting the pre-assessment.");
+      }
+    }
 
     // Fetch all questions to compare answers
     const questionIds = answers.map((a) => a.question_id);
@@ -1322,10 +1342,21 @@ export class TestSessionService {
   static async abandon(testId: string, studentId: string) {
     const session = await TestSession.findOne({
       where: { id: testId, student_id: studentId },
+      include: [
+        {
+          model: PredefinedTest,
+          as: "predefinedTest",
+          attributes: ["is_pre_assessment"],
+        },
+      ],
     });
 
     if (!session) {
       throw ApiError.notFound(RESPONSE_MESSAGES.ERROR.TEST_NOT_FOUND);
+    }
+
+    if ((session as any).predefinedTest?.is_pre_assessment) {
+      throw ApiError.badRequest("Pre-assessment tests cannot be abandoned.");
     }
 
     if (session.status === "completed") {
