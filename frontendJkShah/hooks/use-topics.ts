@@ -10,10 +10,11 @@ interface UseTopicsOptions {
   page?: number;
   limit?: number;
   subjectId?: string;
+  courseId?: string;
   search?: string;
 }
 
-export function useTopics({ page = 1, limit = 10, subjectId, search }: UseTopicsOptions = {}) {
+export function useTopics({ page = 1, limit = 10, subjectId, courseId, search }: UseTopicsOptions = {}) {
   const { isAuthenticated } = useAuth();
   const fetcher = createFetcher();
   
@@ -21,6 +22,10 @@ export function useTopics({ page = 1, limit = 10, subjectId, search }: UseTopics
     ? `${API_ROUTES.TOPICS.BY_SUBJECT(subjectId)}?page=${page}&limit=${limit}`
     : `${API_ROUTES.TOPICS.BASE}?page=${page}&limit=${limit}`;
   
+  if (courseId) {
+    url += `&courseId=${encodeURIComponent(courseId)}`;
+  }
+
   if (search) {
     url += `&search=${encodeURIComponent(search)}`;
   }

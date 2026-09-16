@@ -15,8 +15,9 @@ import { useAuth } from "@/contexts/auth-context";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Search } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { useSubjects } from "@/hooks/use-subjects";
+import { useCourses } from "@/hooks/use-courses";
 
 export default function TopicsPage() {
   const [page, setPage] = useState(1);
@@ -28,14 +29,20 @@ export default function TopicsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearch = useDebounce(searchQuery, 500);
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>("all");
+  const [selectedCourseId, setSelectedCourseId] = useState<string>("all");
 
-  const { subjects } = useSubjects({ limit: 1000 });
+  const { courses } = useCourses({ limit: 1000 });
+  const { subjects } = useSubjects({ 
+    limit: 1000, 
+    courseId: selectedCourseId === "all" ? undefined : selectedCourseId 
+  });
   
   const { topics, total, totalPages, isLoading, error, refetch } = useTopics({ 
     page, 
     limit, 
     search: debouncedSearch,
-    subjectId: selectedSubjectId === "all" ? undefined : selectedSubjectId
+    subjectId: selectedSubjectId === "all" ? undefined : selectedSubjectId,
+    courseId: selectedCourseId === "all" ? undefined : selectedCourseId
   });
   const { isAuthenticated } = useAuth();
 
@@ -132,29 +139,35 @@ export default function TopicsPage() {
             }}
           />
         </div>
-        <Select 
-          value={selectedSubjectId} 
-          onValueChange={(val) => {
-            setSelectedSubjectId(val || "all");
-            setPage(1);
-          }}
-        >
-          <SelectTrigger className="w-56">
-            <SelectValue placeholder="Filter by Subject">
-              {selectedSubjectId === "all" 
-                ? "All Subjects" 
-                : capitalize(subjects.find((s) => s.id === selectedSubjectId)?.name || "Filter by Subject")}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Subjects</SelectItem>
-            {subjects.map((s) => (
-              <SelectItem key={s.id} value={s.id}>
-                {capitalize(s.name)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="w-48">
+          <SearchableSelect
+            options={[
+              { value: "all", label: "All Courses" },
+              ...courses.map((c) => ({ value: c.id, label: capitalize(c.name) }))
+            ]}
+            value={selectedCourseId}
+            onValueChange={(val) => {
+              setSelectedCourseId(val || "all");
+              setSelectedSubjectId("all"); // Reset subject when course changes
+              setPage(1);
+            }}
+            placeholder="Filter by Course"
+          />
+        </div>
+        <div className="w-48">
+          <SearchableSelect
+            options={[
+              { value: "all", label: "All Subjects" },
+              ...subjects.map((s) => ({ value: s.id, label: capitalize(s.name) }))
+            ]}
+            value={selectedSubjectId}
+            onValueChange={(val) => {
+              setSelectedSubjectId(val || "all");
+              setPage(1);
+            }}
+            placeholder="Filter by Subject"
+          />
+        </div>
       </div>
       <DataTable
         title="Topics"

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import {
@@ -30,6 +30,8 @@ interface SearchableSelectProps {
   placeholder?: string;
   emptyText?: string;
   disabled?: boolean;
+  clearable?: boolean;
+  clearValue?: string;
 }
 
 export function SearchableSelect({
@@ -39,6 +41,8 @@ export function SearchableSelect({
   placeholder = "Select an option",
   emptyText = "No results found.",
   disabled = false,
+  clearable = true,
+  clearValue = "all",
 }: SearchableSelectProps) {
   const [open, setOpen] = React.useState(false);
   const triggerRef = React.useRef<HTMLButtonElement>(null);
@@ -74,11 +78,34 @@ export function SearchableSelect({
         )}
       >
         <span className="truncate">{selectedLabel}</span>
-        <ChevronsUpDown className={cn(
-            "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200",
-            open && "rotate-180"
-          )} 
-        />
+        <div className="flex items-center gap-1">
+          {clearable && value && value !== clearValue && (
+            <div 
+              role="button"
+              tabIndex={0}
+              className="flex h-full items-center justify-center rounded-full p-1 hover:bg-muted"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onValueChange(clearValue);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  onValueChange(clearValue);
+                }
+              }}
+            >
+              <X className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
+            </div>
+          )}
+          <ChevronsUpDown className={cn(
+              "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200",
+              open && "rotate-180"
+            )} 
+          />
+        </div>
       </PopoverTrigger>
       <PopoverContent
         className="p-0 rounded-2xl border border-border bg-popover shadow-xl overflow-hidden"
@@ -94,6 +121,7 @@ export function SearchableSelect({
                 <CommandItem
                   key={option.value}
                   value={option.label}
+                  className="cursor-pointer hover:bg-accent hover:text-accent-foreground data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground"
                   onSelect={() => {
                     onValueChange(option.value);
                     setOpen(false);

@@ -34,6 +34,7 @@ export const getAllTopicsSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(10000).default(10),
   search: z.string().optional(),
+  courseId: z.string().uuid("Invalid course ID format").optional(),
 });
 
 export type CreateTopicInput = z.infer<typeof createTopicSchema>;

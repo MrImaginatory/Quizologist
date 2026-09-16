@@ -15,7 +15,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Search } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { useCourses } from "@/hooks/use-courses";
 
 export default function SubjectsPage() {
@@ -127,29 +127,20 @@ export default function SubjectsPage() {
             }}
           />
         </div>
-        <Select 
-          value={selectedCourseId} 
-          onValueChange={(val) => {
-            setSelectedCourseId(val || "all");
-            setPage(1);
-          }}
-        >
-          <SelectTrigger className="w-56">
-            <SelectValue placeholder="Filter by Course">
-              {selectedCourseId === "all" 
-                ? "All Courses" 
-                : capitalize(courses.find((c) => c.id === selectedCourseId)?.name || "Filter by Course")}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Courses</SelectItem>
-            {courses.map((c) => (
-              <SelectItem key={c.id} value={c.id}>
-                {capitalize(c.name)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="w-56">
+          <SearchableSelect
+            options={[
+              { value: "all", label: "All Courses" },
+              ...courses.map((c) => ({ value: c.id, label: capitalize(c.name) }))
+            ]}
+            value={selectedCourseId}
+            onValueChange={(val) => {
+              setSelectedCourseId(val || "all");
+              setPage(1);
+            }}
+            placeholder="Filter by Course"
+          />
+        </div>
       </div>
       <DataTable
         title="Subjects"

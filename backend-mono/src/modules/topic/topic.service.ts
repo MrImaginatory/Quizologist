@@ -51,7 +51,7 @@ export class TopicService {
   }
 
   static async getAll(data: GetAllTopicsInput) {
-    const { page, limit, search } = data;
+    const { page, limit, search, courseId } = data;
     const offset = (page - 1) * limit;
 
     const whereClause: any = {};
@@ -59,10 +59,16 @@ export class TopicService {
       whereClause.name = { [Op.iLike]: `%${search}%` };
     }
 
+    const subjectInclude: any = { ...SUBJECT_INCLUDE };
+    if (courseId) {
+      subjectInclude.where = { course_id: courseId };
+      subjectInclude.required = true; // INNER JOIN
+    }
+
     const { rows, count } = await Topic.findAndCountAll({
       where: whereClause,
       attributes: TIMESTAMP_EXCLUDE,
-      include: [SUBJECT_INCLUDE],
+      include: [subjectInclude],
       limit,
       offset,
       order: [["createdAt", "DESC"]],
