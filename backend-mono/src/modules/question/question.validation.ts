@@ -97,6 +97,7 @@ export const filterQuestionsSchema = z.object({
   course_id: z.string().uuid().optional(),
   subject_id: z.string().uuid().optional(),
   topic_id: z.string().uuid().optional(),
+  difficulty: difficultyEnum.optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(10000).default(10),
 });

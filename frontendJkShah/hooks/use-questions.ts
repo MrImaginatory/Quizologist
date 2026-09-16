@@ -12,6 +12,7 @@ interface UseQuestionsOptions {
   courseId?: string;
   subjectId?: string;
   topicId?: string;
+  difficulty?: string;
 }
 
 interface UseQuestionsResult {
@@ -29,6 +30,7 @@ export function useQuestions({
   courseId,
   subjectId,
   topicId,
+  difficulty,
 }: UseQuestionsOptions = {}): UseQuestionsResult {
   const { token } = useAuth();
   const fetcher = createFetcher(token);
@@ -37,6 +39,7 @@ export function useQuestions({
   if (courseId) searchParams.set("course_id", courseId);
   if (subjectId) searchParams.set("subject_id", subjectId);
   if (topicId) searchParams.set("topic_id", topicId);
+  if (difficulty) searchParams.set("difficulty", difficulty);
   searchParams.set("page", page.toString());
   searchParams.set("limit", limit.toString());
   

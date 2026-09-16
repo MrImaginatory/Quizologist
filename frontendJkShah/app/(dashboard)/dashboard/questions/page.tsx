@@ -34,6 +34,7 @@ export default function QuestionsPage() {
     courseId: "",
     subjectId: "",
     topicId: "",
+    difficulty: "",
   });
   const [deleteTarget, setDeleteTarget] = useState<Question | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -43,6 +44,7 @@ export default function QuestionsPage() {
     courseId: filters.courseId || undefined,
     subjectId: filters.subjectId || undefined,
     topicId: filters.topicId || undefined,
+    difficulty: filters.difficulty || undefined,
   });
   const { token } = useAuth();
 
@@ -56,7 +58,7 @@ export default function QuestionsPage() {
     onDelete: handleDelete,
   });
 
-  const handleFilterChange = useCallback((newFilters: { courseId: string; subjectId: string; topicId: string }) => {
+  const handleFilterChange = useCallback((newFilters: { courseId: string; subjectId: string; topicId: string; difficulty: string }) => {
     setFilters(newFilters);
     setPage(1);
   }, []);

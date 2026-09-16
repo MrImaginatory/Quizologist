@@ -18,6 +18,7 @@ interface QuestionFiltersProps {
     courseId: string;
     subjectId: string;
     topicId: string;
+    difficulty: string;
   }) => void;
 }
 
@@ -25,6 +26,7 @@ export function QuestionFilters({ onFilterChange }: QuestionFiltersProps) {
   const [courseId, setCourseId] = useState("");
   const [subjectId, setSubjectId] = useState("");
   const [topicId, setTopicId] = useState("");
+  const [difficulty, setDifficulty] = useState("");
   const { user } = useAuth();
   const isTeacher = user?.role === "teacher";
 
@@ -66,16 +68,17 @@ export function QuestionFilters({ onFilterChange }: QuestionFiltersProps) {
   const selectedTopic = topics.find((t) => t.id === topicId);
 
   useEffect(() => {
-    onFilterChange({ courseId, subjectId, topicId });
-  }, [courseId, subjectId, topicId, onFilterChange]);
+    onFilterChange({ courseId, subjectId, topicId, difficulty });
+  }, [courseId, subjectId, topicId, difficulty, onFilterChange]);
 
   const handleClearFilters = () => {
     setCourseId("");
     setSubjectId("");
     setTopicId("");
+    setDifficulty("");
   };
 
-  const hasFilters = courseId || subjectId || topicId;
+  const hasFilters = courseId || subjectId || topicId || difficulty;
 
   return (
     <div className="flex flex-wrap items-end gap-4">
@@ -124,6 +127,26 @@ export function QuestionFilters({ onFilterChange }: QuestionFiltersProps) {
           placeholder={!subjectId ? "Select subject first" : isLoadingTopics ? "Loading..." : "All Topics"}
           options={topics.map(t => ({ value: t.id, label: capitalize(t.name) }))}
           disabled={!subjectId || isLoadingTopics}
+        />
+      </div>
+
+      <div className="flex-1 min-w-[200px]">
+        <Label htmlFor="difficulty" className="text-sm font-medium mb-2 block">
+          Difficulty
+        </Label>
+        <SearchableSelect
+          value={difficulty}
+          onValueChange={(value) => {
+            setDifficulty(value === "all" ? "" : (value ?? ""));
+          }}
+          placeholder="All Difficulties"
+          options={[
+            { value: "beginner", label: "Beginner" },
+            { value: "normal", label: "Normal" },
+            { value: "mid", label: "Mid" },
+            { value: "hard", label: "Hard" },
+            { value: "expert", label: "Expert" }
+          ]}
         />
       </div>
 

@@ -236,13 +236,14 @@ export class QuestionService {
   }
 
   static async filter(data: FilterQuestionsInput, user?: { userId: string; role: string }) {
-    const { course_id, subject_id, topic_id, page, limit } = data;
+    const { course_id, subject_id, topic_id, difficulty, page, limit } = data;
     const offset = (page - 1) * limit;
 
     const where: any = {};
     if (course_id) where.course_id = course_id;
     if (subject_id) where.subject_id = subject_id;
     if (topic_id) where.topic_id = topic_id;
+    if (difficulty) where.difficulty = difficulty;
 
     // If teacher, filter by their assigned courses/subjects
     if (user && user.role === "teacher") {
