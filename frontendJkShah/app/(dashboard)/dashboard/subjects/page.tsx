@@ -12,6 +12,11 @@ import { AddSubjectDialog } from "@/components/dialogs/add-subject-dialog";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { useDeleteWithUndo } from "@/hooks/use-delete-with-undo";
 import { useAuth } from "@/contexts/auth-context";
+import { Input } from "@/components/ui/input";
+import { useDebounce } from "@/hooks/use-debounce";
+import { Search } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useCourses } from "@/hooks/use-courses";
 
 export default function SubjectsPage() {
   const [page, setPage] = useState(1);
@@ -20,12 +25,23 @@ export default function SubjectsPage() {
   const [editSubject, setEditSubject] = useState<Subject | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Subject | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const { subjects, total, totalPages, isLoading, error, refetch } = useSubjects({ page, limit });
-  const { token } = useAuth();
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 500);
+  const [selectedCourseId, setSelectedCourseId] = useState<string>("all");
+
+  const { courses } = useCourses({ limit: 1000 });
+  
+  const { subjects, total, totalPages, isLoading, error, refetch } = useSubjects({ 
+    page, 
+    limit, 
+    search: debouncedSearch,
+    courseId: selectedCourseId === "all" ? undefined : selectedCourseId
+  });
+  const { isAuthenticated } = useAuth();
 
   const handleDelete = useCallback(async (id: string) => {
-    await subjectsApi.delete(id, token || undefined);
-  }, [token]);
+    await subjectsApi.delete(id, undefined);
+  }, []);
 
   const { deleteWithUndo } = useDeleteWithUndo({
     type: "subject",
@@ -96,6 +112,40 @@ export default function SubjectsPage() {
           <Plus className="mr-2 h-4 w-4" />
           Add Subject
         </Button>
+      </div>
+
+      <div className="flex items-center gap-4">
+        <div className="relative w-72">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search subjects..."
+            className="pl-9"
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setPage(1);
+            }}
+          />
+        </div>
+        <Select 
+          value={selectedCourseId} 
+          onValueChange={(val) => {
+            setSelectedCourseId(val || "all");
+            setPage(1);
+          }}
+        >
+          <SelectTrigger className="w-56">
+            <SelectValue placeholder="Filter by Course" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Courses</SelectItem>
+            {courses.map((c) => (
+              <SelectItem key={c.id} value={c.id}>
+                {capitalize(c.name)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <DataTable
         title="Subjects"
