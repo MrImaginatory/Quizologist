@@ -10,18 +10,23 @@ interface UseTopicsOptions {
   page?: number;
   limit?: number;
   subjectId?: string;
+  search?: string;
 }
 
-export function useTopics({ page = 1, limit = 10, subjectId }: UseTopicsOptions = {}) {
-  const { token } = useAuth();
-  const fetcher = createFetcher(token);
+export function useTopics({ page = 1, limit = 10, subjectId, search }: UseTopicsOptions = {}) {
+  const { isAuthenticated } = useAuth();
+  const fetcher = createFetcher();
   
-  const url = subjectId
+  let url = subjectId
     ? `${API_ROUTES.TOPICS.BY_SUBJECT(subjectId)}?page=${page}&limit=${limit}`
     : `${API_ROUTES.TOPICS.BASE}?page=${page}&limit=${limit}`;
   
+  if (search) {
+    url += `&search=${encodeURIComponent(search)}`;
+  }
+  
   const { data, error, isLoading, mutate } = useSWR<TopicsResponse>(
-    token ? url : null,
+    isAuthenticated ? url : null,
     fetcher,
     swrOptions
   );

@@ -10,18 +10,23 @@ interface UseSubjectsOptions {
   page?: number;
   limit?: number;
   courseId?: string;
+  search?: string;
 }
 
-export function useSubjects({ page = 1, limit = 10, courseId }: UseSubjectsOptions = {}) {
-  const { token } = useAuth();
-  const fetcher = createFetcher(token);
+export function useSubjects({ page = 1, limit = 10, courseId, search }: UseSubjectsOptions = {}) {
+  const { isAuthenticated } = useAuth();
+  const fetcher = createFetcher();
   
-  const url = courseId
+  let url = courseId
     ? `${API_ROUTES.SUBJECTS.BY_COURSE(courseId)}?page=${page}&limit=${limit}`
     : `${API_ROUTES.SUBJECTS.BASE}?page=${page}&limit=${limit}`;
   
+  if (search) {
+    url += `&search=${encodeURIComponent(search)}`;
+  }
+  
   const { data, error, isLoading, mutate } = useSWR<SubjectsResponse>(
-    token ? url : null,
+    isAuthenticated ? url : null,
     fetcher,
     swrOptions
   );

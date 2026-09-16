@@ -9,16 +9,20 @@ import type { CoursesResponse } from "@/lib/api";
 interface UseCoursesOptions {
   page?: number;
   limit?: number;
+  search?: string;
 }
 
-export function useCourses({ page = 1, limit = 10 }: UseCoursesOptions = {}) {
-  const { token } = useAuth();
-  const fetcher = createFetcher(token);
+export function useCourses({ page = 1, limit = 10, search }: UseCoursesOptions = {}) {
+  const { isAuthenticated } = useAuth();
+  const fetcher = createFetcher();
   
-  const url = `${API_ROUTES.COURSES.BASE}?page=${page}&limit=${limit}`;
+  let url = `${API_ROUTES.COURSES.BASE}?page=${page}&limit=${limit}`;
+  if (search) {
+    url += `&search=${encodeURIComponent(search)}`;
+  }
   
   const { data, error, isLoading, mutate } = useSWR<CoursesResponse>(
-    token ? url : null,
+    isAuthenticated ? url : null,
     fetcher,
     swrOptions
   );
