@@ -140,7 +140,11 @@ export default function TopicsPage() {
           }}
         >
           <SelectTrigger className="w-56">
-            <SelectValue placeholder="Filter by Subject" />
+            <SelectValue placeholder="Filter by Subject">
+              {selectedSubjectId === "all" 
+                ? "All Subjects" 
+                : capitalize(subjects.find((s) => s.id === selectedSubjectId)?.name || "Filter by Subject")}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Subjects</SelectItem>

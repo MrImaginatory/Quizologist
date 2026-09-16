@@ -135,7 +135,11 @@ export default function SubjectsPage() {
           }}
         >
           <SelectTrigger className="w-56">
-            <SelectValue placeholder="Filter by Course" />
+            <SelectValue placeholder="Filter by Course">
+              {selectedCourseId === "all" 
+                ? "All Courses" 
+                : capitalize(courses.find((c) => c.id === selectedCourseId)?.name || "Filter by Course")}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Courses</SelectItem>

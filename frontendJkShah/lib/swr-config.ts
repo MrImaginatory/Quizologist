@@ -12,11 +12,18 @@ export function createFetcher(_unused?: any) {
     abortControllers.set(baseUrl, controller);
 
     try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+      };
+      
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const res = await fetch(url, {
         credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         signal: controller.signal,
       });
 
