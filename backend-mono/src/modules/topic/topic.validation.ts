@@ -27,11 +27,13 @@ export const getTopicsBySubjectSchema = z.object({
   subjectId: z.string().uuid("Invalid subject ID format"),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(10000).default(10),
+  search: z.string().optional(),
 });
 
 export const getAllTopicsSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(10000).default(10),
+  search: z.string().optional(),
 });
 
 export type CreateTopicInput = z.infer<typeof createTopicSchema>;

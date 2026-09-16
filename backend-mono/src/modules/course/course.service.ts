@@ -1,3 +1,4 @@
+import { Op } from "sequelize";
 import { ApiError } from "../../utils/ApiError";
 import { RESPONSE_MESSAGES } from "../../utils/responseMessages";
 import Course from "./course.model";
@@ -30,10 +31,16 @@ export class CourseService {
   }
 
   static async getAll(data: GetAllCourseInput) {
-    const { page, limit } = data;
+    const { page, limit, search } = data;
     const offset = (page - 1) * limit;
 
+    const whereClause: any = {};
+    if (search) {
+      whereClause.name = { [Op.iLike]: `%${search}%` };
+    }
+
     const { rows, count } = await Course.findAndCountAll({
+      where: whereClause,
       attributes: TIMESTAMP_EXCLUDE,
       limit,
       offset,

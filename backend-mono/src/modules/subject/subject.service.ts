@@ -1,3 +1,4 @@
+import { Op } from "sequelize";
 import { ApiError } from "../../utils/ApiError";
 import { RESPONSE_MESSAGES } from "../../utils/responseMessages";
 import Course from "../course/course.model";
@@ -44,10 +45,16 @@ export class SubjectService {
   }
 
   static async getAll(data: GetAllSubjectsInput) {
-    const { page, limit } = data;
+    const { page, limit, search } = data;
     const offset = (page - 1) * limit;
 
+    const whereClause: any = {};
+    if (search) {
+      whereClause.name = { [Op.iLike]: `%${search}%` };
+    }
+
     const { rows, count } = await Subject.findAndCountAll({
+      where: whereClause,
       attributes: TIMESTAMP_EXCLUDE,
       include: [COURSE_INCLUDE],
       limit,
@@ -72,11 +79,16 @@ export class SubjectService {
       throw ApiError.notFound(RESPONSE_MESSAGES.ERROR.COURSE_NOT_FOUND);
     }
 
-    const { page, limit } = data;
+    const { page, limit, search } = data;
     const offset = (page - 1) * limit;
 
+    const whereClause: any = { course_id: data.courseId };
+    if (search) {
+      whereClause.name = { [Op.iLike]: `%${search}%` };
+    }
+
     const { rows, count } = await Subject.findAndCountAll({
-      where: { course_id: data.courseId },
+      where: whereClause,
       attributes: TIMESTAMP_EXCLUDE,
       include: [COURSE_INCLUDE],
       limit,

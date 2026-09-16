@@ -1,3 +1,4 @@
+import { Op } from "sequelize";
 import { ApiError } from "../../utils/ApiError";
 import { RESPONSE_MESSAGES } from "../../utils/responseMessages";
 import Subject from "../subject/subject.model";
@@ -50,10 +51,16 @@ export class TopicService {
   }
 
   static async getAll(data: GetAllTopicsInput) {
-    const { page, limit } = data;
+    const { page, limit, search } = data;
     const offset = (page - 1) * limit;
 
+    const whereClause: any = {};
+    if (search) {
+      whereClause.name = { [Op.iLike]: `%${search}%` };
+    }
+
     const { rows, count } = await Topic.findAndCountAll({
+      where: whereClause,
       attributes: TIMESTAMP_EXCLUDE,
       include: [SUBJECT_INCLUDE],
       limit,
@@ -78,11 +85,16 @@ export class TopicService {
       throw ApiError.notFound(RESPONSE_MESSAGES.ERROR.SUBJECT_NOT_FOUND);
     }
 
-    const { page, limit } = data;
+    const { page, limit, search } = data;
     const offset = (page - 1) * limit;
 
+    const whereClause: any = { subject_id: data.subjectId };
+    if (search) {
+      whereClause.name = { [Op.iLike]: `%${search}%` };
+    }
+
     const { rows, count } = await Topic.findAndCountAll({
-      where: { subject_id: data.subjectId },
+      where: whereClause,
       attributes: TIMESTAMP_EXCLUDE,
       include: [SUBJECT_INCLUDE],
       limit,
