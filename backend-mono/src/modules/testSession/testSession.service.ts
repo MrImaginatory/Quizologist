@@ -32,7 +32,9 @@ async function getTeacherLocationId(teacherId: string): Promise<string | null> {
 
 async function isStudentInSameLocation(teacherId: string, studentId: string): Promise<boolean> {
   const teacherLocationId = await getTeacherLocationId(teacherId);
-  if (!teacherLocationId) return true; // No location set, allow access
+  // HIGH-01: a teacher without a location must NOT be treated as
+  // "same location as everyone" — deny access until a location is assigned.
+  if (!teacherLocationId) return false;
 
   const [result] = await sequelize.query(
     'SELECT location_id FROM users WHERE id = :studentId',

@@ -16,6 +16,16 @@ const nextConfig: NextConfig = {
 
   // Enable React strict mode for better development warnings
   reactStrictMode: true,
+
+  async headers() {
+    return [
+      {
+        // HIGH-03: never expose join tokens (or any URL) via Referer headers
+        source: "/(.*)",
+        headers: [{ key: "Referrer-Policy", value: "no-referrer" }],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

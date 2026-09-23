@@ -47,6 +47,13 @@ export function createLogger(serviceName: string) {
 }
 
 export function requestLogger(logger: winston.Logger) {
+  // HIGH-03: join tokens travel in URLs — never write them to log files
+  // (logs are frequently shipped to third parties and retained for months).
+  const redactUrl = (url: string): string =>
+    url
+      .replace(/(\/join\/)[^/?#]+/gi, "$1[REDACTED]")
+      .replace(/([?&](?:token|access_token)=)[^&]+/gi, "$1[REDACTED]");
+
   return (req: any, res: any, next: () => void) => {
     const start = Date.now();
 
@@ -54,7 +61,7 @@ export function requestLogger(logger: winston.Logger) {
       const duration = Date.now() - start;
       const logData = {
         method: req.method,
-        url: req.originalUrl,
+        url: redactUrl(req.originalUrl),
         status: res.statusCode,
         duration: `${duration}ms`,
         ip: req.ip || req.socket.remoteAddress,

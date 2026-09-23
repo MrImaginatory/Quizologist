@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import useSWR from "swr";
 import { createFetcher, swrOptions } from "@/lib/swr-config";
@@ -24,14 +24,37 @@ interface TestInfo {
   end_time: string | null;
 }
 
+const JOIN_TOKEN_STORAGE_KEY = "joinTestToken";
+const SCRUBBED_JOIN_PLACEHOLDER = "joined";
+const SCRUBBED_JOIN_PATH = "/join/joined";
+
 export default function JoinTestPage() {
   const router = useRouter();
   const params = useParams();
   const { token: authToken, isLoading: authLoading } = useAuth();
   const rawToken = params.token as string;
 
-  // Extract the actual token from the URL format: test_name_start_end_uuid
-  const token = rawToken.includes("_") ? rawToken.split("_").pop() || rawToken : rawToken;
+  // Full share links look like: test_name_start_end_<token>
+  const isFullShareLink = rawToken.includes("_");
+
+  // Resolved once, then scrubbed out of the URL so it never lingers in
+  // browser history, Referer headers or logs (HIGH-03).
+  const [token, setToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isFullShareLink) {
+      // Extract the actual token from the URL format: test_name_start_end_uuid
+      const extracted = rawToken.split("_").pop() || rawToken;
+      sessionStorage.setItem(JOIN_TOKEN_STORAGE_KEY, extracted);
+      setToken(extracted);
+      window.history.replaceState(window.history.state, "", SCRUBBED_JOIN_PATH);
+    } else if (rawToken === SCRUBBED_JOIN_PLACEHOLDER) {
+      setToken(sessionStorage.getItem(JOIN_TOKEN_STORAGE_KEY) || "");
+    } else {
+      // Legacy bare-token links (/join/<token>)
+      setToken(rawToken);
+    }
+  }, [isFullShareLink, rawToken]);
 
   const fetcher = createFetcher(authToken);
 
@@ -62,6 +85,35 @@ export default function JoinTestPage() {
 
   if (!authToken) {
     return null;
+  }
+
+  // Still resolving/scrubbing the token out of the URL
+  if (token === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Scrubbed URL opened without a token (cleared sessionStorage / dead link)
+  if (!token) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <Card className="max-w-md w-full">
+          <CardContent className="p-6 text-center">
+            <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
+            <h2 className="text-xl font-bold mb-2">Invalid or Expired Link</h2>
+            <p className="text-muted-foreground mb-4">
+              This test link is invalid or no longer available. Please request a new link.
+            </p>
+            <Button onClick={() => router.push("/dashboard")}>
+              Go to Dashboard
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   if (error) {

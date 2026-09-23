@@ -41,6 +41,16 @@ import dashboardRoutes from "./modules/dashboard/dashboard.routes";
 const logger = createLogger("backend-mono");
 const app = express();
 
+// Behind a reverse proxy / tunnel: trust the first hop so per-IP rate limits
+// key on the real client IP instead of the proxy's address.
+app.set("trust proxy", 1);
+
+// HIGH-03: never leak join tokens (or any path data) through Referer headers.
+app.use((_req: Request, res: Response, next: NextFunction) => {
+  res.setHeader("Referrer-Policy", "no-referrer");
+  next();
+});
+
 app.use(cors({ origin: env.CORS_ALLOWED_ORIGINS, credentials: true }));
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
@@ -124,7 +134,12 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   }
   if (err.name === "ZodError") {
     const zodError = err as any;
-    const details = zodError.errors.map((e: any) => `${e.path.join('.')}: ${e.message}`).join(', ');
+    // zod v4 renamed `errors` → `issues`; support both so validation errors
+    // return 400 instead of crashing the handler and falling through to 500.
+    const issues: any[] = zodError.issues ?? zodError.errors ?? [];
+    const details = issues
+      .map((e: any) => `${Array.isArray(e.path) && e.path.length ? e.path.join(".") : "value"}: ${e.message}`)
+      .join(", ");
     return ApiResponse.error(res, `Validation failed: ${details}`, 400);
   }
   logger.error("Unhandled error", { error: err.message, stack: err.stack });
