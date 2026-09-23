@@ -12,3 +12,4 @@ requirements.txt
 venv
 .claude
 *.har
+docs
