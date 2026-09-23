@@ -70,6 +70,50 @@ class RedisService {
       console.error(`Redis del error for key ${key}:`, error);
     }
   }
+
+  // ---------------------------------------------------------------
+  // MED-05 — token store primitives.
+  // Unlike getCache (which conflates "missing" and "unavailable"), these
+  // distinguish the two so callers can fail OPEN when Redis is down
+  // (bounded by the 15-minute access TTL) and fail CLOSED where a lookup
+  // is required to prove a token was ever issued (refresh issuance).
+  // ---------------------------------------------------------------
+
+  /** Returns current value (0 when the key never existed) or null if Redis is unavailable. */
+  async getNumber(key: string): Promise<number | null> {
+    if (!this.isConnected || !this.client) return null;
+    try {
+      const value = await this.client.get(key);
+      if (value === null) return 0;
+      const parsed = Number(value);
+      return Number.isNaN(parsed) ? null : parsed;
+    } catch (error) {
+      console.error(`Redis getNumber error for key ${key}:`, error);
+      return null;
+    }
+  }
+
+  /** true/false for present/absent, null if Redis is unavailable. */
+  async exists(key: string): Promise<boolean | null> {
+    if (!this.isConnected || !this.client) return null;
+    try {
+      return (await this.client.exists(key)) === 1;
+    } catch (error) {
+      console.error(`Redis exists error for key ${key}:`, error);
+      return null;
+    }
+  }
+
+  /** Atomic increment (creates the key at 1) or null if Redis is unavailable. */
+  async incr(key: string): Promise<number | null> {
+    if (!this.isConnected || !this.client) return null;
+    try {
+      return await this.client.incr(key);
+    } catch (error) {
+      console.error(`Redis incr error for key ${key}:`, error);
+      return null;
+    }
+  }
 }
 
 export const redisService = new RedisService();

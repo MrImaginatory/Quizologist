@@ -8,7 +8,6 @@ export interface AuthRequest extends Request {
 }
 
 export type UserRole = "admin" | "student" | "teacher";
-
 export interface LocationAttributes {
   id: string;
   address_line_1: string;
@@ -118,23 +117,5 @@ export interface TopicAttributes {
 }
 
 
-
-export interface AuthRequest extends Request {
-  user?: {
-    userId: string;
-    email: string;
-    role: string;
-  };
-}
-
-
-
-export interface AuthRequest extends Request {
-  user?: {
-    userId: string;
-    email: string;
-    role: string;
-  };
-}
 
 export type TestStatus = "pending" | "in_progress" | "completed" | "abandoned";

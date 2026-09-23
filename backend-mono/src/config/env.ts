@@ -64,6 +64,29 @@ function validateEnv(): void {
 
 validateEnv();
 
+// MED-03: development/tunnel origins must never be the production allowlist —
+// warn loudly (the real fix is swapping them for your live domain in .env).
+if ((process.env.NODE_ENV ?? "").toLowerCase() === "production") {
+  const origins = (process.env.CORS_ALLOWED_ORIGINS ?? "")
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean);
+  const devOrigins = origins.filter(
+    (o) =>
+      /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(o) ||
+      /\.trycloudflare\.com$/i.test(o)
+  );
+  if (devOrigins.length > 0) {
+    console.warn(
+      [
+        "[security] MED-03: CORS_ALLOWED_ORIGINS contains development/tunnel origins while NODE_ENV=production:",
+        ...devOrigins.map((o) => `         - ${o}`),
+        "         Replace them with your real domain(s) before public deployment.",
+      ].join("\n")
+    );
+  }
+}
+
 export const env = {
   PORT: parseInt(process.env.PORT || "3001", 10),
   NODE_ENV: process.env.NODE_ENV as string,

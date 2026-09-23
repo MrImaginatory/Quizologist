@@ -8,6 +8,10 @@ export const API_ROUTES = {
   AUTH: {
     SIGNUP: `${BASE_URL}/api/user/signup`,
     LOGIN: `${BASE_URL}/api/user/login`,
+    REFRESH: `${BASE_URL}/api/user/refresh`,
+    LOGOUT: `${BASE_URL}/api/user/logout`,
+    LOGOUT_ALL: `${BASE_URL}/api/user/logout-all`,
+    SOCKET_TICKET: `${BASE_URL}/api/user/socket-ticket`,
   },
 
   // Users

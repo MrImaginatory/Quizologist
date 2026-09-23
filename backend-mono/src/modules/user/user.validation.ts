@@ -1,6 +1,25 @@
 import { z } from "zod";
+import zxcvbn from "zxcvbn";
 
 const userRoleSchema = z.enum(["admin", "student", "teacher"]);
+
+// MED-01: NIST-aligned policy — minimum length AND demonstrated strength.
+// zxcvbn catches common words, names, dates, keyboard runs and dictionary
+// attacks that a simple character-regex would allow through.
+const passwordSchema = z
+  .string()
+  .min(12, "Password must be at least 12 characters")
+  .max(100, "Password must be at most 100 characters")
+  .superRefine((value, ctx) => {
+    const { score } = zxcvbn(value);
+    if (score < 3) {
+      ctx.addIssue({
+        code: "custom",
+        message:
+          "Password is too easy to guess — avoid common words, names, dates and sequences. Try a passphrase of unrelated words.",
+      });
+    }
+  });
 
 export const signupSchema = z.object({
   fname: z
@@ -17,10 +36,7 @@ export const signupSchema = z.object({
     .string()
     .min(10, "Mobile number must be at least 10 digits")
     .max(15, "Mobile number must be at most 15 digits"),
-  password: z
-    .string()
-    .min(6, "Password must be at least 6 characters")
-    .max(100, "Password must be at most 100 characters"),
+  password: passwordSchema,
 });
 
 export const loginSchema = z.object({

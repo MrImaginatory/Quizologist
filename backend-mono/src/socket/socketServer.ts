@@ -2,6 +2,7 @@ import { Server as HttpServer } from "http";
 import { Server, Socket } from "socket.io";
 import winston from "winston";
 import { JwtToken } from "../utils/jwtToken";
+import { TokenStore } from "../utils/tokenStore";
 import { registerSocketHandlers } from "./socketHandler";
 import { registerTimeBasedHandlers } from "./timeBasedSocketHandler";
 import { sessionManager } from "./sessionManager";
@@ -18,7 +19,7 @@ export function createSocketServer(httpServer: HttpServer, logger: winston.Logge
   });
 
   // Authentication middleware
-  io.use((socket: Socket, next) => {
+  io.use(async (socket: Socket, next) => {
     const rawToken = socket.handshake.auth?.token || socket.handshake.query?.token;
 
     if (!rawToken || typeof rawToken !== "string") {
@@ -29,7 +30,11 @@ export function createSocketServer(httpServer: HttpServer, logger: winston.Logge
     const token = rawToken.startsWith("Bearer ") ? rawToken.slice(7) : rawToken;
 
     try {
+      // MED-02: only short-lived `typ: "socket"` tickets (and their revision
+      // checks) may open a socket — long-lived HTTP access tokens cannot, and
+      // tickets are rejected by the HTTP middleware.
       const decoded = JwtToken.verify(token);
+      await TokenStore.assertSocketTicketValid(decoded);
       (socket as any).userId = decoded.userId;
       (socket as any).userEmail = decoded.email;
       (socket as any).userRole = decoded.role;

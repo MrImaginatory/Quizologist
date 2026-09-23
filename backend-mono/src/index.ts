@@ -1,5 +1,6 @@
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import http from "http";
 import path from "path";
 import { env } from "./config/env";
@@ -52,6 +53,8 @@ app.use((_req: Request, res: Response, next: NextFunction) => {
 });
 
 app.use(cors({ origin: env.CORS_ALLOWED_ORIGINS, credentials: true }));
+// MED-02: parse the HttpOnly auth cookies on every request (must precede the gateway).
+app.use(cookieParser());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use(requestLogger(logger));
@@ -137,9 +140,32 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
     // zod v4 renamed `errors` → `issues`; support both so validation errors
     // return 400 instead of crashing the handler and falling through to 500.
     const issues: any[] = zodError.issues ?? zodError.errors ?? [];
-    const details = issues
-      .map((e: any) => `${Array.isArray(e.path) && e.path.length ? e.path.join(".") : "value"}: ${e.message}`)
+    const fieldOf = (e: any) =>
+      Array.isArray(e.path) && e.path.length ? e.path.join(".") : "value";
+
+    // MED-06, refined: production hides SCHEMA INTERNALS (type mismatches and
+    // unknown keys would reveal internal model shape — those fields are named
+    // but not explained). User-facing POLICY messages (password rules, length,
+    // required) are the API's contract and must always be shown so the client
+    // can tell the user exactly what to fix. Issues are grouped per field so a
+    // field failing two rules reads as one clear line, not "password, password".
+    const isProduction = env.NODE_ENV !== "development";
+    const hideMessage = (e: any) =>
+      isProduction && (e.code === "invalid_type" || e.code === "unrecognized_keys");
+
+    const byField = new Map<string, string[]>();
+    for (const issue of issues) {
+      const field = fieldOf(issue);
+      const messages = byField.get(field) ?? [];
+      if (!hideMessage(issue)) messages.push(issue.message);
+      byField.set(field, messages);
+    }
+    const details = [...byField.entries()]
+      .map(([field, messages]) =>
+        messages.length > 0 ? `${field}: ${messages.join("; ")}` : field
+      )
       .join(", ");
+
     return ApiResponse.error(res, `Validation failed: ${details}`, 400);
   }
   logger.error("Unhandled error", { error: err.message, stack: err.stack });

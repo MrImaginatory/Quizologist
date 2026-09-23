@@ -1,6 +1,7 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../../config/database";
 import { UserAttributes, UserRole } from "../../types";
+import { sanitizeText, sanitizeIdentifier } from "../../utils/sanitize";
 
 type UserCreationAttributes = Optional<
   UserAttributes,
@@ -34,14 +35,15 @@ User.init(
       type: DataTypes.STRING(50),
       allowNull: false,
       set(value: string) {
-        this.setDataValue("fname", value.toLowerCase());
+        // MED-04: strip markup/control chars before persisting
+        this.setDataValue("fname", sanitizeText(value).toLowerCase());
       },
     },
     lname: {
       type: DataTypes.STRING(50),
       allowNull: false,
       set(value: string) {
-        this.setDataValue("lname", value.toLowerCase());
+        this.setDataValue("lname", sanitizeText(value).toLowerCase());
       },
     },
     role: {
@@ -53,14 +55,14 @@ User.init(
       allowNull: false,
       unique: true,
       set(value: string) {
-        this.setDataValue("email", value.toLowerCase());
+        this.setDataValue("email", sanitizeIdentifier(value));
       },
     },
     mobileNumber: {
       type: DataTypes.STRING(15),
       allowNull: false,
       set(value: string) {
-        this.setDataValue("mobileNumber", value.toLowerCase());
+        this.setDataValue("mobileNumber", sanitizeIdentifier(value));
       },
     },
     password: {

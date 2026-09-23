@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import { env } from "../../config/env";
 import { ApiError } from "../../utils/ApiError";
-import { JwtToken, JwtPayload } from "../../utils/jwtToken";
+import { TokenStore } from "../../utils/tokenStore";
 import { RESPONSE_MESSAGES } from "../../utils/responseMessages";
 import User from "./user.model";
 import Location from "../location/location.model";
@@ -42,12 +42,11 @@ export class UserService {
         password: hashedPassword,
       });
 
-      const tokenPayload: JwtPayload = {
+      const tokens = await TokenStore.issueTokens({
         userId: existingUser.id,
         email: existingUser.email,
         role: existingUser.role,
-      };
-      const token = JwtToken.generate(tokenPayload);
+      });
 
       const restored = await User.findByPk(existingUser.id, {
         attributes: USER_EXCLUDE,
@@ -56,7 +55,7 @@ export class UserService {
 
       return {
         user: restored!.toJSON(),
-        token,
+        ...tokens,
       };
     }
 
@@ -78,12 +77,11 @@ export class UserService {
       password: hashedPassword,
     });
 
-    const tokenPayload: JwtPayload = {
+    const tokens = await TokenStore.issueTokens({
       userId: user.id,
       email: user.email,
       role: user.role,
-    };
-    const token = JwtToken.generate(tokenPayload);
+    });
 
     const created = await User.findByPk(user.id, {
       attributes: USER_EXCLUDE,
@@ -92,7 +90,7 @@ export class UserService {
 
     return {
       user: created!.toJSON(),
-      token,
+      ...tokens,
     };
   }
 
@@ -116,12 +114,11 @@ export class UserService {
       throw ApiError.unauthorized(RESPONSE_MESSAGES.ERROR.INVALID_CREDENTIALS);
     }
 
-    const tokenPayload: JwtPayload = {
+    const tokens = await TokenStore.issueTokens({
       userId: user.id,
       email: user.email,
       role: user.role,
-    };
-    const token = JwtToken.generate(tokenPayload);
+    });
 
     const logged = await User.findByPk(user.id, {
       attributes: USER_EXCLUDE,
@@ -130,7 +127,7 @@ export class UserService {
 
     return {
       user: logged!.toJSON(),
-      token,
+      ...tokens,
     };
   }
 

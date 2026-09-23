@@ -3,6 +3,7 @@
 import { useEffect, useCallback, useRef, useState } from "react";
 import type { Socket } from "socket.io-client";
 import { useAuth } from "@/contexts/auth-context";
+import { authApi } from "@/lib/api/auth";
 import { Question } from "@/lib/api/types";
 
 export interface TbTestJoinedData {
@@ -73,16 +74,35 @@ export function useTimeBasedSocket(options: UseTimeBasedSocketOptions = {}) {
 
     const connectSocket = async () => {
       const { io } = await import("socket.io-client");
-      const socketUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+      const socketUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+
+      // MED-02: handshake uses a short-lived ticket — the HttpOnly cookie and
+      // access token never reach JavaScript.
+      let ticket: string;
+      try {
+        ticket = (await authApi.getSocketTicket()).data.ticket;
+      } catch {
+        return; // signed out or gateway unreachable — stay disconnected
+      }
 
       socket = io(socketUrl, {
         path: "/socket.io",
-        auth: { token },
+        auth: { token: ticket },
         transports: ["websocket"],
         reconnection: true,
         reconnectionAttempts: 5,
         reconnectionDelay: 1000,
       });
+
+      // MED-05: fetch a fresh ticket before each retry (tickets expire in ~5 min).
+      const refreshTicket = async () => {
+        try {
+          socket.auth = { token: (await authApi.getSocketTicket()).data.ticket };
+        } catch {
+          /* keep the previous ticket for the next attempt */
+        }
+      };
+      socket.io.on("reconnect_attempt", refreshTicket);
 
       socket.on("connect", () => {
         setIsConnected(true);
@@ -97,8 +117,9 @@ export function useTimeBasedSocket(options: UseTimeBasedSocketOptions = {}) {
         setIsConnected(false);
       });
 
-      socket.on("connect_error", () => {
+      socket.on("connect_error", (err) => {
         setIsConnected(false);
+        if (/token|auth/i.test(err.message)) refreshTicket();
       });
 
       socket.on("tb:test_joined", (data: TbTestJoinedData) => {

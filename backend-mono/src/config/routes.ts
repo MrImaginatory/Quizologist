@@ -37,6 +37,36 @@ export const routes: RouteConfig[] = [
     auth: true,
     roles: ["admin"],
   },
+  // Token lifecycle endpoints (MED-02 + MED-05). `auth: false` at the gateway
+  // because they operate on the HttpOnly cookies themselves — refresh and
+  // logout must still work when the access token has already expired.
+  // They MUST be declared before the catch-all `/user` (admin) rule below.
+  {
+    path: "/user/refresh",
+
+    auth: false,
+    methods: ["POST"],
+  },
+  {
+    path: "/user/logout",
+
+    auth: false,
+    methods: ["POST"],
+  },
+  {
+    path: "/user/logout-all",
+
+    auth: false,
+    methods: ["POST"],
+  },
+  // MED-02: short-lived socket handshake ticket — gateway-authenticated via
+  // cookie or bearer, never exposes the long-lived access token to JS.
+  {
+    path: "/user/socket-ticket",
+
+    auth: true,
+    methods: ["POST"],
+  },
   {
     path: "/user",
 

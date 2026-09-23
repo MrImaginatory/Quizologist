@@ -1,3 +1,5 @@
+import { silentRefresh } from "./api/client";
+
 const abortControllers = new Map<string, AbortController>();
 
 export function createFetcher(_unused?: any) {
@@ -12,20 +14,20 @@ export function createFetcher(_unused?: any) {
     abortControllers.set(baseUrl, controller);
 
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-      const headers: HeadersInit = {
-        "Content-Type": "application/json",
-      };
-      
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
+      // MED-02: no token handling here at all — the HttpOnly access cookie is
+      // sent automatically (same-origin via the /api proxy). MED-05: if the
+      // 15-minute access cookie has expired, refresh once and retry.
+      const doFetch = () =>
+        fetch(url, {
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          signal: controller.signal,
+        });
 
-      const res = await fetch(url, {
-        credentials: "include",
-        headers,
-        signal: controller.signal,
-      });
+      let res = await doFetch();
+      if (res.status === 401 && (await silentRefresh())) {
+        res = await doFetch();
+      }
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));

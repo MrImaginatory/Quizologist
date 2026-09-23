@@ -14,4 +14,15 @@ export const authApi = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+
+  /** MED-05: revoke this device's tokens server-side on logout. */
+  logout: () =>
+    apiRequest(API_ROUTES.AUTH.LOGOUT, { method: "POST" }),
+
+  /** MED-02: short-lived socket handshake ticket (the access cookie stays HttpOnly). */
+  getSocketTicket: () =>
+    apiRequest<{ statusCode: number; success: boolean; message: string; data: { ticket: string } }>(
+      API_ROUTES.AUTH.SOCKET_TICKET,
+      { method: "POST" }
+    ),
 };

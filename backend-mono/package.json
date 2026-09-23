@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "exceljs": "^4.4.0",
@@ -23,13 +24,16 @@
     "sequelize": "^6.37.8",
     "socket.io": "^4.8.3",
     "winston": "^3.19.0",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "zxcvbn": "^4.4.2"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
+    "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/zxcvbn": "^4.4.5",
     "nodemon": "^3.1.14",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",

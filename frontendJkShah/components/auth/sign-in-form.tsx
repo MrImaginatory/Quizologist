@@ -37,7 +37,8 @@ export function SignInForm({ onSwitch }: SignInFormProps) {
 
     try {
       const response = await authApi.login({ email, password });
-      login(response.data.token, response.data.user);
+      // MED-02: tokens live in HttpOnly cookies — only the profile comes back.
+      login(response.data.user);
       
       // Check if there's a redirect URL stored
       const redirectUrl = sessionStorage.getItem("redirectAfterLogin");

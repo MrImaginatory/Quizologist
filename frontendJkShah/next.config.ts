@@ -1,10 +1,25 @@
 import type { NextConfig } from "next";
 
+// MED-02: the browser only ever talks to this Next origin. /api/* is proxied
+// server-side to the backend, so auth cookies are always first-party
+// (SameSite=Strict works in dev, on the tunnel, and on a real domain).
+const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:5001";
+
 const nextConfig: NextConfig = {
   allowedDevOrigins: ['pin-waterproof-driven-municipality.trycloudflare.com'],
 
   // Enable response compression
   compress: true,
+
+  // MED-02: same-origin API proxy — cookies never cross an origin boundary.
+  async rewrites() {
+    return [
+      {
+        source: "/api/:path*",
+        destination: `${BACKEND_URL}/api/:path*`,
+      },
+    ];
+  },
 
   // Optimize image delivery
   images: {

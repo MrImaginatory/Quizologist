@@ -3,6 +3,7 @@
 import { useEffect, useCallback, useRef, useState } from "react";
 import type { Socket } from "socket.io-client";
 import { useAuth } from "@/contexts/auth-context";
+import { authApi } from "@/lib/api/auth";
 
 interface TestJoinedData {
   testId: string;
@@ -67,17 +68,37 @@ export function useTestSocket(options: UseTestSocketOptions = {}) {
 
     const connectSocket = async () => {
       const { io } = await import("socket.io-client");
-      const socketUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+      const socketUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+
+      // MED-02: the handshake uses a short-lived (5 min) ticket fetched via the
+      // same-origin proxy — the HttpOnly access cookie never reaches JavaScript.
+      let ticket: string;
+      try {
+        ticket = (await authApi.getSocketTicket()).data.ticket;
+      } catch {
+        return; // signed out or gateway unreachable — stay disconnected
+      }
 
       socket = io(socketUrl, {
         path: "/socket.io",
-        auth: { token },
+        auth: { token: ticket },
         reconnection: true,
         reconnectionAttempts: Infinity,
         reconnectionDelay: 1000,
         reconnectionDelayMax: 5000,
         timeout: 20000,
       });
+
+      // MED-05: reconnection attempts after a network drop may outlive the
+      // ticket's TTL — fetch a fresh one before each retry.
+      const refreshTicket = async () => {
+        try {
+          socket.auth = { token: (await authApi.getSocketTicket()).data.ticket };
+        } catch {
+          /* keep the previous ticket for the next attempt */
+        }
+      };
+      socket.io.on("reconnect_attempt", refreshTicket);
 
       socket.on("connect", () => {
         setIsConnected(true);
@@ -87,8 +108,9 @@ export function useTestSocket(options: UseTestSocketOptions = {}) {
         setIsConnected(false);
       });
 
-      socket.on("connect_error", () => {
+      socket.on("connect_error", (err) => {
         setIsConnected(false);
+        if (/token|auth/i.test(err.message)) refreshTicket();
       });
 
       socket.on("test_joined", (data: TestJoinedData) => {

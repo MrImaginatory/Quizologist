@@ -28,7 +28,7 @@ export interface AuthResponse {
       updatedAt: string;
       deletedAt: string | null;
     };
-    token: string;
+    // MED-02: no token in the response — tokens are set as HttpOnly cookies.
   };
 }
 

@@ -28,6 +28,11 @@ const signupLimiter = authRateLimit(3); // 3 signup attempts / minute / IP
 
 router.post("/signup", signupLimiter, UserController.signup);
 router.post("/login", loginLimiter, UserController.login);
+// MED-02 + MED-05 — HttpOnly cookie token lifecycle (no body tokens anywhere)
+router.post("/refresh", UserController.refresh);
+router.post("/logout", UserController.logout);
+router.post("/logout-all", UserController.logoutAll);
+router.post("/socket-ticket", UserController.socketTicket);
 router.get("/", UserController.getAllUsers);
 router.get("/role/:role", UserController.getUserByRole);
 router.get("/me", UserController.getMe);

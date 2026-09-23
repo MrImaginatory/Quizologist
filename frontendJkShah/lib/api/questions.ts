@@ -1,5 +1,5 @@
 import { API_ROUTES } from "../api-routes";
-import { apiRequest } from "./client";
+import { apiRequest, isJwtShaped } from "./client";
 import { QuestionsResponse, Question, CreateQuestionPayload } from "./types";
 
 interface BulkImportQuestion {
@@ -55,7 +55,8 @@ export const questionsApi = {
   getTemplate: async (token?: string): Promise<Blob> => {
     const response = await fetch(API_ROUTES.QUESTIONS.IMPORT_TEMPLATE, {
       headers: {
-        Authorization: token ? `Bearer ${token}` : "",
+        // MED-02: cookies carry browser auth; header only for real JWTs (scripts)
+        ...(isJwtShaped(token) ? { Authorization: `Bearer ${token}` } : {}),
       },
     });
     if (!response.ok) {

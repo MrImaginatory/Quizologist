@@ -8,9 +8,11 @@ import { preAssessmentApi } from "@/lib/api/tests";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/auth-context";
 
 export function PreAssessmentBanner() {
   const { status, isLoading, refetch } = usePreAssessmentStatus();
+  const { token } = useAuth();
   const [isStarting, setIsStarting] = useState(false);
   const router = useRouter();
 
@@ -28,8 +30,8 @@ export function PreAssessmentBanner() {
         return;
       }
 
-      // Otherwise generate and start a new one
-      const token = localStorage.getItem("token");
+      // MED-02: no localStorage token anymore — session flag gates the call,
+      // the HttpOnly cookie carries the actual credential.
       if (!token) return;
 
       const res = await preAssessmentApi.start(token);
