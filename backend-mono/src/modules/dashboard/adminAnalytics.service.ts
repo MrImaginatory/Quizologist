@@ -378,15 +378,26 @@ export class AdminAnalyticsService {
       { type: QueryTypes.SELECT, replacements: { studentId } }
     ) as any[];
 
-    const courseIds = enrollments.map((e: any) => e.course_id);
+    // Only accept non-empty string ids (defense-in-depth: the IN (:courseIds)
+    // expansion must never receive untyped/empty placeholder values)
+    const courseIds = enrollments
+      .map((e: any) => e.course_id)
+      .filter((id: unknown): id is string => typeof id === "string" && id.length > 0);
 
     // 3. Teacher Access Control
     if (requestorRole === "teacher") {
+      // Validate before the query: if the student has no enrollments, no
+      // teacher can be assigned to them — deny instead of using a fake
+      // ['EMPTY'] placeholder in the IN clause (logic bypass / injection risk).
+      if (courseIds.length === 0) {
+        throw new Error("Unauthorized: Student is not enrolled in any of your courses");
+      }
+
       // Check if teacher is assigned to any of these courses
       const teacherAssignments = await sequelize.query(
         `SELECT id FROM teacher_assignments 
          WHERE teacher_id = :requestorId AND course_id IN (:courseIds) AND deleted_at IS NULL`,
-        { type: QueryTypes.SELECT, replacements: { requestorId, courseIds: courseIds.length > 0 ? courseIds : ['EMPTY'] } }
+        { type: QueryTypes.SELECT, replacements: { requestorId, courseIds } }
       ) as any[];
 
       if (teacherAssignments.length === 0) {
